@@ -1,0 +1,484 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f9fafb 0%, #ffffff 40%, #f9fafb 100%);
+}
+
+/* Glass Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navLogo {
+  display: flex;
+  align-items: center;
+}
+
+.logoImage {
+  width: 150px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.navAuth {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loginBtn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.loginBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.signupBtn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  background-color: #0097ce;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.signupBtn:hover {
+  background-color: #0073a0;
+  transform: translateY(-1px);
+}
+
+.hero {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12rem 1.5rem 6rem;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.heroBadge {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0097ce;
+}
+
+.heroTitle {
+  margin-top: 2rem;
+  font-size: 4rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #111827;
+}
+
+.heroHighlight {
+  color: #0097ce;
+}
+
+.heroText {
+  margin-top: 2rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.25rem;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+.heroActions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Hero Stats */
+.heroStats {
+  margin-top: 4rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.heroStat {
+  padding: 1rem;
+}
+
+.heroStatNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0097ce;
+  margin-bottom: 0.5rem;
+  font-feature-settings: 'tnum';
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.heroStatLabel {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.primaryButton {
+  padding: 0.9rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #0097ce;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 151, 206, 0.35);
+  transition: background-color 0.15s ease, transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.primaryButton:hover {
+  background-color: #0073a0;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(0, 115, 160, 0.4);
+}
+
+.secondaryButton {
+  padding: 0.9rem 2.5rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.secondaryButton:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Section headers */
+.featuresSection,
+.howSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 4rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.whySection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 8rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.sectionTitle {
+  font-size: 3rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.sectionSubtitle {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #6b7280;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Feature cards */
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 900px) {
+  .featureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featureCard {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eef2f7;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.12);
+}
+
+.featureTitle {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.featureText {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #6b7280;
+}
+
+/* Why choose + CTA */
+.whySection {
+  display: grid;
+  grid-template-columns: 1.6fr 1.2fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .whySection {
+    grid-template-columns: 1fr;
+  }
+}
+
+.whyLeft {
+  padding-right: 1rem;
+}
+
+.checklist {
+  margin-top: 1.25rem;
+  list-style: none;
+}
+
+.checklist li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.checklist li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #22c55e;
+  font-size: 0.95rem;
+}
+
+.ctaCard {
+  background-color: #f0f9ff;
+  border-radius: 2rem;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  border: 2px solid #e0f6ff;
+}
+
+.ctaTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.ctaText {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 3rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.footerBrand {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* How It Works – modern staggered timeline */
+
+.howSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 4rem;
+}
+
+.howTimelineWrapper {
+  position: relative;
+  margin-top: 3rem;
+  padding-bottom: 2rem;
+}
+
+/* Staggered positions on desktop */
+.howStepsLayer {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  z-index: 2;
+}
+
+.howStepText {
+  max-width: 320px;
+  transition: transform 0.35s ease, opacity 0.35s ease, color 0.35s ease;
+}
+
+/* All steps aligned in a row */
+.howStep1 {
+  transform: translateY(0);
+}
+
+.howStep2 {
+  transform: translateY(0);
+}
+
+.howStep3 {
+  transform: translateY(0);
+}
+
+/* Label + text styling */
+.howStepLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.howStepTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.4rem;
+  transition: transform 0.35s ease, font-size 0.35s ease, color 0.35s ease;
+}
+
+.howStepBody {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* Active step pops out */
+.howStepActive .howStepTitle {
+  font-size: 1.8rem;
+  color: #0097ce;
+  transform: translateY(-8px) scale(1.1);
+}
+
+.howStepActive {
+  opacity: 1;
+  transform: scale(1.05);
+  transition: all 0.35s ease;
+}
+
+/* Completed previous step: slightly muted */
+.howStepCompleted .howStepTitle {
+  color: #4b5563;
+}
+
+/* Mobile: stack vertically, remove offsets */
+@media (max-width: 900px) {
+  .howStepsLayer {
+    flex-direction: column;
+    gap: 3rem;
+  }
+  .howStep1,
+  .howStep2,
+  .howStep3 {
+    transform: translateY(0);
+  }
+}
+
