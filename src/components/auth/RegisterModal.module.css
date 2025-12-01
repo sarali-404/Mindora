@@ -1,0 +1,516 @@
+/* Register Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  animation: fadeIn 0.3s ease-out;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Hide scrollbar for WebKit browsers */
+.modalContent::-webkit-scrollbar {
+  display: none;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.closeButton:hover {
+  background-color: #F3F4F6;
+  color: #374151;
+}
+
+.registerCard {
+  padding: 3rem;
+  font-family: "Quicksand", sans-serif;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.backButton {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #0073a0;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: "Quicksand", sans-serif;
+  z-index: 10;
+}
+
+.backButton:hover {
+  background-color: #E3F2FD;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  font-family: "Quicksand", sans-serif;
+}
+
+.subtitle {
+  color: #6B7280;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+/* Progress Steps */
+.progressContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: #F8FAFC;
+  border-radius: 16px;
+}
+
+.progressStep {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.progressStep.active {
+  background: #E3F2FD;
+  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.1);
+}
+
+.progressStep.completed {
+  background: #E8F5E8;
+}
+
+.stepNumber {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.progressStep .stepNumber {
+  background: #E5E7EB;
+  color: #6B7280;
+}
+
+.progressStep.active .stepNumber {
+  background: #0073a0;
+  color: white;
+}
+
+.progressStep.completed .stepNumber {
+  background: #22C55E;
+  color: white;
+}
+
+.stepInfo {
+  flex: 1;
+}
+
+.stepTitle {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.stepDescription {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.stepContent {
+  animation: fadeInSlide 0.4s ease-out;
+}
+
+/* Input Styling */
+.inputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputRow:last-child {
+  margin-bottom: 0;
+}
+
+.inputGroup {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.inputGroup:last-child {
+  margin-bottom: 0;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 500;
+  background-color: #FAFBFC;
+  transition: all 0.3s ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #0073a0;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(0, 115, 160, 0.1);
+}
+
+.input:not(:placeholder-shown) {
+  background-color: white;
+}
+
+.label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  color: #6B7280;
+  font-size: 1rem;
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-family: "Quicksand", sans-serif;
+}
+
+.input:focus + .label,
+.input:not(:placeholder-shown) + .label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0073a0;
+  background-color: white;
+  padding: 0 0.5rem;
+}
+
+.select {
+  color: #374151;
+}
+
+.select:invalid {
+  color: #9CA3AF;
+}
+
+/* Optional Note */
+.optionalNote {
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.optionalNote p {
+  color: #0369A1;
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Camera Section */
+.cameraSection {
+  text-align: center;
+  padding: 2rem;
+  border: 2px dashed #E5E7EB;
+  border-radius: 16px;
+  background: #FAFBFC;
+}
+
+.cameraTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  font-family: "Quicksand", sans-serif;
+}
+
+.cameraDescription {
+  color: #6B7280;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.cameraButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: #0073a0;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Quicksand", sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.3);
+}
+
+.cameraButton:hover {
+  background: #005a7f;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 115, 160, 0.4);
+}
+
+.cameraIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.cameraContainer {
+  margin-top: 2rem;
+}
+
+.videoElement {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.captureButton {
+  padding: 1rem 2rem;
+  background: #22C55E;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.captureButton:hover {
+  background: #16A34A;
+  transform: translateY(-1px);
+}
+
+.capturedContainer {
+  margin-top: 2rem;
+}
+
+.capturedImage {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.captureActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.retakeButton {
+  padding: 0.75rem 1.5rem;
+  background: #F59E0B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.retakeButton:hover {
+  background: #D97706;
+  transform: translateY(-1px);
+}
+
+/* Navigation Buttons */
+.navigationButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.prevButton {
+  padding: 1rem 2rem;
+  background: transparent;
+  color: #0073a0;
+  border: 2px solid #0073a0;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.prevButton:hover {
+  background: #0073a0;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.nextButton,
+.submitButton {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #0073a0 0%, #005a7f 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.3);
+  margin-left: auto;
+}
+
+.nextButton:hover,
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 115, 160, 0.4);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 0.5rem;
+    max-width: none;
+    max-height: 95vh;
+  }
+  
+  .registerCard {
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 1.875rem;
+  }
+  
+  .progressContainer {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .inputRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .navigationButtons {
+    flex-direction: column-reverse;
+  }
+  
+  .prevButton,
+  .nextButton,
+  .submitButton {
+    width: 100%;
+    margin-left: 0;
+  }
+}

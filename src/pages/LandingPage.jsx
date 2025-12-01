@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./LandingPage.module.css";
+import LoginModal from "../components/auth/LoginModal";
+import RegisterModal from "../components/auth/RegisterModal";
 
 
 
@@ -59,6 +61,8 @@ function AnimatedCounter({ endValue, duration = 2000, suffix = "" }) {
 export default function LandingPage() {
   const [activeStep, setActiveStep] = useState(1);
   const [animationStarted, setAnimationStarted] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
     if (animationStarted) return;
@@ -94,6 +98,32 @@ export default function LandingPage() {
     };
   }, [animationStarted]);
 
+  const handleLoginClick = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleSignupClick = () => {
+    setShowRegisterModal(true);
+  };
+
+  const handleCloseLogin = () => {
+    setShowLoginModal(false);
+  };
+
+  const handleSwitchToRegister = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowRegisterModal(false);
+    setShowLoginModal(true);
+  };
+
+  const handleCloseRegister = () => {
+    setShowRegisterModal(false);
+  };
+
   return (
     <div className={styles.page}>
       {/* Glass Navbar */}
@@ -106,8 +136,8 @@ export default function LandingPage() {
 
           {/* Auth Buttons */}
           <div className={styles.navAuth}>
-            <button className={styles.loginBtn}>Login</button>
-            <button className={styles.signupBtn}>Sign Up</button>
+            <button className={styles.loginBtn} onClick={handleLoginClick}>Login</button>
+            <button className={styles.signupBtn} onClick={handleSignupClick}>Sign Up</button>
           </div>
         </div>
       </nav>
@@ -294,6 +324,20 @@ export default function LandingPage() {
         <span className={styles.footerBrand}>Mindora</span>
         <span className={styles.footerCopy}>© 2025 Mindora. All rights reserved.</span>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={handleCloseLogin} 
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal 
+        isOpen={showRegisterModal} 
+        onClose={handleCloseRegister} 
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </div>
   );
 }
