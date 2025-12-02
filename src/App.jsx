@@ -3,6 +3,8 @@ import AppLayout from "./components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
 import CommunityPage from "./pages/CommunityPage";
+import SessionsPage from "./pages/SessionsPage";
+import CreateSessionPage from "./pages/CreateSessionPage";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -16,6 +18,8 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/app/dashboard" element={<DashboardPage />} />
           <Route path="/app/community" element={<CommunityPage />} />
+          <Route path="/app/sessions" element={<SessionsPage />} />
+          <Route path="/app/create-session" element={<CreateSessionPage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 
