@@ -5,7 +5,10 @@ import DashboardPage from "./pages/DashboardPage";
 import CommunityPage from "./pages/CommunityPage";
 import SessionsPage from "./pages/SessionsPage";
 import CreateSessionPage from "./pages/CreateSessionPage";
+import LibraryPage from "./pages/LibraryPage";
+import UploadMaterialPage from "./pages/UploadMaterialPage";
 import NotFound from "./pages/NotFound";
+
 
 function App() {
   return (
@@ -20,6 +23,8 @@ function App() {
           <Route path="/app/community" element={<CommunityPage />} />
           <Route path="/app/sessions" element={<SessionsPage />} />
           <Route path="/app/create-session" element={<CreateSessionPage />} />
+          <Route path="/app/library" element={<LibraryPage />} />
+          <Route path="/app/upload-material" element={<UploadMaterialPage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 
