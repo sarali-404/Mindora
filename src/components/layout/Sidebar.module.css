@@ -1,24 +1,23 @@
 .sidebar {
   width: 260px;
+  flex: 0 0 260px;
+  min-width: 260px;
   height: 100vh;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background-color: #ffffff;
-  overflow: hidden; /* prevent sidebar from scrolling */
-}
-
-/* Keep the sidebar fixed in place when the page scrolls */
-.sidebar {
-  position: sticky;
+  overflow: hidden;
+  position: fixed;
   top: 0;
+  left: 0;
   z-index: 40;
 }
 
 .logoArea {
   /* more breathing room above the logo for a cleaner header */
-  padding: 1.25rem 0.9rem 0.75rem;
+  padding: 1.7rem 0.9rem 0.75rem;
   border-bottom: 1px solid #f3f4f6;
   display: flex;
   align-items: center;

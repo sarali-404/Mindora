@@ -7,7 +7,7 @@ export default function AppLayout() {
   return (
     <div className={styles.layout}>
       <AppSidebar />
-      <div style={{ flex: 1 }}>
+      <div className={styles.content}>
         <TopNavbar />
         <main className={styles.main}>
           <Outlet />

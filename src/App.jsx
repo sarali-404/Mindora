@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "./components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
+import CommunityPage from "./pages/CommunityPage";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -14,7 +15,8 @@ function App() {
         {/* All app pages share Layout (sidebar + top navbar) */}
         <Route element={<AppLayout />}>
           <Route path="/app/dashboard" element={<DashboardPage />} />
-          {/* later: add /app/community, /app/sessions, /app/library, /app/goals/:id, etc. */}
+          <Route path="/app/community" element={<CommunityPage />} />
+          {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 
         {/* Fallback: unknown paths show a 404 page (avoid rendering Dashboard for undefined routes) */}

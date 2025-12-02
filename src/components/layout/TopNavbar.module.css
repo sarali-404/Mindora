@@ -14,6 +14,10 @@
   align-items: center;
   justify-content: space-between;
   background-color: #f9fafb;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .userBlock {
