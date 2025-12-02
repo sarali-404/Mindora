@@ -1,0 +1,94 @@
+/* Additional styles for XP display */
+.xpMini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  align-items: flex-start;
+}
+/* Other styles continue below */
+.navbar {
+  height: 72px;
+  padding: 0 2.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f9fafb;
+}
+
+.userBlock {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.userSubtitle {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+
+.statsBlock {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.inlineStat {
+  display: flex;
+  align-items: center;
+  gap: 0rem;
+}
+
+.inlineAnimWrap {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inlineAnim {
+  width: 30px;
+  height: 30px;
+  transform: translateY(-4px); /* nudge fire animation slightly upward */
+}
+
+/* Star-specific larger animation (only for Total XP) */
+.inlineAnimStarWrap {
+  width: 66px;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inlineAnimStar {
+    width: 66px;
+    height: 66px;
+}
+
+.inlineStatValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.inlineStatLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+}

@@ -1,0 +1,189 @@
+.page {
+  padding: 2rem 2.5rem;
+}
+
+/* Sections layout */
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 2.1fr 1.2fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.sectionCard {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.6rem;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sectionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+}
+
+.sectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sectionLink {
+  font-size: 0.9rem;
+  color: #0073a0;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Active goals list */
+
+.goalCard {
+  padding: 1.1rem 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.goalCard:first-of-type {
+  border-top: none;
+}
+
+.goalName {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.goalMeta {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.progressBarOuter {
+  margin-top: 0.75rem;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+.progressBarInner {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0073a0, #a2d0e3);
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: fillBar 0.9s ease-out forwards;
+}
+
+/* Right-side upcoming sessions */
+
+.sessionCard {
+  padding: 0.9rem 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.sessionCard:first-of-type {
+  border-top: none;
+}
+
+.sessionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sessionMeta {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.sessionTime {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  color: #0073a0;
+}
+
+.primaryButton {
+  margin-top: 0.8rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #0073a0, #005985);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Incomplete tasks row */
+
+.tasksSection {
+  margin-top: 2rem;
+}
+
+.tasksRow {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.taskCard {
+  background-color: #ffffff;
+  border-radius: 1.1rem;
+  padding: 1.2rem 1.3rem;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.05);
+  border: 1px solid #eef2f7;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.taskCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+}
+
+.taskTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.3rem;
+}
+
+.taskMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.9rem;
+}
+
+.taskButton {
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #0073a0;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Animations */
+
+@keyframes fillBar {
+  to {
+    transform: scaleX(1);
+  }
+}
