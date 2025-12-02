@@ -19,14 +19,31 @@ export default function UploadMaterialPage() {
         ← Back to Library
       </button>
 
-      <header className={styles.header}>
-        <h1 className={styles.title}>Upload Material</h1>
-        <p className={styles.subtitle}>
-          Share your study materials with the community.
-        </p>
-      </header>
+      {/* header removed per request; search is on Library page */}
 
       <div className={styles.shell}>
+        {/* Steps (upload flow) */}
+        <section className={styles.steps} aria-hidden={false}>
+          <div className={styles.step}>
+            <div className={styles.stepCircle}>1</div>
+            <div className={styles.stepLabel}>Upload your file</div>
+          </div>
+
+          <div className={styles.stepConnector} />
+
+          <div className={styles.step}>
+            <div className={styles.stepCircle}>2</div>
+            <div className={styles.stepLabel}>Fill the details and submit it</div>
+          </div>
+
+          <div className={styles.stepConnector} />
+
+          <div className={styles.step}>
+            <div className={styles.stepCircle}>3</div>
+            <div className={styles.stepLabel}>Get recognition and share</div>
+          </div>
+        </section>
+
         {/* Upload area */}
         <section className={styles.uploadSection}>
           <h2 className={styles.sectionTitle}>Upload File</h2>

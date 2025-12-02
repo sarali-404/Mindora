@@ -53,6 +53,69 @@
   margin-bottom: 0.7rem;
 }
 
+/* Steps / progress indicator */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1rem 0 1.4rem;
+  font-family: "Quicksand", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 140px;
+  text-align: center;
+}
+.stepCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8fa 100%);
+  border: 2px solid #0073a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #0073a0;
+  box-shadow: 0 6px 18px rgba(3, 99, 135, 0.06);
+  animation: stepPulse 2.2s infinite ease-in-out;
+}
+.stepLabel {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #374151;
+}
+.stepConnector {
+  height: 3px;
+  flex: 1 1 auto;
+  background: linear-gradient(90deg, rgba(0,115,160,0.15), rgba(0,115,160,0.35));
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.stepConnector::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.35), rgba(255,255,255,0.0));
+  animation: slide 2s linear infinite;
+}
+
+@keyframes slide {
+  to { left: 100%; }
+}
+
+@keyframes stepPulse {
+  0% { transform: scale(1); box-shadow: 0 6px 18px rgba(3,99,135,0.06); }
+  50% { transform: scale(1.06); box-shadow: 0 12px 28px rgba(3,99,135,0.08); }
+  100% { transform: scale(1); box-shadow: 0 6px 18px rgba(3,99,135,0.06); }
+}
+
 .dropZone {
   border-radius: 1rem;
   border: 1.5px dashed #d1d5db;
@@ -114,6 +177,18 @@
 .detailsSection {
   border-top: 1px solid #f3f4f6;
   padding-top: 1.5rem;
+}
+
+/* Ensure the form and its controls use Quicksand only */
+.detailsSection,
+.detailsSection .fieldGroup,
+.detailsSection .label,
+.detailsSection .input,
+.detailsSection .textarea,
+.detailsSection select,
+.detailsSection .helperText,
+.detailsSection .sectionTitle {
+  font-family: "Quicksand", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .fieldGroup {
