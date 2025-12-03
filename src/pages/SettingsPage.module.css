@@ -1,0 +1,182 @@
+.page {
+  padding: 2rem 2.5rem 2.5rem;
+}
+
+.pageHeader {
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Cards */
+
+.card {
+  background-color: #f9fafb;
+  border-radius: 1.3rem;
+  padding: 1.2rem 1.4rem 1.3rem;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.cardIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background-color: #e4f3fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0073a0;
+}
+
+.cardTitle {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Rows */
+
+.row,
+.linkRow {
+  padding: 0.65rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.rowLast {
+  border-bottom: none;
+}
+
+.rowLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.rowDescription {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Toggle */
+
+.toggleButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.toggleIcon {
+  font-size: 1.6rem;
+  color: #9ca3af;
+}
+
+.toggleOn {
+  color: #0073a0;
+}
+
+/* Link row */
+
+.linkRow {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #edf1f5;
+  padding-right: 0;
+}
+
+/* Storage */
+
+.storageBlock {
+  padding: 0.4rem 0 0.9rem;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.storageLabel {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.storageMeta {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.storageBarOuter {
+  margin-top: 0.45rem;
+  height: 7px;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+.storageBarInner {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #005985, #0073a0);
+}
+
+/* Clear cache */
+
+.clearRow {
+  padding-top: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clearLabel {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.clearDescription {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.clearButton {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #111827;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.6rem 1.3rem 2rem;
+  }
+}

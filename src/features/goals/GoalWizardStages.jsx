@@ -1,5 +1,15 @@
 import styles from "./GoalWizardStages.module.css";
-import { FiTarget, FiCalendar, FiBook, FiCheckCircle } from "react-icons/fi";
+import {
+  MdFlag,
+  MdCalendarToday,
+  MdBook,
+  MdCheckCircle,
+  MdAccessTime,
+  MdUploadFile,
+  MdDescription,
+  MdClose,
+  MdLightbulb,
+} from "react-icons/md";
 
 export default function GoalWizardStages({
   currentStep,
@@ -15,7 +25,7 @@ export default function GoalWizardStages({
       {currentStep === 1 && (
         <div className={styles.stage}>
           <div className={styles.stageTitleRow}>
-            <FiTarget className={styles.stageIcon} />
+            <MdFlag className={styles.stageIcon} style={{ color: '#10b981' }} />
             <h2 className={styles.stageTitle}>What&apos;s Your Target?</h2>
           </div>
           <p className={styles.stageSubtitle}>
@@ -56,7 +66,7 @@ export default function GoalWizardStages({
       {currentStep === 2 && (
         <div className={styles.stage}>
           <div className={styles.stageTitleRow}>
-            <FiCalendar className={styles.stageIcon} />
+            <MdCalendarToday className={styles.stageIcon} style={{ color: '#f59e0b' }} />
             <h2 className={styles.stageTitle}>When&apos;s Your Deadline?</h2>
           </div>
           <p className={styles.stageSubtitle}>Set a realistic target date</p>
@@ -75,7 +85,7 @@ export default function GoalWizardStages({
 
             {formData.deadline && (
               <div className={styles.countdownBox}>
-                <div className={styles.countdownIcon}>⏱️</div>
+                <div className={styles.countdownIcon}><MdAccessTime style={{ color: '#f59e0b' }} /></div>
                 <div>
                   <p className={styles.countdownNumber}>
                     {calculateDaysLeft()} days
@@ -94,7 +104,7 @@ export default function GoalWizardStages({
       {currentStep === 3 && (
         <div className={styles.stage}>
           <div className={styles.stageTitleRow}>
-            <FiBook className={styles.stageIcon} />
+            <MdBook className={styles.stageIcon} style={{ color: '#8b5cf6' }} />
             <h2 className={styles.stageTitle}>Add Your Materials</h2>
           </div>
           <p className={styles.stageSubtitle}>
@@ -112,7 +122,7 @@ export default function GoalWizardStages({
                 className={styles.fileInput}
               />
               <label htmlFor="fileUpload" className={styles.uploadLabel}>
-                <div className={styles.uploadIcon}>📤</div>
+                <div className={styles.uploadIcon}><MdUploadFile style={{ color: '#0073a0' }} /></div>
                 <p className={styles.uploadTitle}>Click to upload materials</p>
                 <p className={styles.uploadSubtitle}>
                   PDF, DOC, PPT, TXT (Max 50MB each)
@@ -127,13 +137,14 @@ export default function GoalWizardStages({
                 </p>
                 {formData.materials.map((file, index) => (
                   <div key={index} className={styles.fileItem}>
-                    <span className={styles.fileName}>📄 {file.name}</span>
+                    <span className={styles.fileName}><MdDescription style={{ marginRight: 6, color: '#3b82f6' }} />{file.name}</span>
                     <button
                       type="button"
                       className={styles.removeBtn}
                       onClick={() => removeFile(index)}
+                      aria-label="Remove file"
                     >
-                      ✕
+                      <MdClose />
                     </button>
                   </div>
                 ))}
@@ -141,7 +152,7 @@ export default function GoalWizardStages({
             )}
 
             <p className={styles.helperText}>
-              💡 You can always add more materials later from your goal page
+              <MdLightbulb style={{ verticalAlign: 'middle', marginRight: 6, color: '#f59e0b' }} /> You can always add more materials later from your goal page
             </p>
           </div>
         </div>

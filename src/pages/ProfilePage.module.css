@@ -1,0 +1,326 @@
+.page {
+  padding: 2rem 2.5rem 2.5rem;
+}
+
+/* Header */
+
+.headerCard {
+  background: linear-gradient(135deg, #005985, #0073a0);
+  border-radius: 1.5rem;
+  padding: 1.6rem 1.9rem 1.8rem;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.avatarCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  background-color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.email {
+  font-size: 0.86rem;
+  color: #6b7280;
+}
+
+.tagsRow {
+  margin-top: 0.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  padding: 0.14rem 0.6rem;
+  border-radius: 999px;
+  background-color: #f3f4f6;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.memberSince {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Make memberSince visible on the gradient header */
+.headerCard .memberSince {
+  color: rgba(249, 250, 251, 0.9);
+}
+
+.editButton {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(15, 23, 42, 0.15);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Stats */
+
+.statsRow {
+  margin-top: 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background-color: #ffffff;
+  border-radius: 0.9rem;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.statValue {
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Friends */
+
+.friendsCard {
+  margin-top: 1.6rem;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.friendsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.friendsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.friendsIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.linkButton {
+  border: none;
+  background: transparent;
+  color: #0073a0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.friendsRow {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.7rem;
+}
+
+.friendPill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.friendAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background-color: #eef6ff;
+  color: #075985;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.friendName {
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+/* Materials */
+
+.materialsGrid {
+  margin-top: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.materialsCard {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.materialsHeader {
+  margin-bottom: 0.8rem;
+}
+
+.materialsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.materialsIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countBadge {
+  margin-left: 0.4rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background-color: #eef6ff;
+  color: #075985;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.materialList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.materialRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.1rem;
+  border-radius: 0.65rem;
+}
+
+.materialRow:hover {
+  background-color: #fbfdff;
+}
+
+.materialTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.materialMetaRow {
+  margin-top: 0.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.materialMeta {
+  white-space: nowrap;
+}
+
+.aiTag {
+  padding: 0.08rem 0.5rem;
+  border-radius: 999px;
+  background-color: #faf5ff;
+  color: #7c3aed;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.metaPill {
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background-color: #eef6ff;
+  color: #075985;
+  font-size: 0.75rem;
+}
+
+.materialActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.iconButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .statsRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.6rem 1.3rem 2rem;
+  }
+
+  .headerCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 import styles from "./TopicsBreakdown.module.css";
+import { MdEmojiEvents, MdWarningAmber } from "react-icons/md";
 
 const SECTIONS = [
   {
@@ -43,7 +44,7 @@ export default function TopicsBreakdown() {
       {/* Left: topics */}
       <section className={styles.card}>
         <div className={styles.cardHeader}>
-          <div className={styles.iconCircle}>🎯</div>
+          <div className={styles.iconCircle}><MdEmojiEvents size={20} style={{ color: '#10b981' }} /></div>
           <h2 className={styles.cardTitle}>Topics Breakdown</h2>
         </div>
 
@@ -57,7 +58,7 @@ export default function TopicsBreakdown() {
       {/* Right: weak areas */}
       <aside className={styles.weakCard}>
         <div className={styles.weakHeader}>
-          <div className={styles.warningIcon}>⚠</div>
+          <div className={styles.warningIcon}><MdWarningAmber size={18} style={{ color: '#f59e0b' }} /></div>
           <h3 className={styles.weakTitle}>Weak Areas</h3>
         </div>
 

@@ -1,4 +1,5 @@
 import styles from "./Quizzes.module.css";
+import { MdQuiz, MdEmojiEvents } from "react-icons/md";
 
 const QUIZZES = [
   {
@@ -38,7 +39,7 @@ export default function Quizzes() {
     <section className={styles.card}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.iconCircle}>🧠</div>
+          <div className={styles.iconCircle}><MdQuiz size={20} style={{ color: '#8b5cf6' }} /></div>
           <h2 className={styles.title}>Practice Quizzes</h2>
         </div>
       </header>
@@ -77,7 +78,7 @@ function QuizCard({ quiz }) {
       <div className={styles.scoreBox}>
         <span className={styles.scoreLabel}>Best Score</span>
         {quiz.bestScore ? (
-          <span className={styles.scoreValue}>🏆 {quiz.bestScore}</span>
+          <span className={styles.scoreValue}><MdEmojiEvents style={{ marginRight: 6, color: '#10b981', verticalAlign: 'middle' }} /> {quiz.bestScore}</span>
         ) : (
           <span className={styles.scorePlaceholder}>No attempts yet</span>
         )}

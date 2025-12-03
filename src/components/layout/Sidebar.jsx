@@ -47,8 +47,8 @@ export default function AppSidebar() {
           {goalsOpen && (
             <div className={styles.goalsChildren}>
               <NavItem to="/app/create-goal" label="Create New Goal" isChild />
-              <NavItem to="/app/goals/1" label="Goal 1" isChild />
-              <NavItem to="/app/goals/2" label="Goal 2" isChild />
+              <NavItem to="/app/goals" label="Goal 1" isChild />
+             
             </div>
           )}
         </div>

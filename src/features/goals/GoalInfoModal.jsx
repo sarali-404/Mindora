@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import styles from "./GoalInfoModal.module.css";
-import { FiCpu, FiBook, FiClipboard, FiBarChart, FiX } from "react-icons/fi";
+import { MdMemory, MdBook, MdContentPaste, MdBarChart, MdClose, MdEmojiEvents } from "react-icons/md";
 
 export default function GoalInfoModal({ isOpen, onClose }) {
   // Close modal on Escape key
@@ -32,11 +32,11 @@ export default function GoalInfoModal({ isOpen, onClose }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-          <FiX />
+          <MdClose />
         </button>
 
         <div className={styles.modalContent}>
-          <h2 className={styles.modalTitle}>Welcome to Goals! 🎯</h2>
+          <h2 className={styles.modalTitle}>Welcome to Goals! <MdEmojiEvents style={{ verticalAlign: 'middle', marginLeft: 8, color: '#10b981' }} /></h2>
           <p className={styles.modalIntro}>
             Create a focused study goal — upload your materials and we'll prepare everything
             you need to practice and improve.
@@ -45,7 +45,7 @@ export default function GoalInfoModal({ isOpen, onClose }) {
           <div className={styles.featureList}>
             <div className={styles.featureItem}>
               <div className={styles.iconWrapper}>
-                <FiCpu className={styles.featureIcon} />
+                <MdMemory className={styles.featureIcon} style={{ color: '#8b5cf6' }} />
               </div>
               <div>
                 <h4 className={styles.featureTitle}>Smart Notes</h4>
@@ -57,7 +57,7 @@ export default function GoalInfoModal({ isOpen, onClose }) {
 
             <div className={styles.featureItem}>
               <div className={styles.iconWrapper}>
-                <FiClipboard className={styles.featureIcon} />
+                <MdContentPaste className={styles.featureIcon} style={{ color: '#3b82f6' }} />
               </div>
               <div>
                 <h4 className={styles.featureTitle}>Adaptive Practice</h4>
@@ -69,7 +69,7 @@ export default function GoalInfoModal({ isOpen, onClose }) {
 
             <div className={styles.featureItem}>
               <div className={styles.iconWrapper}>
-                <FiBarChart className={styles.featureIcon} />
+                <MdBarChart className={styles.featureIcon} style={{ color: '#10b981' }} />
               </div>
               <div>
                 <h4 className={styles.featureTitle}>Progress at a Glance</h4>
@@ -81,7 +81,7 @@ export default function GoalInfoModal({ isOpen, onClose }) {
 
             <div className={styles.featureItem}>
               <div className={styles.iconWrapper}>
-                <FiBook className={styles.featureIcon} />
+                <MdBook className={styles.featureIcon} style={{ color: '#f59e0b' }} />
               </div>
               <div>
                 <h4 className={styles.featureTitle}>Personalized Tips</h4>

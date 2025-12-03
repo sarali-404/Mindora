@@ -1,0 +1,176 @@
+.page {
+  padding: 2rem 2.5rem 2.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.markReadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #0073a0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* List */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Card */
+
+.card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cardUnread {
+  border-color: #c7e3ff;
+  background-color: #f3f7ff;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+/* Left */
+
+.cardLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+/* colored icon backgrounds */
+
+.icon_milestone {
+  background-color: #0ea5e9;
+}
+
+.icon_friend {
+  background-color: #6366f1;
+}
+
+.icon_session {
+  background-color: #22c55e;
+}
+
+.icon_comment {
+  background-color: #f97316;
+}
+
+.icon_streak {
+  background-color: #eab308;
+}
+
+.icon_friend-activity {
+  background-color: #8b5cf6;
+}
+
+.icon_recording {
+  background-color: #ef4444;
+}
+
+/* Text */
+
+.cardTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cardMessage {
+  margin-top: 0.15rem;
+  font-size: 0.84rem;
+  color: #4b5563;
+}
+
+.cardTime {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+/* Right */
+
+.cardRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #1d4ed8;
+}
+
+.deleteButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.6rem 1.3rem 2rem;
+  }
+
+  .card {
+    align-items: flex-start;
+  }
+
+  .cardRight {
+    align-items: center;
+  }
+}

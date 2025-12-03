@@ -9,6 +9,9 @@ import LibraryPage from "./pages/LibraryPage";
 import UploadMaterialPage from "./pages/UploadMaterialPage";
 import CreateGoalPage from "./pages/CreateGoalPage";
 import GoalPage from "./pages/GoalPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 
@@ -29,6 +32,9 @@ function App() {
           <Route path="/app/upload-material" element={<UploadMaterialPage />} />
           <Route path="/app/create-goal" element={<CreateGoalPage />} />
           <Route path="/app/goals" element={<GoalPage />} />
+          <Route path="/app/profile" element={<ProfilePage />} />
+          <Route path="/app/settings" element={<SettingsPage />} />
+          <Route path="/app/notifications" element={<NotificationsPage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 

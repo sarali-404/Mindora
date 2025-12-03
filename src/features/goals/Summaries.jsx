@@ -1,4 +1,5 @@
 import styles from "./Summaries.module.css";
+import { MdDescription, MdEmojiEvents } from "react-icons/md";
 
 const SUMMARIES = [
   {
@@ -22,7 +23,7 @@ export default function Summaries() {
     <section className={styles.card}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.iconCircle}>📝</div>
+          <div className={styles.iconCircle}><MdDescription size={20} style={{ color: '#3b82f6' }} /></div>
           <h2 className={styles.title}>Summaries</h2>
         </div>
         <button className={styles.createButton}>+ Create Summary</button>
@@ -31,7 +32,7 @@ export default function Summaries() {
       <div className={styles.list}>
         {SUMMARIES.map((item) => (
           <article key={item.id} className={styles.summaryRow}>
-            <div className={styles.iconBadge}>🏅</div>
+            <div className={styles.iconBadge}><MdEmojiEvents size={18} style={{ color: '#f59e0b' }} /></div>
             <div className={styles.summaryContent}>
               <div className={styles.summaryTop}>
                 <h3 className={styles.summaryTitle}>{item.title}</h3>
