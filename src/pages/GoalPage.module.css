@@ -1,0 +1,183 @@
+.page {
+  padding: 2rem 2.5rem 2.5rem;
+}
+
+/* Header card */
+
+.headerCard {
+  background: linear-gradient(135deg, #005985, #0073a0);
+  border-radius: 1.5rem;
+  padding: 1.6rem 1.9rem 1.8rem;
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.4rem;
+}
+
+.subjectPill {
+  display: inline-block;
+  padding: 0.12rem 0.65rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.14);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.title {
+  margin-top: 0.45rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.metaRow {
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: rgba(249, 250, 251, 0.85);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.metaDot {
+  opacity: 0.6;
+}
+
+.newGoalButton {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(15, 23, 42, 0.15);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Progress block */
+
+.progressBlock {
+  background-color: rgba(15, 23, 42, 0.18);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem 0.8rem;
+}
+
+.progressRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.progressLabel {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.progressPercent {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.progressBarOuter {
+  height: 7px;
+  border-radius: 999px;
+  background-color: rgba(15, 23, 42, 0.4);
+  overflow: hidden;
+}
+
+.progressBarInner {
+  height: 100%;
+  border-radius: 999px;
+  background-color: #ffffff;
+  transform-origin: left;
+  animation: fillBar 0.8s ease-out forwards;
+}
+
+.progressFooter {
+  margin-top: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  opacity: 0.95;
+}
+
+.progressMeta {
+  opacity: 0.9;
+}
+
+/* Tabs */
+
+.tabsBar {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background-color: #f3f4f6;
+  width: 100%;
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.tab:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.tabActive {
+  background-color: #ffffff;
+  color: #0073a0;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.14);
+  transform: translateY(-2px);
+}
+
+/* Content area */
+
+.contentArea {
+  margin-top: 1.4rem;
+}
+
+.placeholder {
+  padding: 2rem;
+  border-radius: 1rem;
+  background-color: #f9fafb;
+  border: 1px dashed #e5e7eb;
+  color: #6b7280;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Animation */
+
+@keyframes fillBar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

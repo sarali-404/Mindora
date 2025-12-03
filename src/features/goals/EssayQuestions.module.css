@@ -1,0 +1,171 @@
+.card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 1.3rem 1.5rem 1.5rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: #e4f3fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Question blocks */
+
+.questionBlock {
+  margin-top: 0.6rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  background-color: #f5f7fb;
+}
+
+.questionBlock + .questionBlock {
+  margin-top: 0.9rem;
+}
+
+.questionTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.questionLabel {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.statusBadge {
+  padding: 0.05rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.statusSubmitted {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.statusPending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.scoreBox {
+  margin-left: auto;
+  text-align: right;
+}
+
+.scoreValue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.scoreLabel {
+  display: block;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+/* Question text */
+
+.questionText {
+  margin-top: 0.15rem;
+  font-size: 0.88rem;
+  color: #111827;
+}
+
+/* Feedback */
+
+.feedbackBox {
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.9rem;
+  background-color: #e5edf7;
+  display: flex;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.feedbackLabel {
+  font-weight: 600;
+  color: #111827;
+}
+
+.feedbackText {
+  color: #4b5563;
+}
+
+/* Answer area */
+
+.answerArea {
+  margin-top: 0.7rem;
+  width: 100%;
+  min-height: 120px;
+  border-radius: 0.9rem;
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  resize: vertical;
+  outline: none;
+}
+
+.answerArea:focus {
+  border-color: #0073a0;
+  box-shadow: 0 0 0 1px rgba(0, 115, 160, 0.15);
+}
+
+/* Bottom row */
+
+.bottomRow {
+  margin-top: 0.55rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.maxScore {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.submitButton {
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #0073a0;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}

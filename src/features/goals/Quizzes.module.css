@@ -1,0 +1,175 @@
+.card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 1.3rem 1.5rem 1.5rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: #e4f3fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* Quiz card */
+
+.quizCard {
+  background-color: #f5f7fb;
+  border-radius: 1.1rem;
+  padding: 1rem 1rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.quizCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  background-color: #eef2ff;
+}
+
+.quizTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Level + meta */
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.levelBadge {
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.levelEasy {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.levelMedium {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.levelHard {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.metaText {
+  color: #6b7280;
+}
+
+.metaDot {
+  color: #9ca3af;
+}
+
+/* Score box */
+
+.scoreBox {
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scoreLabel {
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.scoreValue {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0073a0;
+}
+
+.scorePlaceholder {
+  font-size: 0.82rem;
+  color: #9ca3af;
+}
+
+/* Attempts + button */
+
+.attemptsText {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.primaryButton {
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #0073a0;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.startButton {
+  background-color: #0f172a;
+}
+
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,248 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(260px, 1fr);
+  gap: 1.4rem;
+}
+
+/* Main topics card */
+
+.card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 1.3rem 1.5rem 1.5rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: #e4f3fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Section rows */
+
+.sectionRow {
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background-color: #f9fafb;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.chevronButton {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: none;
+  background-color: #e5e7eb;
+  color: #4b5563;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sectionTitle {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sectionPercent {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0073a0;
+}
+
+/* Subtopics */
+
+.subtopics {
+  margin-top: 0.6rem;
+  border-radius: 0.9rem;
+  background-color: #f3f4f6;
+  padding: 0.6rem 0.75rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.subtopicRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.subtopicLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.radio {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1.5px solid #9ca3af;
+}
+
+.radioActive {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+
+.subtopicTitle {
+  font-size: 0.84rem;
+  color: #111827;
+}
+
+.subtopicRight {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 140px;
+}
+
+.subtopicPercent {
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+
+/* Progress bars */
+
+.progressOuter {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #e5edf7;
+  overflow: hidden;
+}
+
+.progressOuterSmall {
+  height: 6px;
+}
+
+.progressInner {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #005985, #0073a0);
+}
+
+/* Weak areas */
+
+.weakCard {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 1.3rem 1.4rem 1.4rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+.weakHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.warningIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background-color: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.weakTitle {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.weakList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.weakItem {
+  padding: 0.75rem 0.85rem;
+  border-radius: 1rem;
+  background-color: #fef2f2;
+}
+
+.weakTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.weakItemTitle {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.badge {
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badgeHigh {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.badgeMedium {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.weakDescription {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+
+/* Responsive */
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
