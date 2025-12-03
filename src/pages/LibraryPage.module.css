@@ -218,6 +218,9 @@
 .statItem {
   font-size: 0.8rem;
   color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Responsive */

@@ -7,6 +7,7 @@ import SessionsPage from "./pages/SessionsPage";
 import CreateSessionPage from "./pages/CreateSessionPage";
 import LibraryPage from "./pages/LibraryPage";
 import UploadMaterialPage from "./pages/UploadMaterialPage";
+import CreateGoalPage from "./pages/CreateGoalPage";
 import NotFound from "./pages/NotFound";
 
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/app/create-session" element={<CreateSessionPage />} />
           <Route path="/app/library" element={<LibraryPage />} />
           <Route path="/app/upload-material" element={<UploadMaterialPage />} />
+          <Route path="/app/create-goal" element={<CreateGoalPage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 

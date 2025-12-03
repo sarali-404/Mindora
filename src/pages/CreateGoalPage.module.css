@@ -1,0 +1,184 @@
+.page {
+  padding: 2rem 2.5rem 2.5rem;
+  min-height: calc(100vh - 72px);
+}
+
+.backLink {
+  border: none;
+  background: transparent;
+  color: #0073a0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.backLink:hover {
+  transform: translateX(-4px);
+}
+
+/* Main Layout */
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Wizard Container */
+
+.wizardContainer {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2.5rem 2.5rem 2rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+/* Animation Space */
+
+.animationSpace {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 400px;
+  padding-bottom: 0;
+  margin-top: 12rem;
+}
+
+.birdAnimation {
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+}
+
+/* Wizard Navigation */
+
+.wizardActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: -2rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.btnBack {
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnBack:hover {
+  border-color: #0073a0;
+  color: #0073a0;
+  transform: translateX(-2px);
+}
+
+.btnNext {
+  padding: 0.75rem 2rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #0073a0, #00a3e0);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.2);
+}
+
+.btnNext:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 115, 160, 0.3);
+}
+
+.btnLaunch {
+  padding: 0.85rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btnLaunch:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .wizardContainer {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+
+  .pathLine {
+    width: 50px;
+  }
+
+  .pathStep {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+  }
+
+  .pathLabels {
+    font-size: 0.75rem;
+    padding: 0;
+  }
+
+  .stageIcon {
+    font-size: 3rem;
+  }
+
+  .stageTitle {
+    font-size: 1.4rem;
+  }
+
+  .stageSubtitle {
+    font-size: 0.9rem;
+  }
+
+  .uploadLabel {
+    padding: 2rem 1rem;
+  }
+
+  .wizardActions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .btnBack,
+  .btnNext,
+  .btnLaunch {
+    width: 100%;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .mainLayout {
+    grid-template-columns: 1fr;
+  }
+}

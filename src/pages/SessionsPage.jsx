@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { MdCalendarToday, MdAccessTime, MdPeople } from "react-icons/md";
 import styles from "./SessionsPage.module.css";
 
 export default function SessionsPage() {
@@ -137,15 +138,15 @@ function SessionCard({
 
       <div className={styles.metaList}>
         <div className={styles.metaRow}>
-          <span className={styles.metaIcon}>📅</span>
+          <MdCalendarToday className={styles.metaIcon} style={{ color: '#10b981' }} />
           <span className={styles.metaText}>{date}</span>
         </div>
         <div className={styles.metaRow}>
-          <span className={styles.metaIcon}>⏰</span>
+          <MdAccessTime className={styles.metaIcon} style={{ color: '#f59e0b' }} />
           <span className={styles.metaText}>{time}</span>
         </div>
         <div className={styles.metaRow}>
-          <span className={styles.metaIcon}>👥</span>
+          <MdPeople className={styles.metaIcon} style={{ color: '#8b5cf6' }} />
           <span className={styles.metaText}>{seats}</span>
         </div>
       </div>

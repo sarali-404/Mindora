@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import styles from "./LibraryPage.module.css";
-import { FiFileText, FiEye, FiHeart, FiBookmark } from "react-icons/fi";
+import { MdDescription, MdVisibility, MdFavorite, MdBookmark } from "react-icons/md";
 
 export default function LibraryPage() {
   return (
@@ -124,7 +124,7 @@ function ResourceCard({
     <article className={styles.card}>
       <div className={styles.cardHeaderRow}>
         <div className={styles.iconCircle}>
-          <FiFileText size={18} />
+          <MdDescription size={20} style={{ color: '#3b82f6' }} />
         </div>
         <div className={styles.cardTitleBlock}>
           <h2 className={styles.cardTitle}>{title}</h2>
@@ -147,13 +147,13 @@ function ResourceCard({
         </div>
         <div className={styles.footerStats}>
           <span className={styles.statItem}>
-            <FiEye size={14} /> {views}
+            <MdVisibility size={16} style={{ color: '#b18fffff' }} /> {views}
           </span>
           <span className={styles.statItem}>
-            <FiHeart size={14} /> {likes}
+            <MdFavorite size={16} style={{ color: '#ff6f6fff' }} /> {likes}
           </span>
           <span className={styles.statItem}>
-            <FiBookmark size={14} /> {saves}
+            <MdBookmark size={16} style={{ color: '#ffc869ff' }} /> {saves}
           </span>
         </div>
       </div>
