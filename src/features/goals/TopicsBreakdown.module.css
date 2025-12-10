@@ -246,3 +246,113 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1.2rem 1.3rem;
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    margin-bottom: 1rem;
+  }
+
+  .cardTitle {
+    font-size: 1rem;
+  }
+
+  .overallRow {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .overallLeft {
+    gap: 0.6rem;
+  }
+
+  .overallLabel {
+    font-size: 0.82rem;
+  }
+
+  .overallValue {
+    font-size: 1rem;
+  }
+
+  .topicRow {
+    padding: 0.75rem 0;
+  }
+
+  .topicName {
+    font-size: 0.88rem;
+  }
+
+  .topicStats {
+    font-size: 0.78rem;
+  }
+
+  .progressBarOuter {
+    height: 6px;
+  }
+
+  .weakArea {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .weakItemTitle {
+    font-size: 0.84rem;
+  }
+
+  .badge {
+    font-size: 0.73rem;
+    padding: 0.04rem 0.5rem;
+  }
+
+  .weakDescription {
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem 1.1rem;
+  }
+
+  .cardTitle {
+    font-size: 0.95rem;
+  }
+
+  .iconCircle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .overallRow {
+    padding: 0.7rem 0.8rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .overallLabel {
+    font-size: 0.8rem;
+  }
+
+  .overallValue {
+    font-size: 0.95rem;
+  }
+
+  .topicName {
+    font-size: 0.85rem;
+  }
+
+  .topicStats {
+    font-size: 0.75rem;
+  }
+
+  .weakItemTitle {
+    font-size: 0.82rem;
+  }
+
+  .weakDescription {
+    font-size: 0.74rem;
+  }
+}

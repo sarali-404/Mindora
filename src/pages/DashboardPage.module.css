@@ -187,3 +187,86 @@
     transform: scaleX(1);
   }
 }
+
+/* Mobile Responsive */
+
+@media (max-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tasksRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .sectionCard {
+    padding: 1.2rem 1.3rem;
+    border-radius: 1rem;
+  }
+
+  .sectionHeaderRow {
+    margin-bottom: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+
+  .sectionLink {
+    font-size: 0.85rem;
+  }
+
+  .goalCard {
+    padding: 1rem 0;
+  }
+
+  .sessionCard {
+    padding: 0.85rem 0;
+  }
+
+  .tasksRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .taskCard {
+    padding: 1rem 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 0.75rem;
+  }
+
+  .sectionCard {
+    padding: 1rem 1.1rem;
+  }
+
+  .sectionTitle {
+    font-size: 0.95rem;
+  }
+
+  .goalName, .sessionTitle, .taskTitle {
+    font-size: 0.9rem;
+  }
+
+  .goalMeta, .sessionMeta, .taskMeta {
+    font-size: 0.78rem;
+  }
+
+  .sessionTime {
+    font-size: 0.8rem;
+  }
+
+  .primaryButton, .taskButton {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.9rem;
+  }
+}

@@ -181,4 +181,8 @@
   .mainLayout {
     grid-template-columns: 1fr;
   }
+  
+  .animationSpace {
+    display: none;
+  }
 }

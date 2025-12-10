@@ -169,3 +169,133 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1.1rem 1.3rem 1.2rem;
+    border-radius: 1.2rem;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .headerLeft {
+    gap: 0.55rem;
+  }
+
+  .iconCircle {
+    width: 28px;
+    height: 28px;
+  }
+
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .questionBlock {
+    padding: 0.9rem 1rem;
+  }
+
+  .questionTopRow {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .questionLabel {
+    font-size: 0.84rem;
+  }
+
+  .statusBadge {
+    font-size: 0.73rem;
+    padding: 0.04rem 0.55rem;
+  }
+
+  .scoreBox {
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+    order: -1;
+  }
+
+  .scoreValue {
+    font-size: 0.9rem;
+  }
+
+  .scoreLabel {
+    font-size: 0.7rem;
+  }
+
+  .questionText {
+    font-size: 0.86rem;
+  }
+
+  .feedbackBox {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .answerArea {
+    min-height: 100px;
+    font-size: 0.88rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .bottomRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .maxScore {
+    font-size: 0.76rem;
+  }
+
+  .submitButton {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem 1.1rem;
+  }
+
+  .iconCircle {
+    width: 26px;
+    height: 26px;
+  }
+
+  .title {
+    font-size: 0.9rem;
+  }
+
+  .questionBlock {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .questionLabel {
+    font-size: 0.82rem;
+  }
+
+  .questionText {
+    font-size: 0.84rem;
+  }
+
+  .feedbackBox {
+    font-size: 0.78rem;
+  }
+
+  .answerArea {
+    min-height: 90px;
+    font-size: 0.85rem;
+  }
+
+  .submitButton {
+    font-size: 0.82rem;
+  }
+}

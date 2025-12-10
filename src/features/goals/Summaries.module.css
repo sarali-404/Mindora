@@ -110,3 +110,107 @@
   font-size: 0.84rem;
   color: #4b5563;
 }
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1.1rem 1.3rem 1.2rem;
+    border-radius: 1.2rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .headerLeft {
+    gap: 0.55rem;
+  }
+
+  .iconCircle {
+    width: 28px;
+    height: 28px;
+  }
+
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .createButton {
+    width: 100%;
+    padding: 0.55rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  .list {
+    gap: 0.6rem;
+  }
+
+  .summaryRow {
+    padding: 0.8rem 0.9rem;
+    gap: 0.6rem;
+  }
+
+  .iconBadge {
+    width: 28px;
+    height: 28px;
+  }
+
+  .summaryTop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .summaryTitle {
+    font-size: 0.9rem;
+  }
+
+  .summaryDate {
+    font-size: 0.78rem;
+  }
+
+  .summaryText {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem 1.1rem;
+  }
+
+  .iconCircle, .iconBadge {
+    width: 26px;
+    height: 26px;
+  }
+
+  .title {
+    font-size: 0.9rem;
+  }
+
+  .createButton {
+    font-size: 0.82rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .summaryRow {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .summaryTitle {
+    font-size: 0.88rem;
+  }
+
+  .summaryDate {
+    font-size: 0.75rem;
+  }
+
+  .summaryText {
+    font-size: 0.8rem;
+  }
+}

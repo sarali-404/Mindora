@@ -20,6 +20,26 @@
   flex-shrink: 0;
 }
 
+.hamburger {
+  display: none;
+  border: none;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.hamburger:hover {
+  background-color: transparent;
+}
+
+.hamburger:active {
+  color: #6b7280;
+}
+
 .userBlock {
   display: flex;
   align-items: center;
@@ -95,4 +115,94 @@
   height: 32px;
   border-radius: 999px;
   object-fit: cover;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem 1.5rem;
+    height: 70px;
+  }
+  
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .userName {
+    font-size: 1rem;
+  }
+  
+  .userSubtitle {
+    font-size: 0.75rem;
+  }
+  
+  .statsBlock {
+    gap: 0.75rem;
+  }
+  
+  .inlineStat {
+    gap: 0.35rem;
+  }
+  
+  .inlineAnimWrap,
+  .inlineAnimStarWrap {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .inlineAnim,
+  .inlineAnimStar {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .inlineStatValue {
+    font-size: 0.8rem;
+  }
+  
+  .avatar {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .userBlock {
+    display: none;
+  }
+  
+  .statsBlock {
+    gap: 0.5rem;
+  }
+  
+  .inlineStat {
+    gap: 0.25rem;
+  }
+  
+  .inlineAnimWrap,
+  .inlineAnimStarWrap {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .inlineAnim,
+  .inlineAnimStar {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .inlineStatValue {
+    font-size: 0.7rem;
+  }
+  
+  .avatar {
+    width: 26px;
+    height: 26px;
+  }
 }

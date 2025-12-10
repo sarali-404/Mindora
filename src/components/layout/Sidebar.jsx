@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
+import { MdClose } from "react-icons/md";
 import styles from "./Sidebar.module.css";
 
 import {
@@ -13,14 +14,21 @@ import {
   FiBell,
 } from "react-icons/fi";
 
-export default function AppSidebar() {
+export default function AppSidebar({ isOpen, onClose }) {
   const [goalsOpen, setGoalsOpen] = useState(true);
 
   return (
-    <aside className={styles.sidebar}>
-      {/* Logo */}
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && <div className={styles.overlay} onClick={onClose} />}
+      
+      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      {/* Logo with close button on mobile */}
       <div className={styles.logoArea}>
         <img src="/logo-small.png" alt="Mindora logo" className={styles.logo} />
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close menu">
+          <MdClose size={24} />
+        </button>
       </div>
 
       {/* Main nav */}
@@ -61,6 +69,7 @@ export default function AppSidebar() {
         <NavItem to="/app/notifications" label="Notifications" icon={FiBell} />
       </div>
     </aside>
+    </>
   );
 }
 

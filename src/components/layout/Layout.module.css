@@ -18,3 +18,10 @@
   background-color: #f9fafb;
   overflow-x: hidden;
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+  }
+}

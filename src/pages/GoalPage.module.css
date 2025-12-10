@@ -181,3 +181,122 @@
     transform: scaleX(1);
   }
 }
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .headerCard {
+    padding: 1.3rem 1.5rem 1.4rem;
+    border-radius: 1.2rem;
+  }
+
+  .topRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .metaRow {
+    font-size: 0.78rem;
+    flex-wrap: wrap;
+  }
+
+  .newGoalButton {
+    font-size: 0.82rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .progressBlock {
+    padding: 0.85rem 0.95rem;
+  }
+
+  .progressLabel {
+    font-size: 0.78rem;
+  }
+
+  .progressPercent {
+    font-size: 0.85rem;
+  }
+
+  .progressFooter {
+    font-size: 0.75rem;
+  }
+
+  .tabsBar {
+    gap: 0.5rem;
+    padding: 0.3rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabsBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .contentArea {
+    margin-top: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 0.75rem;
+  }
+
+  .headerCard {
+    padding: 1.1rem 1.2rem;
+  }
+
+  .subjectPill {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.6rem;
+  }
+
+  .title {
+    font-size: 1rem;
+    margin-top: 0.4rem;
+  }
+
+  .metaRow {
+    font-size: 0.75rem;
+  }
+
+  .newGoalButton {
+    font-size: 0.8rem;
+    padding: 0.38rem 0.9rem;
+  }
+
+  .progressLabel, .progressPercent {
+    font-size: 0.75rem;
+  }
+
+  .progressFooter {
+    font-size: 0.72rem;
+  }
+
+  .tab {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .contentArea {
+    margin-top: 1rem;
+  }
+}

@@ -1,15 +1,20 @@
 import Lottie from "lottie-react";
+import { MdMenu } from "react-icons/md";
 import styles from "./TopNavbar.module.css";
 import fireAnim from "../../assets/animations/Fire.json";
 import starAnim from "../../assets/animations/star.json";
 
-export default function TopNavbar() {
+export default function TopNavbar({ onMenuClick }) {
   // Later replace with real user data
   const userName = "Sarali Balasinghe";
   const userSubtitle = "NSBM | Software Engineering";
 
   return (
     <header className={styles.navbar}>
+      <button className={styles.hamburger} onClick={onMenuClick} aria-label="Toggle menu">
+        <MdMenu size={24} />
+      </button>
+      
       <div className={styles.userBlock}>
         <div>
           <h1 className={styles.userName}>{userName}</h1>
