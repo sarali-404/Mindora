@@ -124,7 +124,7 @@ function ResourceCard({
     <article className={styles.card}>
       <div className={styles.cardHeaderRow}>
         <div className={styles.iconCircle}>
-          <MdDescription size={20} style={{ color: '#3b82f6' }} />
+          <MdDescription size={20} style={{ color: '#0073a0' }} />
         </div>
         <div className={styles.cardTitleBlock}>
           <h2 className={styles.cardTitle}>{title}</h2>

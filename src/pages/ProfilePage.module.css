@@ -60,9 +60,10 @@
 .tag {
   padding: 0.14rem 0.6rem;
   border-radius: 999px;
-  background-color: #f3f4f6;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 0.75rem;
-  color: #374151;
+  color: rgba(249, 250, 251, 0.95);
 }
 
 .memberSince {
@@ -104,6 +105,19 @@
   border: 1px solid #f1f5f9;
 }
 
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .statLabel {
   font-size: 0.85rem;
   color: #6b7280;
@@ -114,6 +128,272 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
+}
+
+/* Achievements */
+
+.achievementsCard {
+  margin-top: 1.6rem;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.2rem 1.4rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.achievementsHeader {
+  margin-bottom: 1rem;
+}
+
+.achievementsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.achievementsIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.achievementsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.achievementCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background-color: #fefefe;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.achievementCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.15);
+  border-color: #0073a0;
+}
+
+.achievementCard.locked {
+  background-color: #f9fafb;
+}
+
+.achievementImageWrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+
+.achievementImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+
+.lockOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(107, 114, 128, 0.75);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  backdrop-filter: blur(2px);
+}
+
+.levelBadge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  background: rgba(251, 191, 36, 0.95);
+  color: #ffffff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.achievementName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.achievementCard.locked .achievementName {
+  color: #9ca3af;
+}
+
+.achievementProgressContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.achievementProgressBar {
+  width: 100%;
+  height: 5px;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.achievementCard.locked .achievementProgressBar {
+  background-color: #f3f4f6;
+}
+
+.achievementProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0073a0, #10b981);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.achievementCard.locked .achievementProgressFill {
+  background: linear-gradient(90deg, #9ca3af, #6b7280);
+}
+
+.achievementProgressText {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: center;
+  margin: 0;
+}
+
+.achievementCard.locked .achievementProgressText {
+  color: #9ca3af;
+}
+
+.achievementMaxLevel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10b981;
+  text-align: center;
+  margin: 0;
+  padding: 0.2rem 0.4rem;
+  background-color: #d1fae5;
+  border-radius: 0.3rem;
+}
+
+.achievementTooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f2937;
+  color: #ffffff;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  min-width: 220px;
+  max-width: 280px;
+  z-index: 10;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.achievementTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+}
+
+.tooltipTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 0.3rem 0;
+  color: #fbbf24;
+}
+
+.tooltipText {
+  margin: 0 0 0.6rem 0;
+  color: #d1d5db;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.tooltipLevels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltipLevel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.tooltipLevelComplete {
+  opacity: 1;
+}
+
+.tooltipLevelComplete .tooltipLevelNumber {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #ffffff;
+}
+
+.tooltipLevelNumber {
+  background-color: #374151;
+  color: #9ca3af;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.3rem;
+  font-weight: 700;
+  font-size: 0.65rem;
+  min-width: 32px;
+  text-align: center;
+}
+
+.tooltipLevelDesc {
+  color: #d1d5db;
+  flex: 1;
+}
+
+.tooltipLevelComplete .tooltipLevelDesc {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.achievementTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1f2937;
+}
+
+.tooltipText {
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Friends */
@@ -322,5 +602,56 @@
 
   .statsRow {
     grid-template-columns: 1fr;
+  }
+
+  .achievementsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.8rem;
+  }
+
+  .achievementCard {
+    padding: 0.6rem;
+    gap: 0.3rem;
+  }
+
+  .achievementImageWrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .achievementName {
+    font-size: 0.75rem;
+  }
+
+  .levelBadge {
+    font-size: 0.6rem;
+    padding: 0.08rem 0.3rem;
+  }
+
+  .achievementProgressText {
+    font-size: 0.65rem;
+  }
+
+  .achievementMaxLevel {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.35rem;
+  }
+
+  .achievementTooltip {
+    min-width: 180px;
+    max-width: 240px;
+    font-size: 0.75rem;
+  }
+
+  .tooltipTitle {
+    font-size: 0.82rem;
+  }
+
+  .tooltipText {
+    font-size: 0.7rem;
+  }
+
+  .tooltipLevel {
+    font-size: 0.68rem;
   }
 }
