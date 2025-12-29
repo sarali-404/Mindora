@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
     "start": "concurrently \"npm start --prefix client\" \"npm start --prefix server\"",
     "install-client": "npm install --prefix client",
-    "install-server": "npm install --prefix server", 
+    "install-server": "npm install --prefix server",
     "install-all": "npm run install-client && npm run install-server",
     "build": "npm run build --prefix client"
   },
@@ -23,5 +23,8 @@
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.5.0"
   }
 }

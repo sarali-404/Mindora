@@ -1,4 +1,24 @@
 /* Login Modal Styles */
+
+/* Error message styles */
+.error {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error::before {
+  content: '⚠️';
+  font-size: 1rem;
+}
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -278,6 +298,96 @@
   text-decoration: underline;
 }
 
+/* Verification Message Styles */
+.verificationMessage {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.verificationMessageRejected {
+  background: linear-gradient(135deg, #FEE2E2, #FECACA);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.verificationIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.verificationMessage h3,
+.verificationMessageRejected h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #92400E;
+}
+
+.verificationMessageRejected h3 {
+  color: #991B1B;
+}
+
+.verificationMessage p,
+.verificationMessageRejected p {
+  color: #78350F;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.verificationMessageRejected p {
+  color: #7F1D1D;
+}
+
+.smallText {
+  font-size: 0.8rem !important;
+  color: #A16207 !important;
+}
+
+.verificationMessageRejected .smallText {
+  color: #B91C1C !important;
+}
+
+.tryAgainContainer {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.tryAgainButton {
+  background: transparent;
+  border: 2px solid #10B981;
+  color: #10B981;
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tryAgainButton:hover {
+  background: #10B981;
+  color: white;
+}
+
+/* Google Button Container */
+.googleButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 1rem;
+  min-height: 44px;
+}
+
+.googleButtonContainer > div {
+  display: flex;
+  justify-content: center;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {
@@ -314,5 +424,10 @@
   
   .input {
     padding: 0.875rem;
+  }
+
+  .verificationMessage,
+  .verificationMessageRejected {
+    padding: 1.5rem;
   }
 }

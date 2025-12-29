@@ -1,41 +1,171 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './RegisterModal.module.css';
+import authService from '../../services/authService.js';
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [userId, setUserId] = useState(null);
+  
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false
+  });
+  
   const [formData, setFormData] = useState({
-    // Basic Info
-    name: '',
+    // Step 1: Account
     email: '',
     password: '',
     confirmPassword: '',
-    birthday: '',
-    gender: '',
     
-    // Academic Info
+    // Step 2: Academic Info
     university: '',
     city: '',
     degreeProgram: '',
     studyYear: '',
     
-    // Optional Info
+    // Step 3: Personal Info
+    firstName: '',
+    lastName: '',
+    birthday: '',
+    gender: '',
     howDidYouKnow: '',
     
-    // ID Verification
+    // Step 4: ID Verification
     idPhoto: null
   });
   
   const [capturedImage, setCapturedImage] = useState(null);
+  const [uploadMethod, setUploadMethod] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const googleButtonRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
 
-  const steps = [
-    { number: 1, title: 'Basic Information', description: 'Tell us about yourself' },
-    { number: 2, title: 'Academic Details', description: 'Your university information' },
-    { number: 3, title: 'Additional Info', description: 'Help us know you better' },
-    { number: 4, title: 'ID Verification', description: 'Verify your student identity' }
-  ];
+  // Check for existing registration data on mount
+  useEffect(() => {
+    if (isOpen) {
+      // First check initialData (from login modal redirect)
+      if (initialData) {
+        console.log('InitialData received:', initialData);
+        
+        // Handle continueRegistration from login
+        if (initialData.continueRegistration) {
+          setUserId(initialData.userId);
+          setCurrentStep(initialData.startStep || 2);
+        }
+        
+        // Handle googleUser from login modal
+        if (initialData.googleUser) {
+          const user = initialData.googleUser;
+          setUserId(user.id || user._id || initialData.userId);
+          setCurrentStep(initialData.startStep || 2);
+          if (user.profile) {
+            setFormData(prev => ({
+              ...prev,
+              firstName: user.profile.firstName || '',
+              lastName: user.profile.lastName || ''
+            }));
+          }
+        }
+      }
+      
+      // Then check stored registration data
+      const regData = authService.getRegistrationData();
+      console.log('Registration data from storage:', regData);
+      
+      if (regData && regData.userId) {
+        setUserId(regData.userId);
+        if (regData.registrationStep && regData.registrationStep > 1) {
+          setCurrentStep(regData.registrationStep);
+        }
+        if (regData.profile) {
+          setFormData(prev => ({
+            ...prev,
+            firstName: regData.profile.firstName || prev.firstName || '',
+            lastName: regData.profile.lastName || prev.lastName || ''
+          }));
+        }
+      }
+    }
+  }, [isOpen, initialData]);
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google && googleButtonRef.current && currentStep === 1) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: handleGoogleCallback,
+          });
+          
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: 320
+          });
+        } catch (err) {
+          console.log('Google init error:', err);
+        }
+      }
+    };
+
+    if (isOpen && currentStep === 1) {
+      if (!window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = initGoogle;
+        document.body.appendChild(script);
+      } else {
+        setTimeout(initGoogle, 100);
+      }
+    }
+  }, [isOpen, currentStep]);
+
+  const handleGoogleCallback = async (response) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const result = await authService.googleAuth(response.credential);
+      
+      if (result.success) {
+        if (result.data.continueRegistration) {
+          // New user or incomplete registration - go to step 2
+          setUserId(result.data.userId);
+          setFormData(prev => ({
+            ...prev,
+            firstName: result.data.profile?.firstName || '',
+            lastName: result.data.profile?.lastName || ''
+          }));
+          setCurrentStep(result.data.registrationStep || 2);
+        } else if (result.data.pendingVerification) {
+          // Already submitted, pending verification
+          setRegistrationComplete(true);
+        } else if (result.data.isLoggedIn) {
+          // Verified user - redirect to dashboard
+          onClose();
+          window.location.href = '/app/dashboard';
+        }
+      }
+    } catch (err) {
+      console.error('Google auth error:', err);
+      setError(err.message || 'Google sign-up failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,17 +173,138 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       ...prev,
       [name]: value
     }));
-  };
-
-  const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
+    
+    if (name === 'password') {
+      setPasswordValidation({
+        minLength: value.length >= 6,
+        hasUpperCase: /[A-Z]/.test(value),
+        hasLowerCase: /[a-z]/.test(value),
+        hasNumber: /\d/.test(value)
+      });
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+  const isPasswordValid = () => {
+    return Object.values(passwordValidation).every(v => v);
+  };
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required.');
+      return;
+    }
+    
+    if (!isPasswordValid()) {
+      setError('Please meet all password requirements.');
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await authService.createAccount({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
+      });
+      
+      if (response.success) {
+        setUserId(response.data.userId);
+        setCurrentStep(2);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStepSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+    
+    // Check for userId
+    if (!userId) {
+      // Try to get from registration data
+      const regData = authService.getRegistrationData();
+      if (regData?.userId) {
+        setUserId(regData.userId);
+      } else {
+        setError('Session expired. Please start the registration process again.');
+        setIsLoading(false);
+        return;
+      }
+    }
+    
+    const currentUserId = userId || authService.getRegistrationData()?.userId;
+    console.log('Submitting step', currentStep, 'for userId:', currentUserId);
+    
+    try {
+      let profileData = {};
+      let idPhoto = null;
+      
+      switch (currentStep) {
+        case 2:
+          profileData = {
+            university: formData.university,
+            city: formData.city,
+            degreeProgram: formData.degreeProgram,
+            studyYear: formData.studyYear
+          };
+          break;
+          
+        case 3:
+          profileData = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            birthday: formData.birthday,
+            gender: formData.gender,
+            howDidYouKnow: formData.howDidYouKnow
+          };
+          break;
+          
+        case 4:
+          idPhoto = formData.idPhoto;
+          if (!idPhoto) {
+            setError('Please upload or capture your ID photo.');
+            setIsLoading(false);
+            return;
+          }
+          break;
+      }
+      
+      const requestPayload = {
+        userId: currentUserId,
+        step: currentStep,
+        profileData,
+        idPhoto
+      };
+      
+      console.log('Update profile payload:', requestPayload);
+      
+      const response = await authService.updateProfile(requestPayload);
+      
+      if (response.success) {
+        if (response.data.registrationComplete) {
+          setRegistrationComplete(true);
+          authService.clearRegistrationData();
+        } else {
+          setCurrentStep(response.data.registrationStep);
+        }
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to save. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -65,10 +316,11 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setCameraActive(true);
+        setUploadMethod('camera');
       }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      alert('Unable to access camera. Please ensure you have granted camera permissions.');
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setError('Unable to access camera. Please check permissions.');
     }
   };
 
@@ -84,186 +336,288 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       ctx.drawImage(video, 0, 0);
       
       canvas.toBlob((blob) => {
-        setCapturedImage(URL.createObjectURL(blob));
-        setFormData(prev => ({
-          ...prev,
-          idPhoto: blob
-        }));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCapturedImage(reader.result);
+          setFormData(prev => ({ ...prev, idPhoto: reader.result }));
+        };
+        reader.readAsDataURL(blob);
       }, 'image/jpeg', 0.8);
       
-      // Stop camera
       const stream = video.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
+      stream.getTracks().forEach(track => track.stop());
       setCameraActive(false);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedImage(reader.result);
+        setFormData(prev => ({ ...prev, idPhoto: reader.result }));
+        setUploadMethod('upload');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const retakePhoto = () => {
     setCapturedImage(null);
-    setFormData(prev => ({
-      ...prev,
-      idPhoto: null
-    }));
+    setUploadMethod(null);
+    setFormData(prev => ({ ...prev, idPhoto: null }));
+    if (cameraActive && videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      setCameraActive(false);
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (currentStep === 4) {
-      console.log('Registration completed:', formData);
-      // Handle registration logic here
-      onClose(); // Close modal after successful registration
-    }
+  const handleClose = () => {
+    // Reset state when closing
+    setCurrentStep(1);
+    setError('');
+    setUserId(null);
+    setRegistrationComplete(false);
+    setCapturedImage(null);
+    setUploadMethod(null);
+    setCameraActive(false);
+    setFormData({
+      email: '', password: '', confirmPassword: '',
+      university: '', city: '', degreeProgram: '', studyYear: '',
+      firstName: '', lastName: '', birthday: '', gender: '', howDidYouKnow: '',
+      idPhoto: null
+    });
+    onClose();
   };
 
   if (!isOpen) return null;
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className={styles.stepContent}>
-            <div className={styles.inputRow}>
-              <div className={styles.inputGroup}>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={styles.input}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="name" className={styles.label}>Full Name</label>
+  // Registration Complete Screen
+  if (registrationComplete) {
+    return (
+      <div className={styles.modalOverlay} onClick={handleClose}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <button className={styles.closeButton} onClick={handleClose}>×</button>
+          
+          <div className={styles.successScreen}>
+            <div className={styles.successIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
+            
+            <h2>Registration Submitted!</h2>
+            
+            <p className={styles.successMessage}>
+              Your account has been created and is <strong>pending verification</strong>.
+            </p>
+            
+            <div className={styles.infoBox}>
+              <div className={styles.infoItem}>
+                <span>🔍</span>
+                <span>Our team will review your ID verification</span>
               </div>
-              <div className={styles.inputGroup}>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={styles.input}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="email" className={styles.label}>Email Address</label>
+              <div className={styles.infoItem}>
+                <span>⏱️</span>
+                <span>This typically takes 24-48 hours</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span>✉️</span>
+                <span>You'll receive an email once approved</span>
               </div>
             </div>
-
-            <div className={styles.inputRow}>
-              <div className={styles.inputGroup}>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={styles.input}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="password" className={styles.label}>Password</label>
-              </div>
-              <div className={styles.inputGroup}>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  id="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={styles.input}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
-              </div>
-            </div>
-
-            <div className={styles.inputRow}>
-              <div className={styles.inputGroup}>
-                <input
-                  type="date"
-                  name="birthday"
-                  id="birthday"
-                  value={formData.birthday}
-                  onChange={handleInputChange}
-                  className={styles.input}
-                  required
-                />
-                <label htmlFor="birthday" className={styles.label}>Date of Birth</label>
-              </div>
-              <div className={styles.inputGroup}>
-                <select
-                  name="gender"
-                  id="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className={styles.select}
-                  required
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                  <option value="prefer-not-to-say">Prefer not to say</option>
-                </select>
-              </div>
-            </div>
+            
+            <button className={styles.primaryButton} onClick={handleClose}>
+              Got it!
+            </button>
           </div>
-        );
+        </div>
+      </div>
+    );
+  }
 
-      case 2:
-        return (
-          <div className={styles.stepContent}>
-            <div className={styles.inputRow}>
+  // Step 1: Create Account
+  if (currentStep === 1) {
+    return (
+      <div className={styles.modalOverlay} onClick={handleClose}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <button className={styles.closeButton} onClick={handleClose}>×</button>
+          
+          <div className={styles.header}>
+            <h2>Create Account</h2>
+            <p>Join Mindora and start your learning journey</p>
+          </div>
+          
+          {error && <div className={styles.error}>{error}</div>}
+          
+          {/* Google Sign Up */}
+          <div className={styles.googleSection}>
+            <div ref={googleButtonRef} className={styles.googleButton}></div>
+          </div>
+          
+          <div className={styles.divider}>
+            <span>or sign up with email</span>
+          </div>
+          
+          {/* Email Sign Up Form */}
+          <form onSubmit={handleCreateAccount} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={styles.input}
+                placeholder=" "
+                required
+              />
+              <label className={styles.label}>Email Address</label>
+            </div>
+            
+            <div className={styles.inputGroup}>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className={styles.input}
+                placeholder=" "
+                required
+              />
+              <label className={styles.label}>Password</label>
+              
+              {formData.password && (
+                <div className={styles.passwordRequirements}>
+                  <div className={passwordValidation.minLength ? styles.met : styles.unmet}>
+                    {passwordValidation.minLength ? '✓' : '○'} At least 6 characters
+                  </div>
+                  <div className={passwordValidation.hasUpperCase ? styles.met : styles.unmet}>
+                    {passwordValidation.hasUpperCase ? '✓' : '○'} One uppercase letter
+                  </div>
+                  <div className={passwordValidation.hasLowerCase ? styles.met : styles.unmet}>
+                    {passwordValidation.hasLowerCase ? '✓' : '○'} One lowercase letter
+                  </div>
+                  <div className={passwordValidation.hasNumber ? styles.met : styles.unmet}>
+                    {passwordValidation.hasNumber ? '✓' : '○'} One number
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className={styles.inputGroup}>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className={styles.input}
+                placeholder=" "
+                required
+              />
+              <label className={styles.label}>Confirm Password</label>
+            </div>
+            
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+          
+          <div className={styles.loginLink}>
+            <span>Already have an account? </span>
+            <button type="button" onClick={onSwitchToLogin}>Sign in</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Steps 2-4: Profile Completion
+  return (
+    <div className={styles.modalOverlay} onClick={handleClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeButton} onClick={handleClose}>×</button>
+        
+        {/* Step Indicator */}
+        <div className={styles.stepIndicator}>
+          <div className={`${styles.step} ${currentStep >= 2 ? styles.active : ''}`}>
+            <span>2</span>
+            <p>Academic</p>
+          </div>
+          <div className={styles.stepLine}></div>
+          <div className={`${styles.step} ${currentStep >= 3 ? styles.active : ''}`}>
+            <span>3</span>
+            <p>Personal</p>
+          </div>
+          <div className={styles.stepLine}></div>
+          <div className={`${styles.step} ${currentStep >= 4 ? styles.active : ''}`}>
+            <span>4</span>
+            <p>Verify ID</p>
+          </div>
+        </div>
+        
+        {error && <div className={styles.error}>{error}</div>}
+        
+        <form onSubmit={handleStepSubmit} className={styles.form}>
+          {/* Step 2: Academic Details */}
+          {currentStep === 2 && (
+            <div className={styles.stepContent}>
+              <h3>Academic Information</h3>
+              <p className={styles.stepDescription}>Tell us about your studies</p>
+              
               <div className={styles.inputGroup}>
+                <label className={styles.label}>University / Institution</label>
                 <input
                   type="text"
                   name="university"
-                  id="university"
                   value={formData.university}
                   onChange={handleInputChange}
                   className={styles.input}
-                  placeholder=" "
+                  placeholder="Enter your university name"
                   required
                 />
-                <label htmlFor="university" className={styles.label}>University</label>
               </div>
+              
               <div className={styles.inputGroup}>
+                <label className={styles.label}>City</label>
                 <input
                   type="text"
                   name="city"
-                  id="city"
                   value={formData.city}
                   onChange={handleInputChange}
                   className={styles.input}
-                  placeholder=" "
-                  required
+                  placeholder="Enter your city"
                 />
-                <label htmlFor="city" className={styles.label}>City</label>
               </div>
-            </div>
-
-            <div className={styles.inputRow}>
+              
               <div className={styles.inputGroup}>
+                <label className={styles.label}>Degree Program</label>
                 <input
                   type="text"
                   name="degreeProgram"
-                  id="degreeProgram"
                   value={formData.degreeProgram}
                   onChange={handleInputChange}
                   className={styles.input}
-                  placeholder=" "
+                  placeholder="e.g. Computer Science"
                   required
                 />
-                <label htmlFor="degreeProgram" className={styles.label}>Degree Program</label>
               </div>
+              
               <div className={styles.inputGroup}>
+                <label className={styles.label}>Study Year</label>
                 <select
                   name="studyYear"
-                  id="studyYear"
                   value={formData.studyYear}
                   onChange={handleInputChange}
                   className={styles.select}
@@ -274,160 +628,196 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                   <option value="2">2nd Year</option>
                   <option value="3">3rd Year</option>
                   <option value="4">4th Year</option>
-                  <option value="5">5th Year</option>
-                  <option value="graduate">Graduate</option>
+                  <option value="5+">5+ Year</option>
+                  <option value="postgrad">Postgraduate</option>
                 </select>
               </div>
             </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className={styles.stepContent}>
-            <div className={styles.inputGroup}>
-              <select
-                name="howDidYouKnow"
-                id="howDidYouKnow"
-                value={formData.howDidYouKnow}
-                onChange={handleInputChange}
-                className={styles.select}
-              >
-                <option value="">How did you hear about Mindora? (Optional)</option>
-                <option value="friend">Friend recommendation</option>
-                <option value="social-media">Social Media</option>
-                <option value="university">University announcement</option>
-                <option value="search">Google Search</option>
-                <option value="advertisement">Advertisement</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            
-            <div className={styles.optionalNote}>
-              <p>This information helps us improve our outreach. You can skip this step if you prefer.</p>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className={styles.stepContent}>
-            <div className={styles.cameraSection}>
-              <h3 className={styles.cameraTitle}>Student ID Verification</h3>
-              <p className={styles.cameraDescription}>
-                Please take a clear photo of your student ID card or any university document 
-                that verifies your student status.
-              </p>
-
-              {!cameraActive && !capturedImage && (
-                <button type="button" onClick={startCamera} className={styles.cameraButton}>
-                  <svg className={styles.cameraIcon} viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M12 15.2l3.2-2.2a.75.75 0 01.8 1.2L12 16.8 8 14.2a.75.75 0 01.8-1.2L12 15.2z"/>
-                    <path fill="currentColor" d="M12 9a3 3 0 100 6 3 3 0 000-6zM10.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"/>
-                    <path fill="currentColor" d="M17.25 6.75h-1.5L15 5.25A2.25 2.25 0 0012.75 3h-1.5A2.25 2.25 0 009 5.25l-.75 1.5h-1.5A2.25 2.25 0 004.5 9v7.5A2.25 2.25 0 006.75 18.75h10.5A2.25 2.25 0 0019.5 16.5V9a2.25 2.25 0 00-2.25-2.25zM18 16.5a.75.75 0 01-.75.75H6.75A.75.75 0 016 16.5V9a.75.75 0 01.75-.75h2.5L10 6.75a.75.75 0 01.75-.75h2.5a.75.75 0 01.75.75l.75 1.5h2.5A.75.75 0 0118 9v7.5z"/>
-                  </svg>
-                  Start Camera
-                </button>
-              )}
-
-              {cameraActive && (
-                <div className={styles.cameraContainer}>
-                  <video ref={videoRef} autoPlay playsInline className={styles.videoElement} />
-                  <button type="button" onClick={capturePhoto} className={styles.captureButton}>
-                    Capture Photo
-                  </button>
+          )}
+          
+          {/* Step 3: Personal Info */}
+          {currentStep === 3 && (
+            <div className={styles.stepContent}>
+              <h3>Personal Information</h3>
+              <p className={styles.stepDescription}>Help us know you better</p>
+              
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className={styles.input}
+                    placeholder="Enter first name"
+                    required
+                  />
                 </div>
-              )}
-
-              {capturedImage && (
-                <div className={styles.capturedContainer}>
-                  <img src={capturedImage} alt="Captured ID" className={styles.capturedImage} />
-                  <div className={styles.captureActions}>
-                    <button type="button" onClick={retakePhoto} className={styles.retakeButton}>
-                      Retake Photo
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className={styles.input}
+                    placeholder="Enter last name"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Birthday</label>
+                  <input
+                    type="date"
+                    name="birthday"
+                    value={formData.birthday}
+                    onChange={handleInputChange}
+                    className={styles.input}
+                  />
+                </div>
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className={styles.select}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>How did you hear about us?</label>
+                <select
+                  name="howDidYouKnow"
+                  value={formData.howDidYouKnow}
+                  onChange={handleInputChange}
+                  className={styles.select}
+                >
+                  <option value="">Select an option</option>
+                  <option value="friend">Friend / Classmate</option>
+                  <option value="social">Social Media</option>
+                  <option value="search">Google Search</option>
+                  <option value="university">University</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 4: ID Verification */}
+          {currentStep === 4 && (
+            <div className={styles.stepContent}>
+              <h3>ID Verification</h3>
+              <p className={styles.stepDescription}>
+                Upload your student ID or government ID for verification
+              </p>
+              
+              <div className={styles.idUploadSection}>
+                {!capturedImage ? (
+                  <>
+                    {!cameraActive ? (
+                      <div className={styles.uploadOptions}>
+                        <button
+                          type="button"
+                          className={styles.uploadOption}
+                          onClick={startCamera}
+                        >
+                          <span className={styles.optionIcon}>📷</span>
+                          <span>Take Photo</span>
+                        </button>
+                        
+                        <button
+                          type="button"
+                          className={styles.uploadOption}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <span className={styles.optionIcon}>📁</span>
+                          <span>Upload File</span>
+                        </button>
+                        
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                    ) : (
+                      <div className={styles.cameraContainer}>
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          className={styles.cameraPreview}
+                        />
+                        <button
+                          type="button"
+                          className={styles.captureButton}
+                          onClick={capturePhoto}
+                        >
+                          📸 Capture
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.previewContainer}>
+                    <img
+                      src={capturedImage}
+                      alt="ID Preview"
+                      className={styles.idPreview}
+                    />
+                    <button
+                      type="button"
+                      className={styles.retakeButton}
+                      onClick={retakePhoto}
+                    >
+                      Retake
                     </button>
                   </div>
-                </div>
-              )}
-
+                )}
+              </div>
+              
               <canvas ref={canvasRef} style={{ display: 'none' }} />
             </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        {/* Close button */}
-        <button className={styles.closeButton} onClick={onClose}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
-
-        <div className={styles.registerCard}>
-        {/* Header */}
-        <div className={styles.header}>
-          <button onClick={onSwitchToLogin} className={styles.backButton}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Back to Login
-          </button>
-          <h1 className={styles.title}>Create Your Account</h1>
-          <p className={styles.subtitle}>Join the Mindora learning community</p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className={styles.progressContainer}>
-          {steps.map((step) => (
-            <div 
-              key={step.number} 
-              className={`${styles.progressStep} ${
-                step.number === currentStep ? styles.active : 
-                step.number < currentStep ? styles.completed : ''
-              }`}
-            >
-              <div className={styles.stepNumber}>
-                {step.number < currentStep ? '✓' : step.number}
-              </div>
-              <div className={styles.stepInfo}>
-                <div className={styles.stepTitle}>{step.title}</div>
-                <div className={styles.stepDescription}>{step.description}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Form */}
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {renderStepContent()}
-
+          )}
+          
           {/* Navigation Buttons */}
-          <div className={styles.navigationButtons}>
-            {currentStep > 1 && (
-              <button type="button" onClick={prevStep} className={styles.prevButton}>
-                Previous
+          <div className={styles.navigation}>
+            {currentStep > 2 && (
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={() => setCurrentStep(currentStep - 1)}
+              >
+                Back
               </button>
             )}
             
-            {currentStep < 4 ? (
-              <button type="button" onClick={nextStep} className={styles.nextButton}>
-                Next Step
-              </button>
-            ) : (
-              <button type="submit" className={styles.submitButton}>
-                Create Account
-              </button>
-            )}
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading 
+                ? 'Saving...' 
+                : currentStep === 4 
+                  ? 'Complete Registration' 
+                  : 'Continue'
+              }
+            </button>
           </div>
         </form>
-        </div>
       </div>
     </div>
   );

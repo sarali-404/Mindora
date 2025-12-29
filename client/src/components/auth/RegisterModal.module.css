@@ -1,458 +1,519 @@
 /* Register Modal Styles */
+
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
   animation: fadeIn 0.3s ease-out;
-  padding: 1rem;
 }
 
-.modalContent {
+.modal {
   background: white;
   border-radius: 24px;
+  padding: 2.5rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.3s ease-out;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-/* Hide scrollbar for WebKit browsers */
-.modalContent::-webkit-scrollbar {
-  display: none;
 }
 
 .closeButton {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: transparent;
+  top: 1rem;
+  right: 1rem;
+  background: none;
   border: none;
-  color: #6B7280;
+  font-size: 1.75rem;
+  color: #9CA3AF;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  z-index: 10;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
 .closeButton:hover {
-  background-color: #F3F4F6;
+  background: #F3F4F6;
   color: #374151;
-}
-
-.registerCard {
-  padding: 3rem;
-  font-family: "Quicksand", sans-serif;
 }
 
 /* Header */
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
-.backButton {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  border: none;
-  color: #0073a0;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 0.5rem;
+.header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: #6B7280;
+  font-size: 0.95rem;
+}
+
+/* Error */
+.error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  transition: all 0.2s ease;
-  font-family: "Quicksand", sans-serif;
-  z-index: 10;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 
-.backButton:hover {
-  background-color: #E3F2FD;
-}
-
-.title {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.75rem;
-  font-family: "Quicksand", sans-serif;
-}
-
-.subtitle {
-  color: #6B7280;
-  font-size: 1.125rem;
-  font-weight: 500;
-}
-
-/* Progress Steps */
-.progressContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  background: #F8FAFC;
-  border-radius: 16px;
-}
-
-.progressStep {
+/* Google Section */
+.googleSection {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.progressStep.active {
-  background: #E3F2FD;
-  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.1);
-}
-
-.progressStep.completed {
-  background: #E8F5E8;
-}
-
-.stepNumber {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
 }
 
-.progressStep .stepNumber {
-  background: #E5E7EB;
-  color: #6B7280;
+.googleButton {
+  display: flex;
+  justify-content: center;
 }
 
-.progressStep.active .stepNumber {
-  background: #0073a0;
-  color: white;
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.progressStep.completed .stepNumber {
-  background: #22C55E;
-  color: white;
-}
-
-.stepInfo {
+.divider::before,
+.divider::after {
+  content: '';
   flex: 1;
+  height: 1px;
+  background: #E5E7EB;
 }
 
-.stepTitle {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
-}
-
-.stepDescription {
-  font-size: 0.75rem;
-  color: #6B7280;
+.divider span {
+  color: #9CA3AF;
+  font-size: 0.85rem;
 }
 
 /* Form */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
-}
-
-.stepContent {
-  animation: fadeInSlide 0.4s ease-out;
-}
-
-/* Input Styling */
-.inputRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.inputRow:last-child {
-  margin-bottom: 0;
+  gap: 1rem;
 }
 
 .inputGroup {
   position: relative;
-  margin-bottom: 1.5rem;
 }
 
-.inputGroup:last-child {
-  margin-bottom: 0;
+.input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background: white;
+  color: #1F2937;
 }
 
-.input,
+.input:focus {
+  outline: none;
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.input::placeholder {
+  color: #9CA3AF;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
 .select {
   width: 100%;
   padding: 1rem;
   border: 2px solid #E5E7EB;
   border-radius: 12px;
   font-size: 1rem;
-  font-family: "Quicksand", sans-serif;
-  font-weight: 500;
-  background-color: #FAFBFC;
-  transition: all 0.3s ease;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.input:focus,
 .select:focus {
   outline: none;
-  border-color: #0073a0;
-  background-color: white;
-  box-shadow: 0 0 0 3px rgba(0, 115, 160, 0.1);
+  border-color: #10B981;
 }
 
-.input:not(:placeholder-shown) {
-  background-color: white;
+/* Password Requirements */
+.passwordRequirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
 }
 
-.label {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: transparent;
-  color: #6B7280;
-  font-size: 1rem;
-  font-weight: 500;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  font-family: "Quicksand", sans-serif;
+.met {
+  color: #10B981;
 }
 
-.input:focus + .label,
-.input:not(:placeholder-shown) + .label {
-  top: 0;
-  transform: translateY(-50%);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #0073a0;
-  background-color: white;
-  padding: 0 0.5rem;
-}
-
-.select {
-  color: #374151;
-}
-
-.select:invalid {
+.unmet {
   color: #9CA3AF;
 }
 
-/* Optional Note */
-.optionalNote {
-  background: #F0F9FF;
-  border: 1px solid #BAE6FD;
-  border-radius: 12px;
+/* Buttons */
+.submitButton {
+  width: 100%;
   padding: 1rem;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 0.5rem;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.primaryButton {
+  padding: 1rem 2.5rem;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.backButton {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  color: #6B7280;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background: #F3F4F6;
+  border-color: #D1D5DB;
+}
+
+/* Login Link */
+.loginLink {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+.loginLink button {
+  background: none;
+  border: none;
+  color: #10B981;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.loginLink button:hover {
+  text-decoration: underline;
+}
+
+/* Step Indicator */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  gap: 0.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.step span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #E5E7EB;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+}
+
+.step.active span {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+.step p {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+.step.active p {
+  color: #10B981;
+}
+
+.stepLine {
+  width: 40px;
+  height: 2px;
+  background: #E5E7EB;
+  margin-bottom: 1rem;
+}
+
+/* Step Content */
+.stepContent {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.stepContent h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 0.25rem;
+}
+
+.stepDescription {
+  color: #6B7280;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Navigation */
+.navigation {
+  display: flex;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
-.optionalNote p {
-  color: #0369A1;
-  font-size: 0.875rem;
-  margin: 0;
+.navigation .submitButton {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* ID Upload Section */
+.idUploadSection {
+  margin: 1.5rem 0;
+}
+
+.uploadOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.uploadOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  background: #F9FAFB;
+  border: 2px dashed #D1D5DB;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadOption:hover {
+  border-color: #10B981;
+  background: #ECFDF5;
+}
+
+.optionIcon {
+  font-size: 2rem;
+}
+
+.uploadOption span:last-child {
+  font-size: 0.9rem;
+  color: #4B5563;
   font-weight: 500;
 }
 
-/* Camera Section */
-.cameraSection {
-  text-align: center;
-  padding: 2rem;
-  border: 2px dashed #E5E7EB;
-  border-radius: 16px;
-  background: #FAFBFC;
-}
-
-.cameraTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.75rem;
-  font-family: "Quicksand", sans-serif;
-}
-
-.cameraDescription {
-  color: #6B7280;
-  margin-bottom: 2rem;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.cameraButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
-  background: #0073a0;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: "Quicksand", sans-serif;
-  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.3);
-}
-
-.cameraButton:hover {
-  background: #005a7f;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 115, 160, 0.4);
-}
-
-.cameraIcon {
-  width: 24px;
-  height: 24px;
-}
-
+/* Camera */
 .cameraContainer {
-  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.videoElement {
+.cameraPreview {
   width: 100%;
-  max-width: 400px;
+  max-width: 320px;
   border-radius: 12px;
-  margin-bottom: 1rem;
+  background: #000;
 }
 
 .captureButton {
-  padding: 1rem 2rem;
-  background: #22C55E;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: "Quicksand", sans-serif;
-  transition: all 0.2s ease;
-}
-
-.captureButton:hover {
-  background: #16A34A;
-  transform: translateY(-1px);
-}
-
-.capturedContainer {
-  margin-top: 2rem;
-}
-
-.capturedImage {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.captureActions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.retakeButton {
-  padding: 0.75rem 1.5rem;
-  background: #F59E0B;
+  padding: 0.75rem 2rem;
+  background: #10B981;
   color: white;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  font-family: "Quicksand", sans-serif;
-  transition: all 0.2s ease;
+}
+
+/* Preview */
+.previewContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.idPreview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 12px;
+  border: 2px solid #E5E7EB;
+}
+
+.retakeButton {
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  color: #EF4444;
+  border: 2px solid #EF4444;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .retakeButton:hover {
-  background: #D97706;
-  transform: translateY(-1px);
+  background: #FEF2F2;
 }
 
-/* Navigation Buttons */
-.navigationButtons {
+/* Success Screen */
+.successScreen {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #FCD34D, #F59E0B);
+  border-radius: 50%;
   display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-  margin-top: 2rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  animation: pulse 2s infinite;
 }
 
-.prevButton {
-  padding: 1rem 2rem;
-  background: transparent;
-  color: #0073a0;
-  border: 2px solid #0073a0;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: "Quicksand", sans-serif;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
-
-.prevButton:hover {
-  background: #0073a0;
+.successIcon svg {
+  width: 40px;
+  height: 40px;
   color: white;
-  transform: translateY(-1px);
 }
 
-.nextButton,
-.submitButton {
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #0073a0 0%, #005a7f 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: "Quicksand", sans-serif;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  box-shadow: 0 4px 12px rgba(0, 115, 160, 0.3);
-  margin-left: auto;
+.successScreen h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.75rem;
 }
 
-.nextButton:hover,
-.submitButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 115, 160, 0.4);
+.successMessage {
+  color: #6B7280;
+  margin-bottom: 1.5rem;
+}
+
+.successMessage strong {
+  color: #F59E0B;
+}
+
+.infoBox {
+  background: #FEF3C7;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #92400E;
+}
+
+.infoItem:not(:last-child) {
+  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -466,51 +527,46 @@
   }
 }
 
-@keyframes fadeInSlide {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
   }
 }
 
 /* Mobile Responsiveness */
-@media (max-width: 768px) {
-  .modalContent {
-    margin: 0.5rem;
+@media (max-width: 480px) {
+  .modal {
+    margin: 1rem;
+    padding: 1.5rem;
     max-width: none;
-    max-height: 95vh;
   }
   
-  .registerCard {
-    padding: 2rem;
-  }
-  
-  .title {
-    font-size: 1.875rem;
-  }
-  
-  .progressContainer {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+  .header h2 {
+    font-size: 1.5rem;
   }
   
   .inputRow {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
   
-  .navigationButtons {
-    flex-direction: column-reverse;
+  .uploadOptions {
+    grid-template-columns: 1fr;
   }
   
-  .prevButton,
-  .nextButton,
-  .submitButton {
-    width: 100%;
-    margin-left: 0;
+  .passwordRequirements {
+    grid-template-columns: 1fr;
+  }
+  
+  .stepIndicator {
+    gap: 0.25rem;
+  }
+  
+  .stepLine {
+    width: 20px;
   }
 }
