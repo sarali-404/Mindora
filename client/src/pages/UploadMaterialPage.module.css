@@ -255,6 +255,16 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: #005f85;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .secondaryButton {
@@ -266,6 +276,202 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success state */
+.successContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 1rem;
+}
+
+.successIcon {
+  font-size: 5rem;
+  color: #10b981;
+}
+
+.successContainer h2 {
+  font-size: 1.8rem;
+  color: #111827;
+  margin: 0;
+}
+
+.successContainer p {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Error banner */
+.errorBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.errorBanner button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+/* File input hidden */
+.fileInput {
+  display: none;
+}
+
+/* File preview */
+.filePreview {
+  border: 2px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background-color: #fafafa;
+}
+
+.filePreviewContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.previewImage {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.fileIconLarge {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+}
+
+.fileInfo {
+  flex: 1;
+}
+
+.fileName {
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  word-break: break-word;
+}
+
+.fileSize {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.removeFileBtn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.removeFileBtn:hover:not(:disabled) {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.removeFileBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress bar */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0073a0, #00a0dc);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  min-width: 40px;
+}
+
+/* Drop zone active state */
+.dropZoneActive {
+  border-color: #0073a0 !important;
+  background-color: #f0f9ff !important;
+}
+
+/* Required field indicator */
+.required {
+  color: #dc2626;
+}
+
+/* Step states */
+.stepActive .stepCircle {
+  background-color: #0073a0;
+  color: #ffffff;
+}
+
+.stepCompleted .stepCircle {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+/* Upload icon styling */
+.uploadIcon {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
 }
 
 /* Responsive */

@@ -7,9 +7,12 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const materialRoutes = require('./src/routes/materialRoutes');
 
 // Import email service for verification
 const { verifyEmailConnection } = require('./src/services/emailService');
+
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,14 +42,20 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
+
+// Serve static files for uploaded materials (before security middleware)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Security middleware
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
+  // Allow framing for uploads path (for PDF preview), deny for others
+  if (!req.path.startsWith('/uploads')) {
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  }
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
   // Additional CORS headers for Google OAuth
@@ -79,6 +88,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/materials', materialRoutes);
 
 // 404 handler
 app.use((req, res) => {

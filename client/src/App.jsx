@@ -12,6 +12,7 @@ import GoalPage from "./pages/GoalPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import NotePage from "./pages/NotePage";
 import NotFound from "./pages/NotFound";
 
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="/app/profile" element={<ProfilePage />} />
           <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="/app/notifications" element={<NotificationsPage />} />
+          <Route path="/app/note/:id" element={<NotePage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 

@@ -11,8 +11,13 @@ import {
   MdAccessTime,
   MdUpload,
   MdPlayCircleOutline,
+  MdClose,
+  MdWarning,
 } from "react-icons/md";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import authService from "../services/authService";
+import materialService from "../services/materialService";
 
 // Import achievement images
 import firstStepsImg from "../assets/achievements/first_steps.png";
@@ -27,15 +32,31 @@ import teachingBirdImg from "../assets/achievements/teaching_bird.png";
 import welcomeAboardImg from "../assets/achievements/welcome_aborad.png";
 
 export default function ProfilePage() {
-  // later these can come from API/user context
+  const navigate = useNavigate();
+  
+  // Get current user from authService
+  const currentUser = authService.getUser();
+  
+  // Dynamic user data
   const user = {
-    name: "Alex Thompson",
-    
-    university: "Massachusetts Institute of Technology",
-    major: "Computer Science",
-    memberSince: "January 2024",
-    initials: "AT",
+    name: currentUser?.profile?.firstName && currentUser?.profile?.lastName 
+      ? `${currentUser.profile.firstName} ${currentUser.profile.lastName}`
+      : currentUser?.username || "User",
+    university: currentUser?.profile?.university || "University not set",
+    major: currentUser?.profile?.degreeProgram || "Major not set",
+    memberSince: currentUser?.createdAt 
+      ? new Date(currentUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : "Recently joined",
+    initials: currentUser?.profile?.firstName && currentUser?.profile?.lastName
+      ? `${currentUser.profile.firstName[0]}${currentUser.profile.lastName[0]}`
+      : currentUser?.username?.substring(0, 2).toUpperCase() || "U",
   };
+
+  // Materials state
+  const [myMaterials, setMyMaterials] = useState([]);
+  const [materialsLoading, setMaterialsLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ show: false, material: null });
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Achievement data with level system - in a real app, this would come from the backend
   const achievements = [
@@ -200,6 +221,54 @@ export default function ProfilePage() {
     },
   ];
 
+  // Fetch user's materials
+  useEffect(() => {
+    const fetchMyMaterials = async () => {
+      try {
+        setMaterialsLoading(true);
+        const response = await materialService.getMyMaterials({ limit: 50 });
+        setMyMaterials(response.data || []);
+      } catch (error) {
+        console.error('Error fetching materials:', error);
+      } finally {
+        setMaterialsLoading(false);
+      }
+    };
+
+    fetchMyMaterials();
+  }, []);
+
+  // Handle edit material - navigate to NotePage with edit mode
+  const handleEditMaterial = (materialId) => {
+    navigate(`/app/note/${materialId}?edit=true`);
+  };
+
+  // Handle delete material
+  const handleDeleteMaterial = async () => {
+    if (!deleteModal.material) return;
+    
+    try {
+      setDeleteLoading(true);
+      await materialService.deleteMaterial(deleteModal.material._id);
+      setMyMaterials(prev => prev.filter(m => m._id !== deleteModal.material._id));
+      setDeleteModal({ show: false, material: null });
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      alert('Failed to delete material. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <div className={styles.page}>
       {/* Top profile header */}
@@ -303,32 +372,112 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* My Uploaded Materials - Dynamic */}
         <div className={styles.materialsCard}>
           <div className={styles.materialsHeader}>
             <div className={styles.materialsTitleRow}>
-              <span className={styles.materialsIcon}><MdVisibility size={18} style={{color: '#8b5cf6'}}/></span>
-              <h2 className={styles.sectionTitle}>Public Materials</h2>
-              <span className={styles.countBadge}>2</span>
+              <span className={styles.materialsIcon}><MdUpload size={18} style={{color: '#0073a0'}}/></span>
+              <h2 className={styles.sectionTitle}>Materials Uploaded by Me</h2>
+              <span className={styles.countBadge}>{myMaterials.length}</span>
             </div>
           </div>
           <div className={styles.materialList}>
-            <MaterialRow
-              title="React Hooks Comprehensive Guide"
-              type="PDF"
-              date="Oct 12, 2025"
-              meta="45 views"
-              actionLabel="Make Private"
-            />
-            <MaterialRow
-              title="Binary Search Trees Tutorial"
-              type="Document"
-              date="Oct 18, 2025"
-              meta="32 views"
-              actionLabel="Make Private"
-            />
+            {materialsLoading ? (
+              <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>Loading materials...</p>
+              </div>
+            ) : myMaterials.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>You haven't uploaded any materials yet.</p>
+                <button 
+                  className={styles.uploadButton}
+                  onClick={() => navigate('/app/upload')}
+                >
+                  <MdUpload size={18} />
+                  Upload Material
+                </button>
+              </div>
+            ) : (
+              myMaterials.map((material) => (
+                <div key={material._id} className={styles.materialRow}>
+                  <div className={styles.materialInfo}>
+                    <p className={styles.materialTitle}>{material.title}</p>
+                    <div className={styles.materialMetaRow}>
+                      <span className={styles.materialMeta}>
+                        {material.materialType} · {formatDate(material.createdAt)}
+                      </span>
+                      <span className={styles.visibilityBadge}>
+                        {material.visibility === 'public' ? (
+                          <><MdVisibility size={14} /> Public</>
+                        ) : (
+                          <><MdLock size={14} /> Private</>
+                        )}
+                      </span>
+                      <span className={styles.metaPill}>{material.views || 0} views</span>
+                    </div>
+                  </div>
+                  <div className={styles.materialActions}>
+                    <button 
+                      className={styles.editBtn}
+                      onClick={() => handleEditMaterial(material._id)}
+                      title="Edit material"
+                    >
+                      <MdEdit size={18} />
+                    </button>
+                    <button 
+                      className={styles.deleteBtn}
+                      onClick={() => setDeleteModal({ show: true, material })}
+                      title="Delete material"
+                    >
+                      <MdDelete size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className={styles.modalOverlay} onClick={() => !deleteLoading && setDeleteModal({ show: false, material: null })}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <button 
+              className={styles.modalClose}
+              onClick={() => !deleteLoading && setDeleteModal({ show: false, material: null })}
+              disabled={deleteLoading}
+            >
+              <MdClose size={20} />
+            </button>
+            <div className={styles.modalIcon}>
+              <MdWarning size={48} />
+            </div>
+            <h2 className={styles.modalTitle}>Delete Material</h2>
+            <p className={styles.modalText}>
+              Are you sure you want to delete <strong>"{deleteModal.material?.title}"</strong>? 
+              This action cannot be undone.
+            </p>
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelBtn}
+                onClick={() => setDeleteModal({ show: false, material: null })}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.confirmDeleteBtn}
+                onClick={handleDeleteMaterial}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

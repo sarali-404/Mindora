@@ -1,114 +1,331 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./LibraryPage.module.css";
-import { MdDescription, MdVisibility, MdFavorite, MdBookmark } from "react-icons/md";
+import materialService from "../services/materialService";
+import { 
+  MdDescription, 
+  MdVisibility, 
+  MdFavorite, 
+  MdBookmark,
+  MdSearch,
+  MdFilterList,
+  MdSort,
+  MdRefresh,
+  MdPictureAsPdf,
+  MdSlideshow,
+  MdImage,
+  MdVideoLibrary,
+  MdArticle
+} from "react-icons/md";
 
 export default function LibraryPage() {
+  const navigate = useNavigate();
+  
+  // Data state
+  const [materials, setMaterials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
+  // Filter and search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [materialType, setMaterialType] = useState("");
+  
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pages: 1,
+    total: 0,
+    limit: 12
+  });
+
+  // Fetch materials
+  const fetchMaterials = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const params = {
+        page: pagination.current,
+        limit: pagination.limit,
+        sortBy,
+        sortOrder,
+      };
+      
+      if (searchQuery) params.search = searchQuery;
+      if (materialType) params.materialType = materialType;
+      
+      const response = await materialService.getMaterials(params);
+      
+      setMaterials(response.data || []);
+      setPagination(prev => ({
+        ...prev,
+        ...response.pagination
+      }));
+    } catch (err) {
+      setError("Failed to load materials. Please try again.");
+      console.error("Fetch materials error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.current, pagination.limit, searchQuery, sortBy, sortOrder, materialType]);
+
+  // Fetch on mount and when filters change
+  useEffect(() => {
+    fetchMaterials();
+  }, [fetchMaterials]);
+
+  // Handle search submit
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchQuery(searchInput);
+    setPagination(prev => ({ ...prev, current: 1 }));
+  };
+
+  // Handle sort change
+  const handleSortChange = (newSortBy) => {
+    if (sortBy === newSortBy) {
+      setSortOrder(prev => prev === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder("desc");
+    }
+    setPagination(prev => ({ ...prev, current: 1 }));
+  };
+
+  // Handle type filter
+  const handleTypeFilter = (type) => {
+    setMaterialType(prev => prev === type ? "" : type);
+    setPagination(prev => ({ ...prev, current: 1 }));
+  };
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    setPagination(prev => ({ ...prev, current: page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
   return (
     <div className={styles.page}>
       {/* Header with search */}
       <header className={styles.header}>
-        <div className={styles.searchContainer}>
+        <form className={styles.searchContainer} onSubmit={handleSearch}>
+          <MdSearch className={styles.searchIcon} />
           <input
             className={styles.searchInput}
             placeholder="Search materials by title, subject, or keywords..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-        </div>
+          {searchInput && (
+            <button 
+              type="button" 
+              className={styles.clearSearch}
+              onClick={() => {
+                setSearchInput("");
+                setSearchQuery("");
+                setPagination(prev => ({ ...prev, current: 1 }));
+              }}
+            >
+              ×
+            </button>
+          )}
+        </form>
         <Link to="/app/upload-material" className={styles.uploadButton}>
           Upload Material
         </Link>
       </header>
 
-      {/* Sort row */}
-      <section className={styles.sortRow}>
-        <span className={styles.sortLabel}>Recommended for You</span>
+      {/* Filters row */}
+      <section className={styles.filtersRow}>
+        <div className={styles.typeFilters}>
+          <button 
+            className={`${styles.filterChip} ${!materialType ? styles.filterChipActive : ''}`}
+            onClick={() => setMaterialType("")}
+          >
+            All
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'PDF' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('PDF')}
+          >
+            <MdPictureAsPdf /> PDF
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'Slides' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('Slides')}
+          >
+            <MdSlideshow /> Slides
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'Notes' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('Notes')}
+          >
+            <MdArticle /> Notes
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'Video' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('Video')}
+          >
+            <MdVideoLibrary /> Video
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'Image' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('Image')}
+          >
+            <MdImage /> Image
+          </button>
+        </div>
+
         <div className={styles.sortOptions}>
-          <button className={styles.sortChip}>Sort by Views</button>
-          <button className={`${styles.sortChip} ${styles.sortChipActive}`}>
-            Newer First
+          <button 
+            className={`${styles.sortChip} ${sortBy === 'createdAt' ? styles.sortChipActive : ''}`}
+            onClick={() => handleSortChange('createdAt')}
+          >
+            {sortBy === 'createdAt' && (sortOrder === 'desc' ? '↓' : '↑')} Newest
+          </button>
+          <button 
+            className={`${styles.sortChip} ${sortBy === 'views' ? styles.sortChipActive : ''}`}
+            onClick={() => handleSortChange('views')}
+          >
+            {sortBy === 'views' && (sortOrder === 'desc' ? '↓' : '↑')} Views
+          </button>
+          <button 
+            className={`${styles.sortChip} ${sortBy === 'likesCount' ? styles.sortChipActive : ''}`}
+            onClick={() => handleSortChange('likesCount')}
+          >
+            {sortBy === 'likesCount' && (sortOrder === 'desc' ? '↓' : '↑')} Likes
           </button>
         </div>
       </section>
 
+      {/* Results info */}
+      {searchQuery && (
+        <div className={styles.resultsInfo}>
+          Showing results for "{searchQuery}" ({pagination.total} found)
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className={styles.errorState}>
+          <p>{error}</p>
+          <button onClick={fetchMaterials} className={styles.retryButton}>
+            <MdRefresh /> Retry
+          </button>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className={styles.loadingState}>
+          <div className={styles.spinner}></div>
+          <p>Loading materials...</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !error && materials.length === 0 && (
+        <div className={styles.emptyState}>
+          <MdDescription className={styles.emptyIcon} />
+          <h3>No materials found</h3>
+          <p>
+            {searchQuery 
+              ? "Try different search terms or clear filters"
+              : "Be the first to upload study materials!"}
+          </p>
+          <Link to="/app/upload-material" className={styles.uploadButtonLarge}>
+            Upload Material
+          </Link>
+        </div>
+      )}
+
       {/* Cards grid */}
-      <section className={styles.grid}>
-        <ResourceCard
-          title="Machine Learning Algorithms Summary"
-          tag="AI & ML"
-          description="Overview of supervised and unsupervised learning algorithms."
-          author="Mike Johnson"
-          uni="Berkeley"
-          date="Oct 15, 2025"
-          type="PDF"
-          views="412"
-          likes="126"
-          saves="34"
-        />
-        <ResourceCard
-          title="Python Data Science Toolkit"
-          tag="Data Science"
-          description="Essential Python libraries for data science: NumPy, Pandas, Matplotlib."
-          author="James Kim"
-          uni="CalTech"
-          date="Oct 10, 2025"
-          type="PDF"
-          views="334"
-          likes="92"
-          saves="28"
-        />
-        <ResourceCard
-          title="Binary Search Trees Cheat Sheet"
-          tag="Data Structures"
-          description="Visual guide to BST operations and traversal patterns."
-          author="Sarah Chen"
-          uni="Stanford"
-          date="Oct 18, 2025"
-          type="Document"
-          views="289"
-          likes="79"
-          saves="23"
-        />
-        <ResourceCard
-          title="Graph Theory Fundamentals"
-          tag="Algorithms"
-          description="Core graph theory concepts: vertices, edges, paths, and common uses."
-          author="Anna Lee"
-          uni="Yale"
-          date="Oct 8, 2025"
-          type="Document"
-          views="245"
-          likes="67"
-          saves="19"
-        />
-        <ResourceCard
-          title="CSS Grid Layout Guide"
-          tag="Web Development"
-          description="Modern CSS Grid techniques for responsive layouts."
-          author="Emily Rodriguez"
-          uni="Harvard"
-          date="Oct 12, 2025"
-          type="Document"
-          views="198"
-          likes="56"
-          saves="15"
-        />
-        <ResourceCard
-          title="React Hooks Comprehensive Notes"
-          tag="Web Development"
-          description="Complete notes on React Hooks for building interactive UIs."
-          author="You"
-          uni="MIT"
-          date="Oct 20, 2025"
-          type="PDF"
-          views="156"
-          likes="46"
-          saves="12"
-        />
-      </section>
+      {!loading && !error && materials.length > 0 && (
+        <>
+          <section className={styles.grid}>
+            {materials.map((material) => (
+              <ResourceCard
+                key={material._id}
+                id={material._id}
+                title={material.title}
+                tag={material.subject}
+                description={material.description}
+                author={material.author?.username || 'Unknown'}
+                uni={material.author?.university || ''}
+                date={formatDate(material.createdAt)}
+                type={material.materialType}
+                views={material.views || 0}
+                likes={material.likesCount || 0}
+                saves={material.savesCount || 0}
+              />
+            ))}
+          </section>
+
+          {/* Pagination */}
+          {pagination.pages > 1 && (
+            <div className={styles.pagination}>
+              <button 
+                className={styles.pageButton}
+                disabled={pagination.current === 1}
+                onClick={() => handlePageChange(pagination.current - 1)}
+              >
+                Previous
+              </button>
+              
+              <div className={styles.pageNumbers}>
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                  .filter(page => {
+                    // Show first, last, and pages around current
+                    return page === 1 || 
+                           page === pagination.pages || 
+                           Math.abs(page - pagination.current) <= 1;
+                  })
+                  .map((page, index, array) => (
+                    <span key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className={styles.pageEllipsis}>...</span>
+                      )}
+                      <button
+                        className={`${styles.pageNumber} ${pagination.current === page ? styles.pageNumberActive : ''}`}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                    </span>
+                  ))}
+              </div>
+              
+              <button 
+                className={styles.pageButton}
+                disabled={pagination.current === pagination.pages}
+                onClick={() => handlePageChange(pagination.current + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
+// Resource Card Component
 function ResourceCard({
+  id,
   title,
   tag,
   description,
@@ -120,43 +337,57 @@ function ResourceCard({
   likes,
   saves,
 }) {
+  const getTypeIcon = () => {
+    switch (type) {
+      case 'PDF': return <MdPictureAsPdf size={20} style={{ color: '#dc2626' }} />;
+      case 'Slides': return <MdSlideshow size={20} style={{ color: '#f59e0b' }} />;
+      case 'Video': return <MdVideoLibrary size={20} style={{ color: '#8b5cf6' }} />;
+      case 'Image': return <MdImage size={20} style={{ color: '#10b981' }} />;
+      default: return <MdDescription size={20} style={{ color: '#0073a0' }} />;
+    }
+  };
+
   return (
-    <article className={styles.card}>
-      <div className={styles.cardHeaderRow}>
-        <div className={styles.iconCircle}>
-          <MdDescription size={20} style={{ color: '#0073a0' }} />
+    <Link to={`/app/note/${id}`} className={styles.cardLink}>
+      <article className={styles.card}>
+        <div className={styles.cardHeaderRow}>
+          <div className={styles.iconCircle}>
+            {getTypeIcon()}
+          </div>
+          <div className={styles.cardTitleBlock}>
+            <h2 className={styles.cardTitle}>{title}</h2>
+            <span className={styles.tagChip}>{tag}</span>
+          </div>
         </div>
-        <div className={styles.cardTitleBlock}>
-          <h2 className={styles.cardTitle}>{title}</h2>
-          <span className={styles.tagChip}>{tag}</span>
-        </div>
-      </div>
 
-      <p className={styles.cardDescription}>{description}</p>
+        <p className={styles.cardDescription}>
+          {description || 'No description available'}
+        </p>
 
-      <div className={styles.cardMetaRow}>
-        <span className={styles.cardMetaText}>
-          {author} · {uni}
-        </span>
-      </div>
-
-      <div className={styles.cardFooter}>
-        <div className={styles.footerLeft}>
-          <span className={styles.footerMeta}>{date}</span>
-          <span className={styles.typeBadge}>{type}</span>
-        </div>
-        <div className={styles.footerStats}>
-          <span className={styles.statItem}>
-            <MdVisibility size={16} style={{ color: '#b18fffff' }} /> {views}
-          </span>
-          <span className={styles.statItem}>
-            <MdFavorite size={16} style={{ color: '#ff6f6fff' }} /> {likes}
-          </span>
-          <span className={styles.statItem}>
-            <MdBookmark size={16} style={{ color: '#ffc869ff' }} /> {saves}
+        <div className={styles.cardMetaRow}>
+          <span className={styles.cardMetaText}>
+            {author}{uni ? ` · ${uni}` : ''}
           </span>
         </div>
-      </div>
-    </article>
+
+        <div className={styles.cardFooter}>
+          <div className={styles.footerLeft}>
+            <span className={styles.footerMeta}>{date}</span>
+            <span className={styles.typeBadge}>{type}</span>
+          </div>
+          <div className={styles.footerStats}>
+            <span className={styles.statItem}>
+              <MdVisibility size={16} style={{ color: '#b18fffff' }} /> {views}
+            </span>
+            <span className={styles.statItem}>
+              <MdFavorite size={16} style={{ color: '#ff6f6fff' }} /> {likes}
+            </span>
+            <span className={styles.statItem}>
+              <MdBookmark size={16} style={{ color: '#ffc869ff' }} /> {saves}
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
   );
 }
