@@ -8,6 +8,9 @@ require('dotenv').config();
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 
+// Import email service for verification
+const { verifyEmailConnection } = require('./src/services/emailService');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -99,8 +102,11 @@ app.use((error, req, res, next) => {
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB Atlas');
+    
+    // Verify email connection
+    await verifyEmailConnection();
     
     // Start server only after successful database connection
     app.listen(PORT, () => {
@@ -117,14 +123,13 @@ mongoose.connect(process.env.MONGODB_URI)
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log('❌ Unhandled Promise Rejection:', err.message);
-  // Close server & exit process
-  server.close(() => {
-    process.exit(1);
-  });
+  console.error(err);
+  process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.log('❌ Uncaught Exception:', err.message);
+  console.error(err);
   process.exit(1);
 });

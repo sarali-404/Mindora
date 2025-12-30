@@ -7,6 +7,7 @@ const {
   clearTokenCookie,
   verifyToken 
 } = require('../utils/tokenUtils');
+const { generateOTP, sendOTPEmail, sendWelcomeEmail, sendPasswordResetOTP } = require('../services/emailService');
 
 // Google OAuth client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -38,11 +39,34 @@ const createAccount = async (req, res) => {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     
     if (existingUser) {
-      // If user exists but registration is incomplete, let them continue
-      if (existingUser.verificationStatus === 'incomplete') {
+      // If user exists but email not verified, resend OTP
+      if (existingUser.verificationStatus === 'unverified' && !existingUser.isEmailVerified) {
+        const otp = generateOTP();
+        existingUser.emailOTP = {
+          code: otp,
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+        };
+        await existingUser.save();
+        
+        // Send OTP email
+        await sendOTPEmail(existingUser.email, otp);
+        
         return res.status(200).json({
           success: true,
-          message: 'Account exists. Please continue with registration.',
+          message: 'OTP sent to your email. Please verify.',
+          data: {
+            userId: existingUser._id,
+            email: existingUser.email,
+            requiresOTP: true
+          }
+        });
+      }
+      
+      // If email verified but profile incomplete
+      if (existingUser.verificationStatus === 'email_verified' && existingUser.registrationStep < 4) {
+        return res.status(200).json({
+          success: true,
+          message: 'Account exists. Please continue with profile setup.',
           data: {
             userId: existingUser._id,
             email: existingUser.email,
@@ -69,26 +93,49 @@ const createAccount = async (req, res) => {
       counter++;
     }
     
-    // Create user with incomplete status
+    // Generate OTP
+    const otp = generateOTP();
+    
+    // Create user with unverified status
     const user = new User({
       username,
       email: email.toLowerCase(),
       password,
       authProvider: 'local',
-      verificationStatus: 'incomplete',
-      registrationStep: 1
+      verificationStatus: 'unverified',
+      isEmailVerified: false,
+      registrationStep: 1,
+      emailOTP: {
+        code: otp,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+      }
     });
     
     await user.save();
     
+    // Send OTP email
+    let emailSent = false;
+    try {
+      console.log('📧 Attempting to send OTP email to:', email);
+      const result = await sendOTPEmail(email, otp);
+      console.log('📧 OTP email sent successfully:', result);
+      emailSent = true;
+    } catch (emailError) {
+      console.error('📧 Failed to send OTP email:', emailError.message);
+      console.error('📧 Full error:', emailError);
+      // Don't fail registration, but let frontend know
+    }
+    
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please complete your profile.',
+      message: emailSent 
+        ? 'Account created! Please check your email for the verification code.'
+        : 'Account created! We had trouble sending the verification email. Please try resending.',
       data: {
         userId: user._id,
         email: user.email,
         username: user.username,
-        registrationStep: 2 // Move to step 2
+        requiresOTP: true
       }
     });
     
@@ -142,8 +189,31 @@ const googleAuth = async (req, res) => {
     if (user) {
       // User exists - check their status
       
-      // If incomplete, let them continue registration
-      if (user.verificationStatus === 'incomplete') {
+      // If unverified (email not verified), mark as email_verified since Google verified it
+      if (user.verificationStatus === 'unverified') {
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        user.isEmailVerified = true;
+        user.verificationStatus = 'email_verified';
+        user.emailOTP = undefined; // Clear any pending OTP
+        await user.save();
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Please complete your profile.',
+          data: {
+            userId: user._id,
+            email: user.email,
+            username: user.username,
+            profile: user.profile,
+            registrationStep: user.registrationStep || 2,
+            continueRegistration: true
+          }
+        });
+      }
+      
+      // If email_verified but profile incomplete, let them continue
+      if (user.verificationStatus === 'email_verified' && user.registrationStep < 4) {
         // Update Google ID if not set
         if (!user.googleId) {
           user.googleId = googleId;
@@ -220,7 +290,7 @@ const googleAuth = async (req, res) => {
       });
     }
     
-    // New user - create account with incomplete status
+    // New user - create account with email_verified status (Google verifies email)
     const nameParts = name ? name.split(' ') : [''];
     const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
     let username = baseUsername;
@@ -236,9 +306,9 @@ const googleAuth = async (req, res) => {
       email: email.toLowerCase(),
       googleId,
       authProvider: 'google',
-      verificationStatus: 'incomplete',
+      verificationStatus: 'email_verified', // Google users have verified email
       registrationStep: 2,
-      isEmailVerified: email_verified,
+      isEmailVerified: true, // Google verifies email
       profile: {
         firstName: nameParts[0] || '',
         lastName: nameParts.slice(1).join(' ') || '',
@@ -334,7 +404,13 @@ const updateProfile = async (req, res) => {
           verified: false
         };
         user.registrationStep = 4;
-        user.verificationStatus = 'pending'; // Now waiting for admin approval
+        user.verificationStatus = 'verified'; // ID submitted, waiting for admin approval
+        break;
+      
+      case 'skip':
+        // User skipped ID verification - they can still use basic features
+        // Status remains email_verified, they can verify ID later
+        user.registrationStep = 4;
         break;
         
       default:
@@ -348,16 +424,20 @@ const updateProfile = async (req, res) => {
     await user.save();
     console.log('User saved successfully');
     
-    // If step 4 completed, registration is done
-    if (step === 4) {
+    // If step 4 completed (either verified or skipped)
+    if (step === 4 || step === 'skip') {
+      const isSkipped = step === 'skip';
       return res.json({
         success: true,
-        message: 'Registration completed! Your account is pending verification.',
+        message: isSkipped 
+          ? 'Registration completed! You can verify your ID later to unlock all features.'
+          : 'Registration completed! Your ID is being reviewed.',
         data: {
           userId: user._id,
           email: user.email,
-          verificationStatus: 'pending',
-          registrationComplete: true
+          verificationStatus: user.verificationStatus,
+          registrationComplete: true,
+          idSkipped: isSkipped
         }
       });
     }
@@ -412,11 +492,24 @@ const login = async (req, res) => {
       });
     }
     
-    // Check if registration is incomplete
-    if (user.verificationStatus === 'incomplete') {
+    // Check if email not verified
+    if (user.verificationStatus === 'unverified' || !user.isEmailVerified) {
       return res.status(200).json({
         success: true,
-        message: 'Please complete your registration.',
+        message: 'Please verify your email first.',
+        data: {
+          userId: user._id,
+          email: user.email,
+          requiresOTP: true
+        }
+      });
+    }
+    
+    // Check if profile incomplete (email verified but registration not done)
+    if (user.verificationStatus === 'email_verified' && user.registrationStep < 4) {
+      return res.status(200).json({
+        success: true,
+        message: 'Please complete your profile.',
         data: {
           userId: user._id,
           email: user.email,
@@ -427,14 +520,6 @@ const login = async (req, res) => {
     }
     
     // Check verification status
-    if (user.verificationStatus === 'pending') {
-      return res.status(403).json({
-        success: false,
-        message: 'Your account is pending verification. Please wait for admin approval.',
-        verificationStatus: 'pending'
-      });
-    }
-    
     if (user.verificationStatus === 'rejected') {
       return res.status(403).json({
         success: false,
@@ -723,6 +808,400 @@ const register = async (req, res) => {
   return createAccount(req, res);
 };
 
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOTP = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    
+    if (!userId || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID and OTP are required.'
+      });
+    }
+    
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
+      });
+    }
+    
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified.'
+      });
+    }
+    
+    // Check OTP exists
+    if (!user.emailOTP || !user.emailOTP.code) {
+      return res.status(400).json({
+        success: false,
+        message: 'No OTP found. Please request a new one.'
+      });
+    }
+    
+    // Check OTP expiry
+    if (new Date() > new Date(user.emailOTP.expiresAt)) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new one.',
+        expired: true
+      });
+    }
+    
+    // Verify OTP
+    if (user.emailOTP.code !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.'
+      });
+    }
+    
+    // OTP is valid - update user
+    user.isEmailVerified = true;
+    user.verificationStatus = 'email_verified';
+    user.registrationStep = 2;
+    user.emailOTP = undefined; // Clear OTP
+    await user.save();
+    
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user.email, user.profile?.firstName || user.username).catch(console.error);
+    
+    res.json({
+      success: true,
+      message: 'Email verified successfully!',
+      data: {
+        userId: user._id,
+        email: user.email,
+        registrationStep: 2,
+        isEmailVerified: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying OTP.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+const resendOTP = async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    
+    // Find user by ID or email
+    let user;
+    if (userId) {
+      user = await User.findById(userId);
+    } else if (email) {
+      user = await User.findOne({ email: email.toLowerCase() });
+    }
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
+      });
+    }
+    
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified.'
+      });
+    }
+    
+    // Rate limiting - check last OTP sent time
+    if (user.emailOTP && user.emailOTP.expiresAt) {
+      const otpCreatedAt = new Date(user.emailOTP.expiresAt).getTime() - (10 * 60 * 1000);
+      const timeSinceLastOTP = Date.now() - otpCreatedAt;
+      
+      // Allow resend only after 1 minute
+      if (timeSinceLastOTP < 60 * 1000) {
+        const waitTime = Math.ceil((60 * 1000 - timeSinceLastOTP) / 1000);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${waitTime} seconds before requesting a new OTP.`,
+          waitTime
+        });
+      }
+    }
+    
+    // Generate new OTP
+    const otp = generateOTP();
+    user.emailOTP = {
+      code: otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    };
+    await user.save();
+    
+    // Send OTP email
+    console.log('📧 Resending OTP to:', user.email);
+    try {
+      const result = await sendOTPEmail(user.email, otp, user.profile?.firstName);
+      console.log('📧 Resend OTP email result:', result);
+    } catch (emailError) {
+      console.error('📧 Resend OTP email failed:', emailError.message);
+      throw emailError; // Re-throw to be caught by outer try-catch
+    }
+    
+    res.json({
+      success: true,
+      message: 'A new OTP has been sent to your email.',
+      data: {
+        userId: user._id,
+        email: user.email
+      }
+    });
+    
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resending OTP.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// @desc    Forgot Password - Send Reset OTP
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email (don't reveal if user exists)
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Always return success message (security - don't reveal if email exists)
+    const successMessage = 'If an account with that email exists, a password reset code has been sent.';
+
+    if (!user) {
+      // Wait a bit to prevent timing attacks
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return res.status(200).json({
+        success: true,
+        message: successMessage
+      });
+    }
+
+    // Check rate limit - 1 OTP per minute
+    if (user.passwordResetOTP && user.passwordResetOTP.code) {
+      const timeSinceLastOTP = Date.now() - new Date(user.passwordResetOTP.expiresAt).getTime() + (10 * 60 * 1000);
+      if (timeSinceLastOTP < 60 * 1000) {
+        const waitTime = Math.ceil((60 * 1000 - timeSinceLastOTP) / 1000);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${waitTime} seconds before requesting another code.`
+        });
+      }
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Save OTP to user
+    user.passwordResetOTP = {
+      code: otp,
+      expiresAt: otpExpiry,
+      verified: false
+    };
+    await user.save();
+
+    // Send reset OTP email
+    try {
+      await sendPasswordResetOTP(user.email, otp, user.username || 'User');
+      console.log(`📧 Password reset OTP sent to ${user.email}`);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      // Clear the OTP since email failed
+      user.passwordResetOTP = undefined;
+      await user.save();
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send reset email. Please try again.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: successMessage,
+      data: {
+        email: user.email.replace(/(.{2})(.*)(@.*)/, '$1***$3') // Mask email
+      }
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing request.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// @desc    Verify Reset OTP
+// @route   POST /api/auth/verify-reset-otp
+// @access  Public
+const verifyResetOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and OTP are required'
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email or OTP'
+      });
+    }
+
+    // Check if OTP exists
+    if (!user.passwordResetOTP || !user.passwordResetOTP.code) {
+      return res.status(400).json({
+        success: false,
+        message: 'No password reset request found. Please request a new code.'
+      });
+    }
+
+    // Check if OTP is expired
+    if (new Date() > new Date(user.passwordResetOTP.expiresAt)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Code has expired. Please request a new one.'
+      });
+    }
+
+    // Check if OTP matches
+    if (user.passwordResetOTP.code !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid code. Please try again.'
+      });
+    }
+
+    // Mark OTP as verified
+    user.passwordResetOTP.verified = true;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Code verified successfully',
+      data: {
+        verified: true
+      }
+    });
+
+  } catch (error) {
+    console.error('Verify reset OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying code.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// @desc    Reset Password
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and new password are required'
+      });
+    }
+
+    // Password validation
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request'
+      });
+    }
+
+    // Check if OTP was verified
+    if (!user.passwordResetOTP || !user.passwordResetOTP.verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please verify your code first'
+      });
+    }
+
+    // Check if OTP is still valid (not expired during password entry)
+    if (new Date() > new Date(user.passwordResetOTP.expiresAt)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session expired. Please request a new code.'
+      });
+    }
+
+    // Update password
+    user.password = newPassword; // Will be hashed by pre-save middleware
+    user.passwordResetOTP = undefined; // Clear reset OTP
+    await user.save();
+
+    console.log(`🔐 Password reset successful for ${user.email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully. You can now login with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting password.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   createAccount,
   googleAuth,
@@ -733,5 +1212,10 @@ module.exports = {
   getCurrentUser,
   refreshToken,
   changePassword,
-  register
+  register,
+  verifyOTP,
+  resendOTP,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword
 };

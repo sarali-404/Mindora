@@ -11,7 +11,8 @@ class AuthService {
         this.setRegistrationData({
           userId: response.data.userId,
           email: response.data.email,
-          registrationStep: response.data.registrationStep
+          requiresOTP: response.data.requiresOTP,
+          registrationStep: response.data.registrationStep || 1
         });
         
         return response;
@@ -20,6 +21,42 @@ class AuthService {
       throw new Error(response.message || 'Account creation failed');
     } catch (error) {
       console.error('Create account error:', error);
+      throw error;
+    }
+  }
+
+  // Verify OTP
+  async verifyOTP(userId, otp) {
+    try {
+      const response = await apiClient.post('/auth/verify-otp', { userId, otp });
+      
+      if (response.success && response.data) {
+        // Update registration data
+        this.setRegistrationData({
+          ...this.getRegistrationData(),
+          userId: response.data.userId,
+          registrationStep: response.data.registrationStep,
+          isEmailVerified: true,
+          requiresOTP: false
+        });
+        
+        return response;
+      }
+      
+      throw new Error(response.message || 'OTP verification failed');
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw error;
+    }
+  }
+
+  // Resend OTP
+  async resendOTP(userId, email) {
+    try {
+      const response = await apiClient.post('/auth/resend-otp', { userId, email });
+      return response;
+    } catch (error) {
+      console.error('Resend OTP error:', error);
       throw error;
     }
   }
@@ -294,6 +331,39 @@ class AuthService {
   // Check if user is regular user
   isUser() {
     return this.getUserRole() === 'user';
+  }
+
+  // Forgot Password - Request reset OTP
+  async forgotPassword(email) {
+    try {
+      const response = await apiClient.post('/auth/forgot-password', { email });
+      return response;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  }
+
+  // Verify Reset OTP
+  async verifyResetOTP(email, otp) {
+    try {
+      const response = await apiClient.post('/auth/verify-reset-otp', { email, otp });
+      return response;
+    } catch (error) {
+      console.error('Verify reset OTP error:', error);
+      throw error;
+    }
+  }
+
+  // Reset Password
+  async resetPassword(email, newPassword) {
+    try {
+      const response = await apiClient.post('/auth/reset-password', { email, newPassword });
+      return response;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
   }
 }
 

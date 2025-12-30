@@ -12,11 +12,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.error::before {
-  content: '⚠️';
-  font-size: 1rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .modalOverlay {
@@ -300,7 +296,7 @@
 
 /* Verification Message Styles */
 .verificationMessage {
-  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  background: linear-gradient(135deg, #E6F4F8, #D0EBF2);
   border-radius: 16px;
   padding: 2rem;
   text-align: center;
@@ -318,6 +314,13 @@
 .verificationIcon {
   font-size: 3rem;
   margin-bottom: 1rem;
+  color: #0073a0;
+  display: flex;
+  justify-content: center;
+}
+
+.verificationMessageRejected .verificationIcon {
+  color: #DC2626;
 }
 
 .verificationMessage h3,
@@ -325,7 +328,8 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #92400E;
+  color: #005a7f;
+  font-family: "Quicksand", sans-serif;
 }
 
 .verificationMessageRejected h3 {
@@ -334,10 +338,11 @@
 
 .verificationMessage p,
 .verificationMessageRejected p {
-  color: #78350F;
+  color: #374151;
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 0.5rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .verificationMessageRejected p {
@@ -346,7 +351,7 @@
 
 .smallText {
   font-size: 0.8rem !important;
-  color: #A16207 !important;
+  color: #6B7280 !important;
 }
 
 .verificationMessageRejected .smallText {
@@ -360,18 +365,19 @@
 
 .tryAgainButton {
   background: transparent;
-  border: 2px solid #10B981;
-  color: #10B981;
+  border: 2px solid #0073a0;
+  color: #0073a0;
   padding: 0.75rem 2rem;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-family: "Quicksand", sans-serif;
 }
 
 .tryAgainButton:hover {
-  background: #10B981;
+  background: #0073a0;
   color: white;
 }
 

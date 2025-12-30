@@ -26,6 +26,7 @@
   position: relative;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.3s ease-out;
+  font-family: "Quicksand", sans-serif;
 }
 
 .closeButton {
@@ -34,7 +35,7 @@
   right: 1rem;
   background: none;
   border: none;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: #9CA3AF;
   cursor: pointer;
   width: 40px;
@@ -51,6 +52,11 @@
   color: #374151;
 }
 
+.closeButton svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* Header */
 .header {
   text-align: center;
@@ -62,11 +68,13 @@
   font-weight: 700;
   color: #1F2937;
   margin-bottom: 0.5rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .header p {
   color: #6B7280;
   font-size: 0.95rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Error */
@@ -78,6 +86,7 @@
   border-radius: 8px;
   margin-bottom: 1rem;
   font-size: 0.875rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Google Section */
@@ -133,12 +142,13 @@
   transition: all 0.2s;
   background: white;
   color: #1F2937;
+  font-family: "Quicksand", sans-serif;
 }
 
 .input:focus {
   outline: none;
-  border-color: #10B981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: #0073a0;
+  box-shadow: 0 0 0 3px rgba(0, 115, 160, 0.1);
 }
 
 .input::placeholder {
@@ -151,6 +161,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
+  font-family: "Quicksand", sans-serif;
 }
 
 .select {
@@ -162,11 +173,12 @@
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: "Quicksand", sans-serif;
 }
 
 .select:focus {
   outline: none;
-  border-color: #10B981;
+  border-color: #0073a0;
 }
 
 /* Password Requirements */
@@ -176,10 +188,11 @@
   gap: 0.25rem;
   margin-top: 0.5rem;
   font-size: 0.75rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .met {
-  color: #10B981;
+  color: #0073a0;
 }
 
 .unmet {
@@ -190,7 +203,7 @@
 .submitButton {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: linear-gradient(135deg, #0073a0, #005a7f);
   color: white;
   border: none;
   border-radius: 12px;
@@ -199,11 +212,12 @@
   cursor: pointer;
   transition: all 0.3s;
   margin-top: 0.5rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .submitButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 115, 160, 0.3);
 }
 
 .submitButton:disabled {
@@ -213,7 +227,7 @@
 
 .primaryButton {
   padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: linear-gradient(135deg, #0073a0, #005a7f);
   color: white;
   border: none;
   border-radius: 12px;
@@ -221,11 +235,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  font-family: "Quicksand", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .primaryButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 115, 160, 0.3);
 }
 
 .backButton {
@@ -238,6 +257,10 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: "Quicksand", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .backButton:hover {
@@ -251,14 +274,16 @@
   margin-top: 1.5rem;
   color: #6B7280;
   font-size: 0.9rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .loginLink button {
   background: none;
   border: none;
-  color: #10B981;
+  color: #0073a0;
   font-weight: 600;
   cursor: pointer;
+  font-family: "Quicksand", sans-serif;
 }
 
 .loginLink button:hover {
@@ -296,7 +321,7 @@
 }
 
 .step.active span {
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: linear-gradient(135deg, #0073a0, #005a7f);
   color: white;
 }
 
@@ -304,10 +329,11 @@
   font-size: 0.7rem;
   color: #9CA3AF;
   margin: 0;
+  font-family: "Quicksand", sans-serif;
 }
 
 .step.active p {
-  color: #10B981;
+  color: #0073a0;
 }
 
 .stepLine {
@@ -379,12 +405,16 @@
 }
 
 .uploadOption:hover {
-  border-color: #10B981;
-  background: #ECFDF5;
+  border-color: #0073a0;
+  background: #E6F4F8;
 }
 
 .optionIcon {
   font-size: 2rem;
+  color: #0073a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .uploadOption span:last-child {
@@ -410,13 +440,18 @@
 
 .captureButton {
   padding: 0.75rem 2rem;
-  background: #10B981;
+  background: #0073a0;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 /* Preview */
@@ -458,19 +493,20 @@
 .successIcon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #FCD34D, #F59E0B);
+  background: linear-gradient(135deg, #0073a0, #005a7f);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
   animation: pulse 2s infinite;
+  font-size: 2rem;
+  color: white;
 }
 
 .successIcon svg {
   width: 40px;
   height: 40px;
-  color: white;
 }
 
 .successScreen h2 {
@@ -478,19 +514,21 @@
   font-weight: 700;
   color: #1F2937;
   margin-bottom: 0.75rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .successMessage {
   color: #6B7280;
   margin-bottom: 1.5rem;
+  font-family: "Quicksand", sans-serif;
 }
 
 .successMessage strong {
-  color: #F59E0B;
+  color: #0073a0;
 }
 
 .infoBox {
-  background: #FEF3C7;
+  background: #E6F4F8;
   border-radius: 16px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -503,11 +541,18 @@
   padding: 0.5rem 0;
   text-align: left;
   font-size: 0.9rem;
-  color: #92400E;
+  color: #005a7f;
+  font-family: "Quicksand", sans-serif;
+}
+
+.infoItem svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .infoItem:not(:last-child) {
-  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+  border-bottom: 1px solid rgba(0, 115, 160, 0.2);
 }
 
 /* Animations */
@@ -530,11 +575,11 @@
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 0 0 rgba(0, 115, 160, 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 15px rgba(0, 115, 160, 0);
   }
 }
 
@@ -569,4 +614,139 @@
   .stepLine {
     width: 20px;
   }
+  
+  .otpContainer {
+    gap: 0.5rem;
+  }
+  
+  .otpInput {
+    width: 40px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+}
+
+/* OTP Styles */
+.otpContainer {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 2rem 0;
+}
+
+.otpInput {
+  width: 50px;
+  height: 60px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  background: white;
+  color: #1F2937;
+  transition: all 0.2s;
+  font-family: "Quicksand", sans-serif;
+}
+
+.otpInput:focus {
+  outline: none;
+  border-color: #0073a0;
+  box-shadow: 0 0 0 3px rgba(0, 115, 160, 0.1);
+}
+
+.otpInput:not(:placeholder-shown) {
+  border-color: #0073a0;
+}
+
+.resendOtp {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #6B7280;
+  font-family: "Quicksand", sans-serif;
+}
+
+.resendOtp button {
+  background: none;
+  border: none;
+  color: #0073a0;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: "Quicksand", sans-serif;
+}
+
+.resendOtp button:hover {
+  text-decoration: underline;
+}
+
+.resendOtp button:disabled {
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+/* Step Wrapper for indicator */
+.stepWrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Skip Button */
+.skipButton {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  color: #6B7280;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Quicksand", sans-serif;
+}
+
+.skipButton:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.skipButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Step 4 Buttons Container */
+.step4Buttons {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.step4Buttons .submitButton {
+  flex: 1;
+}
+
+.step4Buttons .skipButton {
+  flex-shrink: 0;
+}
+
+/* Step Content */
+.stepContent {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.stepContent h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 0.25rem;
+  font-family: "Quicksand", sans-serif;
+}
+
+.stepDescription {
+  color: #6B7280;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  font-family: "Quicksand", sans-serif;
 }

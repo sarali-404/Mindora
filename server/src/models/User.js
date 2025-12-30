@@ -42,8 +42,8 @@ const userSchema = new mongoose.Schema({
   // Account verification status
   verificationStatus: {
     type: String,
-    enum: ['incomplete', 'pending', 'verified', 'rejected'],
-    default: 'incomplete'
+    enum: ['unverified', 'email_verified', 'verified', 'rejected'],
+    default: 'unverified'
   },
   registrationStep: {
     type: Number,
@@ -54,6 +54,20 @@ const userSchema = new mongoose.Schema({
   verificationMessage: String, // Admin can add rejection reason
   verifiedAt: Date,
   verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  // Email OTP verification
+  emailOTP: {
+    code: String,
+    expiresAt: Date
+  },
+  // Password Reset OTP
+  passwordResetOTP: {
+    code: String,
+    expiresAt: Date,
+    verified: {
+      type: Boolean,
+      default: false
+    }
+  },
   profile: {
     firstName: {
       type: String,
@@ -122,6 +136,7 @@ const userSchema = new mongoose.Schema({
       delete ret.passwordResetExpires;
       delete ret.loginAttempts;
       delete ret.lockUntil;
+      delete ret.emailOTP;
       return ret;
     }
   }

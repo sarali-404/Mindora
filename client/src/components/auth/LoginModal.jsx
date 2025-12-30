@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { HiOutlineX, HiOutlineClock, HiOutlineExclamationCircle } from 'react-icons/hi';
 import styles from './LoginModal.module.css';
 import authService from '../../services/authService.js';
+import ForgotPasswordModal from './ForgotPasswordModal.jsx';
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const googleButtonRef = useRef(null);
   const [formData, setFormData] = useState({
     username: '',
@@ -43,6 +46,16 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
       const response = await authService.login(loginData);
       
       if (response.success) {
+        // Check if user needs OTP verification
+        if (response.data.requiresOTP) {
+          onSwitchToRegister({
+            requiresOTP: true,
+            userId: response.data.userId,
+            email: response.data.email
+          });
+          return;
+        }
+        
         // Check if user needs to continue registration
         if (response.data.continueRegistration) {
           onSwitchToRegister({
@@ -62,16 +75,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
       console.error('Login failed:', error);
       
       // Check for verification status in error response
-      if (error.verificationStatus === 'incomplete') {
-        // User needs to complete registration
-        onSwitchToRegister({
-          continueRegistration: true,
-          userId: error.userId,
-          email: formData.username,
-          startStep: error.registrationStep || 2
-        });
-        return;
-      } else if (error.verificationStatus) {
+      if (error.verificationStatus) {
         setVerificationStatus(error.verificationStatus);
         setError(error.message);
       } else if (error.data && error.data.errors) {
@@ -175,7 +179,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
     if (verificationStatus === 'pending') {
       return (
         <div className={styles.verificationMessage}>
-          <div className={styles.verificationIcon}>⏳</div>
+          <div className={styles.verificationIcon}><HiOutlineClock size={32} /></div>
           <h3>Account Pending Verification</h3>
           <p>Your account is being reviewed by our team. This typically takes 24-48 hours.</p>
           <p className={styles.smallText}>You'll receive an email once your account is approved.</p>
@@ -186,7 +190,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
     if (verificationStatus === 'rejected') {
       return (
         <div className={styles.verificationMessageRejected}>
-          <div className={styles.verificationIcon}>❌</div>
+          <div className={styles.verificationIcon}><HiOutlineExclamationCircle size={32} /></div>
           <h3>Verification Rejected</h3>
           <p>Unfortunately, your ID verification was not approved.</p>
           <p className={styles.smallText}>Please contact support@mindora.com for assistance.</p>
@@ -202,9 +206,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         {/* Close button */}
         <button className={styles.closeButton} onClick={onClose}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
+          <HiOutlineX size={24} />
         </button>
 
         {/* Header */}
@@ -272,7 +274,11 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                 />
                 <span className={styles.checkboxText}>Remember me</span>
               </label>
-              <button type="button" className={styles.forgotPassword}>
+              <button 
+                type="button" 
+                className={styles.forgotPassword}
+                onClick={() => setShowForgotPassword(true)}
+              >
                 Forgot password?
               </button>
             </div>
@@ -317,6 +323,13 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
           </div>
         )}
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onBackToLogin={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 };

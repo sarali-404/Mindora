@@ -9,7 +9,12 @@ const {
   changePassword,
   googleAuth,
   updateProfile,
-  checkVerificationStatus
+  checkVerificationStatus,
+  verifyOTP,
+  resendOTP,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword
 } = require('../controllers/authController');
 
 const { authenticate, authorize } = require('../middleware/auth');
@@ -20,10 +25,52 @@ const {
   handleValidationErrors
 } = require('../middleware/validation');
 
+// Import email service for testing
+const { sendOTPEmail, generateOTP } = require('../services/emailService');
+
 const router = express.Router();
+
+// Test email endpoint (REMOVE IN PRODUCTION)
+router.post('/test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    console.log('📧 Testing email to:', email);
+    const otp = generateOTP();
+    console.log('📧 Generated OTP:', otp);
+    
+    const result = await sendOTPEmail(email, otp, 'Test User');
+    console.log('📧 Email result:', result);
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent!',
+      data: result
+    });
+  } catch (error) {
+    console.error('📧 Test email error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send test email',
+      error: error.message
+    });
+  }
+});
 
 // Public routes - Account Creation (Step 1)
 router.post('/create-account', createAccount);
+
+// OTP Verification
+router.post('/verify-otp', verifyOTP);
+router.post('/resend-otp', resendOTP);
+
+// Forgot Password Routes
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-otp', verifyResetOTP);
+router.post('/reset-password', resetPassword);
 
 // Legacy register endpoint
 router.post('/register', [
