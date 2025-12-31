@@ -8,9 +8,13 @@ require('dotenv').config();
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const materialRoutes = require('./src/routes/materialRoutes');
+const sessionRoutes = require('./src/routes/sessionRoutes');
 
 // Import email service for verification
 const { verifyEmailConnection } = require('./src/services/emailService');
+
+// Import Discord service
+const discordService = require('./src/services/discordService');
 
 const path = require('path');
 
@@ -89,6 +93,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/materials', materialRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -117,6 +122,11 @@ mongoose.connect(process.env.MONGODB_URI)
     
     // Verify email connection
     await verifyEmailConnection();
+    
+    // Initialize Discord bot (non-blocking)
+    discordService.initialize().catch(err => {
+      console.warn('⚠️ Discord bot initialization failed:', err.message);
+    });
     
     // Start server only after successful database connection
     app.listen(PORT, () => {

@@ -48,6 +48,100 @@
   color: #6b7280;
 }
 
+/* Discord Info Banner */
+
+.discordInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1.1rem;
+  background: #f0f4fb;
+  border: 1px solid #dbeafe;
+  border-radius: 0.75rem;
+  color: #1e40af;
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.discordInfo svg {
+  flex-shrink: 0;
+  color: #5865f2;
+}
+
+/* Verification Required */
+
+.verificationRequired {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.verificationRequired h2 {
+  font-size: 1.25rem;
+  color: #111827;
+  margin: 0;
+}
+
+.verificationRequired p {
+  color: #6b7280;
+  margin: 0;
+  max-width: 300px;
+}
+
+/* Error Message */
+
+.errorMessage {
+  padding: 0.85rem 1.1rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.75rem;
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Session Type Toggle */
+
+.sessionTypeToggle {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.4rem;
+  background: #f9fafb;
+  padding: 0.4rem;
+  border-radius: 0.75rem;
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.typeBtn:hover {
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.typeBtnActive {
+  background: #0073a0;
+  border-color: #0073a0;
+  color: #ffffff;
+}
+
 /* Form */
 
 .form {
