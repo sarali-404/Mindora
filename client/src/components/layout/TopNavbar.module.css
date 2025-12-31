@@ -117,6 +117,31 @@
   object-fit: cover;
 }
 
+.avatarButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatarButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.avatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #005985, #0073a0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .navbar {
@@ -166,6 +191,11 @@
     width: 28px;
     height: 28px;
   }
+  
+  .avatarFallback {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -202,6 +232,11 @@
   }
   
   .avatar {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .avatarFallback {
     width: 26px;
     height: 26px;
   }

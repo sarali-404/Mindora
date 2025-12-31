@@ -203,10 +203,54 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Upload profile picture
+// @route   POST /api/users/profile-picture
+// @access  Private
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded.'
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
+      });
+    }
+
+    // Store the path to the uploaded file
+    const avatarPath = `/uploads/profile-pictures/${req.file.filename}`;
+    user.profile.avatar = avatarPath;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile picture uploaded successfully.',
+      data: {
+        avatar: avatarPath
+      }
+    });
+  } catch (error) {
+    console.error('Upload profile picture error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading profile picture.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
   uploadIDPhoto,
   getAllUsers,
-  deleteUser
+  deleteUser,
+  uploadProfilePicture
 };

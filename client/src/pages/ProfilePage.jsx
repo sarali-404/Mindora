@@ -13,8 +13,10 @@ import {
   MdPlayCircleOutline,
   MdClose,
   MdWarning,
+  MdLogout,
+  MdCameraAlt,
 } from "react-icons/md";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import materialService from "../services/materialService";
@@ -33,9 +35,11 @@ import welcomeAboardImg from "../assets/achievements/welcome_aborad.png";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   
   // Get current user from authService
-  const currentUser = authService.getUser();
+  const [currentUser, setCurrentUser] = useState(authService.getUser());
+  const [uploadingPicture, setUploadingPicture] = useState(false);
   
   // Dynamic user data
   const user = {
@@ -50,6 +54,73 @@ export default function ProfilePage() {
     initials: currentUser?.profile?.firstName && currentUser?.profile?.lastName
       ? `${currentUser.profile.firstName[0]}${currentUser.profile.lastName[0]}`
       : currentUser?.username?.substring(0, 2).toUpperCase() || "U",
+  };
+
+  // Get profile picture URL
+  const getProfilePictureUrl = () => {
+    if (!currentUser?.profile?.avatar) return null;
+    const avatar = currentUser.profile.avatar;
+    // Check if it's a full URL (Google picture) or a relative path
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    // Otherwise it's a relative path to our server
+    return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${avatar}`;
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate('/'); // Redirect to landing page
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate even if logout API fails
+      navigate('/');
+    }
+  };
+
+  // Handle profile picture upload
+  const handleProfilePictureClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB.');
+      return;
+    }
+
+    try {
+      setUploadingPicture(true);
+      const response = await authService.uploadProfilePicture(file);
+      
+      if (response.success) {
+        // Update local user data
+        const updatedUser = { ...currentUser, profile: { ...currentUser.profile, avatar: response.data.avatar } };
+        authService.setUser(updatedUser);
+        setCurrentUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload profile picture. Please try again.');
+    } finally {
+      setUploadingPicture(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Materials state
@@ -274,7 +345,44 @@ export default function ProfilePage() {
       {/* Top profile header */}
       <section className={styles.headerCard}>
         <div className={styles.headerLeft}>
-          <div className={styles.avatarCircle}>{user.initials}</div>
+          <div className={styles.avatarWrapper}>
+            {getProfilePictureUrl() ? (
+              <img 
+                src={getProfilePictureUrl()} 
+                alt="Profile" 
+                className={styles.avatarImage}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className={styles.avatarCircle}
+              style={{ display: getProfilePictureUrl() ? 'none' : 'flex' }}
+            >
+              {user.initials}
+            </div>
+            <button 
+              className={styles.avatarEditBtn}
+              onClick={handleProfilePictureClick}
+              disabled={uploadingPicture}
+              title="Change profile picture"
+            >
+              {uploadingPicture ? (
+                <div className={styles.uploadSpinner}></div>
+              ) : (
+                <MdCameraAlt size={16} />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              style={{ display: 'none' }}
+            />
+          </div>
           <div className={styles.headerInfo}>
             <h1 className={styles.name}>{user.name}</h1>
             {/* email removed as requested */}
@@ -287,7 +395,9 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
-        <button className={styles.editButton}><MdEdit size={18} style={{marginRight:8}}/>Edit Profile</button>
+        <button className={styles.logoutButton} onClick={handleLogout}>
+          <MdLogout size={18} style={{marginRight:8}}/>Logout
+        </button>
       </section>
 
       {/* Stats row */}

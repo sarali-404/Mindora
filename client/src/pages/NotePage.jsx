@@ -822,6 +822,7 @@ const NotePage = () => {
                 onReply={setReplyingTo}
                 onDelete={handleDeleteComment}
                 formatTime={formatRelativeTime}
+                currentUserId={currentUserId}
               />
             ))}
           </div>
@@ -850,8 +851,13 @@ const NotePage = () => {
 };
 
 // Comment Item Component
-function CommentItem({ comment, onReply, onDelete, formatTime, parentId = null }) {
+function CommentItem({ comment, onReply, onDelete, formatTime, parentId = null, currentUserId }) {
   const [showActions, setShowActions] = useState(false);
+
+  // Check if current user is the owner of this comment
+  const isCommentOwner = currentUserId && comment.author && 
+    (comment.author._id?.toString() === currentUserId?.toString() ||
+     comment.author.toString() === currentUserId?.toString());
 
   return (
     <div className={styles.commentItem}>
@@ -873,9 +879,11 @@ function CommentItem({ comment, onReply, onDelete, formatTime, parentId = null }
           <button onClick={() => onReply(comment)}>
             <MdReply /> Reply
           </button>
-          <button onClick={() => onDelete(comment._id, parentId)}>
-            <MdDelete /> Delete
-          </button>
+          {isCommentOwner && (
+            <button onClick={() => onDelete(comment._id, parentId)}>
+              <MdDelete /> Delete
+            </button>
+          )}
         </div>
 
         {/* Replies */}
@@ -889,6 +897,7 @@ function CommentItem({ comment, onReply, onDelete, formatTime, parentId = null }
                 onDelete={onDelete}
                 formatTime={formatTime}
                 parentId={comment._id}
+                currentUserId={currentUserId}
               />
             ))}
           </div>

@@ -365,6 +365,35 @@ class AuthService {
       throw error;
     }
   }
+
+  // Upload profile picture
+  async uploadProfilePicture(file) {
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile-picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload profile picture');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Upload profile picture error:', error);
+      throw error;
+    }
+  }
 }
 
 // Create and export singleton instance
