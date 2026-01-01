@@ -1,200 +1,890 @@
+import { useState, useEffect, useRef } from "react";
+import { 
+  MdSearch, 
+  MdPersonAdd, 
+  MdCheck, 
+  MdClose, 
+  MdChat, 
+  MdPeople,
+  MdPersonSearch,
+  MdNotifications,
+  MdSend,
+  MdAttachFile,
+  MdMoreVert,
+  MdDelete,
+  MdVerified,
+  MdRefresh
+} from "react-icons/md";
+import { FaCircle } from "react-icons/fa";
 import styles from "./CommunityPage.module.css";
-import { FaMedal } from "react-icons/fa";
+import friendService, { formatLastSeen, getDisplayName, getInitials } from "../services/friendService";
+import chatService, { formatMessageTime, formatConversationTime, isImageFile, getFileIcon, formatFileSize } from "../services/chatService";
+import socketService from "../services/socketService";
+import authService from "../services/authService";
 
 export default function CommunityPage() {
+  const currentUser = authService.getUser();
+  const [activeTab, setActiveTab] = useState('friends');
+  
+  // Data states
+  const [friends, setFriends] = useState([]);
+  const [discoverUsers, setDiscoverUsers] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  
+  // UI states
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Chat states
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [typingUsers, setTypingUsers] = useState({});
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const selectedChatRef = useRef(null);
+
+  // Keep selectedChatRef in sync with selectedChat state
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
+  // Initialize socket and fetch initial data
+  useEffect(() => {
+    const socket = socketService.connect();
+    fetchInitialData();
+
+    // Socket listeners with refs to get latest state
+    socketService.onNewMessage((message) => {
+      const currentChat = selectedChatRef.current;
+      console.log('📩 New message received:', message);
+      
+      if (currentChat && 
+          (message.sender._id === currentChat._id || message.receiver._id === currentChat._id)) {
+        setMessages(prev => [...prev, message]);
+        chatService.markAsRead(currentChat._id);
+      } else {
+        setUnreadCount(prev => prev + 1);
+      }
+      fetchConversations();
+    });
+
+    socketService.onMessageDeleted(({ messageId }) => {
+      setMessages(prev => prev.map(m => 
+        m._id === messageId ? { ...m, deletedForEveryone: true, content: 'This message was deleted' } : m
+      ));
+    });
+
+    socketService.onMessagesRead(({ readBy }) => {
+      const currentChat = selectedChatRef.current;
+      if (currentChat?._id === readBy) {
+        setMessages(prev => prev.map(m => ({ ...m, read: true })));
+      }
+    });
+
+    socketService.onUserTyping(({ senderId, senderName }) => {
+      setTypingUsers(prev => ({ ...prev, [senderId]: senderName }));
+    });
+
+    socketService.onUserStopTyping(({ senderId }) => {
+      setTypingUsers(prev => {
+        const updated = { ...prev };
+        delete updated[senderId];
+        return updated;
+      });
+    });
+
+    socketService.onPresenceUpdate(({ userId, isOnline, lastSeen }) => {
+      setFriends(prev => prev.map(f => 
+        f.user._id === userId ? { ...f, user: { ...f.user, isOnline, lastSeen } } : f
+      ));
+      
+      const currentChat = selectedChatRef.current;
+      if (currentChat?._id === userId) {
+        setSelectedChat(prev => prev ? { ...prev, isOnline, lastSeen } : null);
+      }
+    });
+
+    socketService.onFriendRemoved(({ userId, displayName }) => {
+      // Remove from friends list
+      setFriends(prev => prev.filter(f => f.user._id !== userId));
+      
+      // If currently chatting with this user, close the chat
+      const currentChat = selectedChatRef.current;
+      if (currentChat?._id === userId) {
+        setSelectedChat(null);
+        setMessages([]);
+        alert(`${displayName} has removed you from their friends list. You can no longer chat with them.`);
+      } else {
+        // Show notification
+        alert(`${displayName} has removed you from their friends list.`);
+      }
+      
+      // Refresh conversations to remove this chat
+      fetchConversations();
+    });
+
+    return () => {
+      socketService.removeAllListeners();
+    };
+  }, []);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchFriends(),
+        fetchPendingRequests(),
+        fetchConversations(),
+        fetchUnreadCount()
+      ]);
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFriends = async () => {
+    try {
+      const response = await friendService.getFriends();
+      setFriends(response.data || []);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    }
+  };
+
+  const fetchDiscoverUsers = async (search = '') => {
+    try {
+      const response = await friendService.discoverUsers({ search, limit: 20 });
+      setDiscoverUsers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching discover users:', error);
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const [pending, sent] = await Promise.all([
+        friendService.getPendingRequests(),
+        friendService.getSentRequests()
+      ]);
+      setPendingRequests(pending.data || []);
+      setSentRequests(sent.data || []);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const response = await chatService.getConversations();
+      setConversations(response.data || []);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await chatService.getUnreadCount();
+      setUnreadCount(response.data?.count || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Friend actions
+  const handleSendFriendRequest = async (userId) => {
+    try {
+      await friendService.sendFriendRequest(userId);
+      fetchDiscoverUsers(searchQuery);
+      fetchPendingRequests();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleAcceptRequest = async (friendshipId) => {
+    try {
+      await friendService.acceptFriendRequest(friendshipId);
+      fetchFriends();
+      fetchPendingRequests();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDeclineRequest = async (friendshipId) => {
+    try {
+      await friendService.declineFriendRequest(friendshipId);
+      fetchPendingRequests();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleCancelRequest = async (friendshipId) => {
+    try {
+      await friendService.cancelFriendRequest(friendshipId);
+      fetchPendingRequests();
+      fetchDiscoverUsers(searchQuery);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleUnfriend = async (userId) => {
+    if (!confirm('Are you sure you want to unfriend this user?')) return;
+    try {
+      await friendService.unfriend(userId);
+      fetchFriends();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  // Chat actions
+  const openChat = async (user) => {
+    setSelectedChat(user);
+    setActiveTab('chat');
+    setChatLoading(true);
+    
+    try {
+      const response = await chatService.getConversation(user._id);
+      setMessages(response.data || []);
+      await chatService.markAsRead(user._id);
+      fetchUnreadCount();
+    } catch (error) {
+      console.error('Error loading chat:', error);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if ((!messageInput.trim() && !attachmentFile) || !selectedChat) return;
+
+    try {
+      let response;
+      if (attachmentFile) {
+        response = await chatService.sendMessageWithAttachment(
+          selectedChat._id, 
+          messageInput, 
+          attachmentFile
+        );
+        setAttachmentFile(null);
+      } else {
+        response = await chatService.sendMessage(selectedChat._id, messageInput);
+      }
+      
+      setMessages(prev => [...prev, response.data]);
+      setMessageInput('');
+      fetchConversations();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleTyping = () => {
+    if (!selectedChat) return;
+    
+    socketService.emitTyping(selectedChat._id);
+    
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socketService.emitStopTyping(selectedChat._id);
+    }, 2000);
+  };
+
+  const handleDeleteMessage = async (messageId, forEveryone = false) => {
+    try {
+      if (forEveryone) {
+        await chatService.deleteMessageForEveryone(messageId);
+        setMessages(prev => prev.map(m => 
+          m._id === messageId ? { ...m, deletedForEveryone: true, content: 'This message was deleted' } : m
+        ));
+      } else {
+        await chatService.deleteMessageForSelf(messageId);
+        setMessages(prev => prev.filter(m => m._id !== messageId));
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (activeTab === 'discover') {
+      fetchDiscoverUsers(searchQuery);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'discover') {
+      fetchDiscoverUsers(searchQuery);
+    }
+    if (tab !== 'chat') {
+      setSelectedChat(null);
+    }
+  };
+
+  const totalRequestsCount = pendingRequests.length + sentRequests.length;
+
   return (
     <div className={styles.page}>
-      {/* Header (search moved into header) */}
+      {/* Header */}
       <header className={styles.header}>
-        <div className={styles.searchContainer}>
+        <h1 className={styles.pageTitle}>Community</h1>
+        <form className={styles.searchContainer} onSubmit={handleSearch}>
+          <MdSearch className={styles.searchIcon} />
           <input
             className={styles.searchInput}
-            placeholder="Search users by name or university..."
+            placeholder={activeTab === 'discover' ? "Search users by name or university..." : "Search..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-        <button className={styles.primaryGhostButton}>View Leaderboard</button>
+        </form>
       </header>
 
-      {/* Friends */}
-      <section className={styles.sectionBlock}>
-        <div className={styles.sectionHeaderRow}>
-          <h2 className={styles.sectionTitle}>My Friends</h2>
-        </div>
-        <div className={styles.friendRow}>
-          <FriendCard status="One day ago" statusColor="purple" />
-          <FriendCard status="Online" statusColor="green" />
-          <FriendCard status="Two weeks ago" statusColor="purple" />
-          <FriendCard status="Online" statusColor="green" />
-           <FriendCard status="Online" statusColor="green" />
-          <FriendCard status="Two weeks ago" statusColor="purple" />
-          <FriendCard status="Online" statusColor="green" />
-        </div>
-      </section>
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === 'friends' ? styles.tabActive : ''}`}
+          onClick={() => handleTabChange('friends')}
+        >
+          <MdPeople size={18} />
+          Friends
+          <span className={styles.tabBadge}>{friends.length}</span>
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'discover' ? styles.tabActive : ''}`}
+          onClick={() => handleTabChange('discover')}
+        >
+          <MdPersonSearch size={18} />
+          Discover
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActive : ''}`}
+          onClick={() => handleTabChange('requests')}
+        >
+          <MdNotifications size={18} />
+          Requests
+          {totalRequestsCount > 0 && (
+            <span className={styles.tabBadgeAlert}>{totalRequestsCount}</span>
+          )}
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'chat' ? styles.tabActive : ''}`}
+          onClick={() => handleTabChange('chat')}
+        >
+          <MdChat size={18} />
+          Chat
+          {unreadCount > 0 && (
+            <span className={styles.tabBadgeAlert}>{unreadCount}</span>
+          )}
+        </button>
+      </div>
 
-      {/* People you may know */}
-      <section className={styles.sectionBlock}>
-        <div className={styles.sectionHeaderRow}>
-          <h2 className={styles.sectionTitle}>People You May Know</h2>
-        </div>
-        <div className={styles.friendRow}>
-          <SuggestionCard />
-          <SuggestionCard />
-          <SuggestionCard />
-          <SuggestionCard />
-          <SuggestionCard />
-          <SuggestionCard />
-          <SuggestionCard />
-        </div>
-      </section>
+      {/* Content */}
+      <div className={styles.content}>
+        {loading ? (
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {/* Friends Tab */}
+            {activeTab === 'friends' && (
+              <div className={styles.friendsGrid}>
+                {friends.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <MdPeople size={48} />
+                    <h3>No friends yet</h3>
+                    <p>Start discovering people and send friend requests!</p>
+                    <button 
+                      className={styles.primaryButton}
+                      onClick={() => handleTabChange('discover')}
+                    >
+                      Discover People
+                    </button>
+                  </div>
+                ) : (
+                  friends.map(({ user }) => (
+                    <FriendCard
+                      key={user._id}
+                      user={user}
+                      onMessage={() => openChat(user)}
+                      onUnfriend={() => handleUnfriend(user._id)}
+                    />
+                  ))
+                )}
+              </div>
+            )}
 
-      {/* Leaderboard */}
-      <section className={styles.sectionBlock}>
-        <div className={styles.sectionHeaderRow}>
-          <h2 className={styles.sectionTitle}>Leaderboard - Top Learners</h2>
-        </div>
-        <div className={styles.leaderboardCard}>
-          <LeaderboardRow
-            rank={1}
-            name="Anna Lee"
-            major="Computer Science"
-            uni="NSBM"
-            badge="Top Contributor"
-            relation="Friend"
-            xp="5,420"
-            highlight
-          />
-          <LeaderboardRow
-            rank={2}
-            name="Chris Martin"
-            major="Data Science"
-            uni="Stanford"
-            badge="Goal Master"
-            relation="Add"
-            xp="4,890"
-            shaded
-          />
-          <LeaderboardRow
-            rank={3}
-            name="Maya Patel"
-            major="AI & ML"
-            uni="Berkeley"
-            badge="Study Champion"
-            relation="Friend"
-            xp="4,320"
-          />
-          <LeaderboardRow
-            rank={4}
-            name="James Wilson"
-            major="Computer Science"
-            uni="MIT"
-            relation="Add"
-            xp="4,100"
-            shaded
-          />
-          <LeaderboardRow
-            rank={5}
-            name="Sofia Garcia"
-            major="Data Science"
-            uni="Harvard"
-            badge="Streak Master"
-            relation="Friend"
-            xp="3,950"
-          />
-        </div>
-      </section>
+            {/* Discover Tab */}
+            {activeTab === 'discover' && (
+              <div className={styles.friendsGrid}>
+                {discoverUsers.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <MdPersonSearch size={48} />
+                    <h3>No users found</h3>
+                    <p>Try searching with different keywords</p>
+                  </div>
+                ) : (
+                  discoverUsers.map((user) => (
+                    <DiscoverCard
+                      key={user._id}
+                      user={user}
+                      onSendRequest={() => handleSendFriendRequest(user._id)}
+                      onCancelRequest={() => handleCancelRequest(user.friendshipId)}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Requests Tab */}
+            {activeTab === 'requests' && (
+              <div className={styles.requestsContainer}>
+                <section className={styles.requestsSection}>
+                  <h3 className={styles.sectionTitle}>
+                    Received Requests
+                    {pendingRequests.length > 0 && (
+                      <span className={styles.countBadge}>{pendingRequests.length}</span>
+                    )}
+                  </h3>
+                  {pendingRequests.length === 0 ? (
+                    <p className={styles.emptyText}>No pending requests</p>
+                  ) : (
+                    <div className={styles.requestsList}>
+                      {pendingRequests.map((request) => (
+                        <RequestCard
+                          key={request._id}
+                          user={request.requester}
+                          type="received"
+                          onAccept={() => handleAcceptRequest(request._id)}
+                          onDecline={() => handleDeclineRequest(request._id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className={styles.requestsSection}>
+                  <h3 className={styles.sectionTitle}>
+                    Sent Requests
+                    {sentRequests.length > 0 && (
+                      <span className={styles.countBadge}>{sentRequests.length}</span>
+                    )}
+                  </h3>
+                  {sentRequests.length === 0 ? (
+                    <p className={styles.emptyText}>No sent requests</p>
+                  ) : (
+                    <div className={styles.requestsList}>
+                      {sentRequests.map((request) => (
+                        <RequestCard
+                          key={request._id}
+                          user={request.recipient}
+                          type="sent"
+                          onCancel={() => handleCancelRequest(request._id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+
+            {/* Chat Tab */}
+            {activeTab === 'chat' && (
+              <div className={styles.chatContainer}>
+                {/* Conversations List */}
+                <div className={styles.conversationsList}>
+                  <div className={styles.conversationsHeader}>
+                    <h3>Messages</h3>
+                    <button className={styles.refreshBtn} onClick={fetchConversations}>
+                      <MdRefresh size={18} />
+                    </button>
+                  </div>
+                  
+                  {conversations.length === 0 ? (
+                    <div className={styles.emptyConversations}>
+                      <p>No conversations yet</p>
+                      <small>Message a friend to start chatting</small>
+                    </div>
+                  ) : (
+                    conversations.map((conv) => (
+                      <div
+                        key={conv.conversationId}
+                        className={`${styles.conversationItem} ${
+                          selectedChat?._id === conv.otherUser._id ? styles.conversationActive : ''
+                        }`}
+                        onClick={() => openChat(conv.otherUser)}
+                      >
+                        <div className={styles.conversationAvatar}>
+                          {conv.otherUser.profile?.avatar ? (
+                            <img src={conv.otherUser.profile.avatar} alt="" />
+                          ) : (
+                            <span>{getInitials(conv.otherUser)}</span>
+                          )}
+                          {conv.otherUser.isOnline && <span className={styles.onlineDot}></span>}
+                        </div>
+                        <div className={styles.conversationInfo}>
+                          <div className={styles.conversationTop}>
+                            <span className={styles.conversationName}>
+                              {getDisplayName(conv.otherUser)}
+                            </span>
+                            <span className={styles.conversationTime}>
+                              {formatConversationTime(conv.lastMessage.createdAt)}
+                            </span>
+                          </div>
+                          <p className={styles.conversationPreview}>
+                            {conv.lastMessage.attachment ? '📎 Attachment' : conv.lastMessage.content}
+                          </p>
+                        </div>
+                        {conv.unreadCount > 0 && (
+                          <span className={styles.unreadBadge}>{conv.unreadCount}</span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Chat Window */}
+                <div className={styles.chatWindow}>
+                  {!selectedChat ? (
+                    <div className={styles.noChatSelected}>
+                      <MdChat size={64} />
+                      <h3>Select a conversation</h3>
+                      <p>Choose a friend to start messaging</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.chatHeader}>
+                        <div className={styles.chatHeaderInfo}>
+                          <div className={styles.chatAvatar}>
+                            {selectedChat.profile?.avatar ? (
+                              <img src={selectedChat.profile.avatar} alt="" />
+                            ) : (
+                              <span>{getInitials(selectedChat)}</span>
+                            )}
+                          </div>
+                          <div>
+                            <h4>{getDisplayName(selectedChat)}</h4>
+                            <p className={styles.chatStatus}>
+                              {selectedChat.isOnline ? (
+                                <><FaCircle className={styles.onlineIndicator} /> Online</>
+                              ) : (
+                                `Last seen ${formatLastSeen(selectedChat.lastSeen)}`
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.messagesContainer}>
+                        {chatLoading ? (
+                          <div className={styles.loadingMessages}>
+                            <div className={styles.spinner}></div>
+                          </div>
+                        ) : (
+                          <>
+                            {messages.map((message) => (
+                              <MessageBubble
+                                key={message._id}
+                                message={message}
+                                isOwn={message.sender._id === currentUser?.id || message.sender._id === currentUser?._id}
+                                onDelete={handleDeleteMessage}
+                              />
+                            ))}
+                            {typingUsers[selectedChat._id] && (
+                              <div className={styles.typingIndicator}>
+                                {typingUsers[selectedChat._id]} is typing...
+                              </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                          </>
+                        )}
+                      </div>
+
+                      <form className={styles.messageForm} onSubmit={handleSendMessage}>
+                        {attachmentFile && (
+                          <div className={styles.attachmentPreview}>
+                            <span>{attachmentFile.name}</span>
+                            <button type="button" onClick={() => setAttachmentFile(null)}>
+                              <MdClose />
+                            </button>
+                          </div>
+                        )}
+                        <div className={styles.messageInputRow}>
+                          <button
+                            type="button"
+                            className={styles.attachButton}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <MdAttachFile size={20} />
+                          </button>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            hidden
+                            onChange={(e) => setAttachmentFile(e.target.files[0])}
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                          />
+                          <input
+                            className={styles.messageInput}
+                            placeholder="Type a message..."
+                            value={messageInput}
+                            onChange={(e) => {
+                              setMessageInput(e.target.value);
+                              handleTyping();
+                            }}
+                            maxLength={2000}
+                          />
+                          <button
+                            type="submit"
+                            className={styles.sendButton}
+                            disabled={!messageInput.trim() && !attachmentFile}
+                          >
+                            <MdSend size={20} />
+                          </button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function FriendCard({ status, statusColor }) {
+// ==================== COMPONENTS ====================
+
+function FriendCard({ user, onMessage, onUnfriend }) {
+  const [showMenu, setShowMenu] = useState(false);
+
   return (
     <article className={styles.friendCard}>
       <div className={styles.friendTop}>
-        <div className={styles.avatarCircle}>A</div>
-        <div>
-          <p className={styles.friendName}>Alex Turner</p>
-          <p className={styles.friendMeta}>Computer Science · MIT</p>
+        <div className={styles.avatarContainer}>
+          {user.profile?.avatar ? (
+            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+          ) : (
+            <div className={styles.avatarCircle}>{getInitials(user)}</div>
+          )}
+          {user.isOnline && <span className={styles.onlineBadge}></span>}
+        </div>
+        <div className={styles.friendInfo}>
+          <p className={styles.friendName}>
+            {getDisplayName(user)}
+            {user.verificationStatus === 'verified' && (
+              <MdVerified className={styles.verifiedIcon} />
+            )}
+          </p>
+          <p className={styles.friendMeta}>
+            {user.profile?.university || 'University not set'}
+          </p>
           <div className={styles.friendStatusRow}>
-            <span
-              className={`${styles.statusDot} ${
-                statusColor === "green" ? styles.statusGreen : styles.statusPurple
-              }`}
+            <FaCircle 
+              className={user.isOnline ? styles.statusGreen : styles.statusGray} 
+              size={8}
             />
-            <span className={styles.friendStatusText}>{status}</span>
+            <span className={styles.friendStatusText}>
+              {user.isOnline ? 'Online' : formatLastSeen(user.lastSeen)}
+            </span>
           </div>
         </div>
-      </div>
-      <button className={styles.discordButton}>Message on Discord</button>
-    </article>
-  );
-}
-
-function SuggestionCard() {
-  return (
-    <article className={styles.suggestionCard}>
-      <div className={styles.friendTop}>
-        <div className={styles.avatarCircle}>A</div>
-        <div>
-          <p className={styles.friendName}>Alex Turner</p>
-          <p className={styles.friendMeta}>Computer Science · MIT</p>
-          <p className={styles.mutualText}>3 mutual friends</p>
+        <div className={styles.friendMenu}>
+          <button className={styles.menuButton} onClick={() => setShowMenu(!showMenu)}>
+            <MdMoreVert />
+          </button>
+          {showMenu && (
+            <div className={styles.menuDropdown}>
+              <button onClick={() => { onUnfriend(); setShowMenu(false); }}>
+                <MdDelete /> Unfriend
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      <button className={styles.addFriendButton}>Add Friend</button>
+      <button className={styles.messageButton} onClick={onMessage}>
+        <MdChat size={16} /> Message
+      </button>
     </article>
   );
 }
 
-function LeaderboardRow({
-  rank,
-  name,
-  major,
-  uni,
-  badge,
-  relation,
-  xp,
-  highlight,
-  shaded,
-}) {
+function DiscoverCard({ user, onSendRequest, onCancelRequest }) {
+  const isPending = user.friendshipStatus === 'pending';
+  const isRequester = user.isRequester;
+
   return (
-    <div
-      className={`${styles.leaderRow} ${highlight ? styles.leaderRowHighlight : ""} ${
-        shaded ? styles.leaderRowShaded : ""
-      }`}
-    >
-      <div className={styles.leaderLeft}>
-        {rank <= 3 ? (
-          <FaMedal
-            className={`${styles.medal} ${
-              rank === 1 ? styles.gold : rank === 2 ? styles.silver : styles.bronze
-            }`}
-          />
-        ) : (
-          <span className={styles.rank}>{rank}</span>
-        )}
-        <div className={styles.leaderAvatar}>{name[0]}</div>
+    <article className={styles.discoverCard}>
+      <div className={styles.friendTop}>
+        <div className={styles.avatarContainer}>
+          {user.profile?.avatar ? (
+            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+          ) : (
+            <div className={styles.avatarCircle}>{getInitials(user)}</div>
+          )}
+        </div>
+        <div className={styles.friendInfo}>
+          <p className={styles.friendName}>
+            {getDisplayName(user)}
+            {user.verificationStatus === 'verified' && (
+              <MdVerified className={styles.verifiedIcon} />
+            )}
+          </p>
+          <p className={styles.friendMeta}>
+            {user.profile?.university || 'University not set'}
+          </p>
+          {user.profile?.bio && (
+            <p className={styles.userBio}>{user.profile.bio}</p>
+          )}
+        </div>
+      </div>
+      
+      {isPending && isRequester ? (
+        <button className={styles.pendingButton} onClick={onCancelRequest}>
+          Pending • Cancel
+        </button>
+      ) : isPending && !isRequester ? (
+        <button className={styles.respondButton}>Respond to Request</button>
+      ) : (
+        <button className={styles.addFriendButton} onClick={onSendRequest}>
+          <MdPersonAdd size={16} /> Add Friend
+        </button>
+      )}
+    </article>
+  );
+}
+
+function RequestCard({ user, type, onAccept, onDecline, onCancel }) {
+  return (
+    <div className={styles.requestCard}>
+      <div className={styles.requestInfo}>
+        <div className={styles.avatarContainer}>
+          {user.profile?.avatar ? (
+            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+          ) : (
+            <div className={styles.avatarCircle}>{getInitials(user)}</div>
+          )}
+        </div>
         <div>
-          <p className={styles.leaderName}>{name}</p>
-          <p className={styles.leaderMeta}>
-            {major} · {uni}
+          <p className={styles.friendName}>
+            {getDisplayName(user)}
+            {user.verificationStatus === 'verified' && (
+              <MdVerified className={styles.verifiedIcon} />
+            )}
+          </p>
+          <p className={styles.friendMeta}>
+            {user.profile?.university || 'University not set'}
           </p>
         </div>
       </div>
-
-      <div className={styles.leaderRight}>
-        {badge && <span className={styles.badgeChip}>{badge}</span>}
-        <span
-          className={`${styles.relationChip} ${
-            relation === "Friend" ? styles.relationFriend : styles.relationAdd
-          }`}
-        >
-          {relation}
-        </span>
-        <div className={styles.xpBlock}>
-          <span className={styles.xpLabel}>Total XP</span>
-          <span className={styles.xpValue}>{xp}</span>
-        </div>
+      
+      <div className={styles.requestActions}>
+        {type === 'received' ? (
+          <>
+            <button className={styles.acceptButton} onClick={onAccept}>
+              <MdCheck /> Accept
+            </button>
+            <button className={styles.declineButton} onClick={onDecline}>
+              <MdClose /> Decline
+            </button>
+          </>
+        ) : (
+          <button className={styles.cancelButton} onClick={onCancel}>
+            Cancel Request
+          </button>
+        )}
       </div>
+    </div>
+  );
+}
+
+function MessageBubble({ message, isOwn, onDelete }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  if (message.deletedForEveryone) {
+    return (
+      <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''} ${styles.messageDeleted}`}>
+        <em>This message was deleted</em>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}>
+      {message.attachment && (
+        <div className={styles.messageAttachment}>
+          {isImageFile(message.attachment.mimeType) ? (
+            <img 
+              src={chatService.getAttachmentUrl(message.attachment.filename)} 
+              alt="attachment" 
+              className={styles.attachmentImage}
+            />
+          ) : (
+            <a 
+              href={chatService.getAttachmentUrl(message.attachment.filename)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.attachmentFile}
+            >
+              <span>{getFileIcon(message.attachment.mimeType)}</span>
+              <div>
+                <p>{message.attachment.originalName}</p>
+                <small>{formatFileSize(message.attachment.size)}</small>
+              </div>
+            </a>
+          )}
+        </div>
+      )}
+      
+      {message.content && <p className={styles.messageContent}>{message.content}</p>}
+      
+      <div className={styles.messageFooter}>
+        <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
+        {isOwn && message.read && <span className={styles.readReceipt}>✓✓</span>}
+      </div>
+
+      {isOwn && (
+        <div className={styles.messageMenu}>
+          <button onClick={() => setShowMenu(!showMenu)}>
+            <MdMoreVert size={14} />
+          </button>
+          {showMenu && (
+            <div className={styles.messageMenuDropdown}>
+              <button onClick={() => { onDelete(message._id, false); setShowMenu(false); }}>
+                Delete for me
+              </button>
+              <button onClick={() => { onDelete(message._id, true); setShowMenu(false); }}>
+                Delete for everyone
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

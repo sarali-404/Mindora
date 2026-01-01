@@ -128,24 +128,35 @@ class DiscordService {
   // Create an embed for session announcement
   createSessionEmbed(session, inviteUrl) {
     const startTime = new Date(session.scheduledAt);
+    const hostName = session.host?.profile?.firstName 
+      ? `${session.host.profile.firstName} ${session.host.profile.lastName || ''}`.trim()
+      : session.host?.username || 'Unknown';
+    
+    const startText = session.isImmediate 
+      ? '🔴 **LIVE NOW**' 
+      : `<t:${Math.floor(startTime.getTime() / 1000)}:F>`;
+    
+    const tagsText = session.tags?.length > 0 
+      ? session.tags.map(t => `\`${t}\``).join(' ') 
+      : '';
+
     const embed = new EmbedBuilder()
-      .setColor(0x0073a0)
+      .setColor(session.isImmediate ? 0xdc2626 : 0x0073a0)
       .setTitle(`📚 ${session.title}`)
-      .setDescription(session.description || 'Join this study session!')
-      .addFields(
-        { name: '📖 Subject', value: session.subject, inline: true },
-        { name: '👤 Host', value: session.host.username || 'Unknown', inline: true },
-        { name: '⏱️ Duration', value: `${session.duration} minutes`, inline: true },
-        { name: '👥 Max Participants', value: `${session.maxParticipants}`, inline: true },
-        { name: '🕐 Starts', value: session.isImmediate ? 'Now!' : `<t:${Math.floor(startTime.getTime() / 1000)}:R>`, inline: true },
+      .setDescription(
+        `${session.description || '*No description provided*'}\n\n` +
+        `**🎯 Subject:** ${session.subject}\n` +
+        `**👤 Hosted by:** ${hostName}\n` +
+        `**⏱️ Duration:** ${session.duration} min  •  **👥 Max:** ${session.maxParticipants} participants\n` +
+        `**🕐 Starts:** ${startText}` +
+        (tagsText ? `\n\n${tagsText}` : '')
       )
       .setURL(inviteUrl)
+      .addFields(
+        { name: '🎙️ Join Voice Channel', value: `[Click here to join](${inviteUrl})`, inline: false }
+      )
       .setTimestamp()
-      .setFooter({ text: 'Mindora Study Sessions' });
-
-    if (session.tags && session.tags.length > 0) {
-      embed.addFields({ name: '🏷️ Tags', value: session.tags.join(', '), inline: false });
-    }
+      .setFooter({ text: 'Mindora Study Sessions • Click the link above to join!' });
 
     return embed;
   }

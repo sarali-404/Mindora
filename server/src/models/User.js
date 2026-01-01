@@ -125,7 +125,21 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  lockUntil: Date
+  lockUntil: Date,
+  
+  // Online status & presence
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastSeen: {
+    type: Date,
+    default: Date.now
+  },
+  socketId: {
+    type: String,
+    default: null
+  }
 }, {
   timestamps: true,
   toJSON: { 

@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const http = require('http');
 require('dotenv').config();
 
 // Import routes
@@ -9,6 +10,8 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const materialRoutes = require('./src/routes/materialRoutes');
 const sessionRoutes = require('./src/routes/sessionRoutes');
+const friendRoutes = require('./src/routes/friendRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 
 // Import email service for verification
 const { verifyEmailConnection } = require('./src/services/emailService');
@@ -16,9 +19,13 @@ const { verifyEmailConnection } = require('./src/services/emailService');
 // Import Discord service
 const discordService = require('./src/services/discordService');
 
+// Import Socket service
+const socketService = require('./src/services/socketService');
+
 const path = require('path');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration
@@ -94,6 +101,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/chat', chatRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -128,8 +137,11 @@ mongoose.connect(process.env.MONGODB_URI)
       console.warn('⚠️ Discord bot initialization failed:', err.message);
     });
     
+    // Initialize Socket.io
+    socketService.initialize(server);
+    
     // Start server only after successful database connection
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🌐 CORS enabled for: ${corsOptions.origin}`);

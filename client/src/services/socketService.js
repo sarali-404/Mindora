@@ -1,0 +1,188 @@
+import { io } from 'socket.io-client';
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
+class SocketService {
+  constructor() {
+    this.socket = null;
+    this.isConnecting = false;
+    this.eventHandlers = {};
+  }
+
+  // Connect to socket server (singleton pattern)
+  connect() {
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      console.warn('No auth token, cannot connect to socket');
+      return null;
+    }
+
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      return this.socket;
+    }
+
+    // Return existing connected socket
+    if (this.socket?.connected) {
+      return this.socket;
+    }
+
+    // Disconnect any stale socket first
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    this.isConnecting = true;
+
+    this.socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      timeout: 20000,
+      autoConnect: true
+    });
+
+    this.socket.on('connect', () => {
+      console.log('🔌 Socket connected:', this.socket.id);
+      this.isConnecting = false;
+      // Re-attach event handlers after reconnection
+      this.reattachHandlers();
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason);
+      this.isConnecting = false;
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('🔌 Socket connection error:', error.message);
+      this.isConnecting = false;
+    });
+
+    return this.socket;
+  }
+
+  // Disconnect from socket server
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.isConnecting = false;
+      this.eventHandlers = {};
+    }
+  }
+
+  // Get socket instance (don't create if not exists)
+  getSocket() {
+    return this.socket;
+  }
+
+  // Re-attach handlers after reconnection
+  reattachHandlers() {
+    if (!this.socket) return;
+    
+    Object.entries(this.eventHandlers).forEach(([event, callback]) => {
+      this.socket.off(event); // Remove any existing
+      this.socket.on(event, callback);
+    });
+  }
+
+  // Register an event handler (stores for re-attachment)
+  on(event, callback) {
+    if (!this.socket) {
+      this.connect();
+    }
+    
+    this.eventHandlers[event] = callback;
+    
+    if (this.socket) {
+      this.socket.off(event); // Prevent duplicate listeners
+      this.socket.on(event, callback);
+    }
+  }
+
+  // ==================== EVENT LISTENERS ====================
+
+  onNewMessage(callback) {
+    this.on('new_message', callback);
+  }
+
+  onMessageDeleted(callback) {
+    this.on('message_deleted', callback);
+  }
+
+  onMessagesRead(callback) {
+    this.on('messages_read', callback);
+  }
+
+  onUserTyping(callback) {
+    this.on('user_typing', callback);
+  }
+
+  onUserStopTyping(callback) {
+    this.on('user_stop_typing', callback);
+  }
+
+  onPresenceUpdate(callback) {
+    this.on('presence_update', callback);
+  }
+
+  onFriendRemoved(callback) {
+    this.on('friend_removed', callback);
+  }
+
+  // ==================== EMIT EVENTS ====================
+
+  emitTyping(receiverId) {
+    if (this.socket?.connected) {
+      this.socket.emit('typing', { receiverId });
+    }
+  }
+
+  emitStopTyping(receiverId) {
+    if (this.socket?.connected) {
+      this.socket.emit('stop_typing', { receiverId });
+    }
+  }
+
+  emitMessageRead(conversationId, senderId) {
+    if (this.socket?.connected) {
+      this.socket.emit('message_read', { conversationId, senderId });
+    }
+  }
+
+  // ==================== CLEANUP ====================
+
+  removeAllListeners() {
+    if (this.socket) {
+      this.socket.off('new_message');
+      this.socket.off('message_deleted');
+      this.socket.off('messages_read');
+      this.socket.off('user_typing');
+      this.socket.off('user_stop_typing');
+      this.socket.off('presence_update');
+      this.socket.off('friend_removed');
+    }
+    this.eventHandlers = {};
+  }
+
+  off(event) {
+    if (this.socket) {
+      this.socket.off(event);
+    }
+    delete this.eventHandlers[event];
+  }
+
+  // Check if connected
+  isConnected() {
+    return this.socket?.connected || false;
+  }
+}
+
+const socketService = new SocketService();
+export default socketService;

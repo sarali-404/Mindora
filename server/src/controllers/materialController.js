@@ -6,6 +6,20 @@ const fs = require('fs');
 // Upload a new material
 exports.uploadMaterial = async (req, res) => {
   try {
+    // Check if user is verified
+    if (req.user.verificationStatus !== 'verified') {
+      // Clean up uploaded file if user is not verified
+      if (req.file) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      }
+      return res.status(403).json({
+        success: false,
+        message: 'You must be verified to upload materials. Please complete ID verification in your profile.'
+      });
+    }
+
     const { title, description, subject, materialType, visibility, tags } = req.body;
     
     if (!req.file) {
