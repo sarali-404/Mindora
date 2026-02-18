@@ -349,7 +349,6 @@ export default function CommunityPage() {
     <div className={styles.page}>
       {/* Header */}
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>Community</h1>
         <form className={styles.searchContainer} onSubmit={handleSearch}>
           <MdSearch className={styles.searchIcon} />
           <input
@@ -737,6 +736,7 @@ function FriendCard({ user, onMessage, onUnfriend }) {
 function DiscoverCard({ user, onSendRequest, onCancelRequest }) {
   const isPending = user.friendshipStatus === 'pending';
   const isRequester = user.isRequester;
+  const isFriend = user.friendshipStatus === 'accepted';
 
   return (
     <article className={styles.discoverCard}>
@@ -764,7 +764,11 @@ function DiscoverCard({ user, onSendRequest, onCancelRequest }) {
         </div>
       </div>
       
-      {isPending && isRequester ? (
+      {isFriend ? (
+        <button className={styles.friendsButton} disabled>
+          ✓ Friends
+        </button>
+      ) : isPending && isRequester ? (
         <button className={styles.pendingButton} onClick={onCancelRequest}>
           Pending • Cancel
         </button>

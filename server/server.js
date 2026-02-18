@@ -22,6 +22,9 @@ const discordService = require('./src/services/discordService');
 // Import Socket service
 const socketService = require('./src/services/socketService');
 
+// Import Session scheduler
+const sessionScheduler = require('./src/services/sessionScheduler');
+
 const path = require('path');
 
 const app = express();
@@ -139,6 +142,9 @@ mongoose.connect(process.env.MONGODB_URI)
     
     // Initialize Socket.io
     socketService.initialize(server);
+
+    // Start session scheduler for auto-ending expired sessions
+    sessionScheduler.start();
     
     // Start server only after successful database connection
     server.listen(PORT, () => {

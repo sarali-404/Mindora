@@ -8,9 +8,9 @@
 /* Header */
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -423,6 +423,24 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
+}
+
+.friendsButton {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: default;
+}
+
+.friendsButton:disabled {
+  background: #22c55e;
+  opacity: 0.8;
 }
 
 /* Requests Section */
