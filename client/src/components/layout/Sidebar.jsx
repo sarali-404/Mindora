@@ -1,7 +1,8 @@
-import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { MdClose } from "react-icons/md";
 import styles from "./Sidebar.module.css";
+import goalService from "../../services/goalService";
 
 import {
   FiHome,
@@ -16,6 +17,22 @@ import {
 
 export default function AppSidebar({ isOpen, onClose }) {
   const [goalsOpen, setGoalsOpen] = useState(true);
+  const [goals, setGoals] = useState([]);
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const res = await goalService.getMyGoals();
+        if (res.success && Array.isArray(res.data)) {
+          setGoals(res.data);
+        }
+      } catch (err) {
+        // silently fail — sidebar is not critical
+      }
+    };
+    fetchGoals();
+  }, [location.pathname]);
 
   return (
     <>
@@ -54,9 +71,20 @@ export default function AppSidebar({ isOpen, onClose }) {
 
           {goalsOpen && (
             <div className={styles.goalsChildren}>
-              <NavItem to="/app/create-goal" label="Create New Goal" isChild />
-              <NavItem to="/app/goals" label="Goal 1" isChild />
-             
+              <NavItem to="/app/create-goal" label="+ Create New Goal" isChild />
+              {goals.map((g) => (
+                <NavLink
+                  key={g._id}
+                  to={`/app/goals/${g._id}`}
+                  className={({ isActive }) =>
+                    [styles.navItem, styles.navItemChild, styles.goalLink, isActive ? styles.navItemActive : ''].join(' ')
+                  }
+                  title={g.title}
+                >
+                  <span className={styles.goalDot} />
+                  <span className={styles.goalSubject}>{g.subject}</span>
+                </NavLink>
+              ))}
             </div>
           )}
         </div>

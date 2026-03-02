@@ -25,6 +25,9 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
-    "google-auth-library": "^10.5.0"
+    "@google/generative-ai": "^0.24.1",
+    "google-auth-library": "^10.5.0",
+    "mammoth": "^1.11.0",
+    "pdf-parse": "^2.4.5"
   }
 }

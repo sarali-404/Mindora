@@ -32,7 +32,8 @@ function App() {
           <Route path="/app/library" element={<LibraryPage />} />
           <Route path="/app/upload-material" element={<UploadMaterialPage />} />
           <Route path="/app/create-goal" element={<CreateGoalPage />} />
-          <Route path="/app/goals" element={<GoalPage />} />
+          <Route path="/app/goals/create" element={<CreateGoalPage />} />
+          <Route path="/app/goals/:goalId" element={<GoalPage />} />
           <Route path="/app/profile" element={<ProfilePage />} />
           <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="/app/notifications" element={<NotificationsPage />} />

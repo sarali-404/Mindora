@@ -115,6 +115,7 @@ const authorizeOwnerOrAdmin = (req, res, next) => {
 
 module.exports = {
   authenticate,
+  protect: authenticate, // Alias for consistency with goal routes
   authorize,
   optionalAuth,
   authorizeOwnerOrAdmin

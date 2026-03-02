@@ -153,6 +153,39 @@
   font-size: 0.9rem;
 }
 
+/* Individual goal links */
+.goalLink {
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  overflow: hidden;
+}
+
+.goalDot {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  background-color: #0073a0;
+  display: inline-block;
+}
+
+.goalSubject {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: #374151;
+  max-width: 150px;
+}
+
+.navItemActive .goalDot {
+  background-color: #ffffff;
+}
+
+.navItemActive .goalSubject {
+  color: #ffffff;
+}
+
 /* Bottom nav */
 .bottomNav {
   margin-top: 0;

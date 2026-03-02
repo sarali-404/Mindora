@@ -37,6 +37,80 @@
   color: #111827;
 }
 
+/* Error banner */
+.errorBanner {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+/* Empty state */
+.emptyState {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6b7280;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.emptyState h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.3rem;
+}
+
+.emptyState p {
+  font-size: 0.85rem;
+}
+
+/* Essay section */
+.essaySection {
+  margin-bottom: 1.5rem;
+}
+
+.essayTopic {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+}
+
+.essayDescription {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-bottom: 0.8rem;
+}
+
+/* Difficulty badges */
+.difficultyBadge {
+  padding: 0.04rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.difficultyEasy {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.difficultyMedium {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+
+.difficultyHard {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
 /* Question blocks */
 
 .questionBlock {
@@ -126,6 +200,134 @@
   color: #4b5563;
 }
 
+/* Submitted answer display */
+.submittedAnswer {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  font-size: 0.85rem;
+}
+
+.submittedAnswer strong {
+  display: block;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.submittedAnswer p {
+  color: #4b5563;
+  white-space: pre-wrap;
+}
+
+/* Strengths and weaknesses */
+.strengthsWeaknesses {
+  margin-top: 0.5rem;
+}
+
+.strengthsWeaknesses strong {
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.strengthsWeaknesses ul {
+  margin: 0.25rem 0 0 1.2rem;
+  padding: 0;
+}
+
+.strengthsWeaknesses li {
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-bottom: 0.15rem;
+}
+
+/* Sample answer */
+.sampleAnswer {
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+  background-color: #eff6ff;
+  font-size: 0.82rem;
+}
+
+.sampleAnswer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.sampleAnswer p {
+  margin-top: 0.4rem;
+  color: #374151;
+  white-space: pre-wrap;
+}
+
+/* Hint box */
+.hintBox {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+  background-color: #fef3c7;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+
+.hintBox strong {
+  color: #78350f;
+}
+
+/* Generate section */
+.generateSection {
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background-color: #f5f7fb;
+  border: 1px dashed #d1d5db;
+}
+
+.generateTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.3rem;
+}
+
+.generateDescription {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-bottom: 0.7rem;
+}
+
+.topicButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.generateButton {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.generateButton:hover:not(:disabled) {
+  border-color: #0073a0;
+  color: #0073a0;
+  background-color: #e4f3fb;
+}
+
+.generateButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Answer area */
 
 .answerArea {
@@ -168,6 +370,16 @@
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #005f82;
+}
+
+.submitButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 
 /* Mobile Responsive */

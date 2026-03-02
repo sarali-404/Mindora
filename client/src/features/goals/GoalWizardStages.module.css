@@ -100,6 +100,89 @@
   box-shadow: 0 0 0 3px rgba(0, 115, 160, 0.1);
 }
 
+/* Input wrapper for suggestions */
+.inputWrapper {
+  position: relative;
+}
+
+.loadingIndicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Suggestions dropdown */
+.suggestionsDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  z-index: 100;
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestionsHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.suggestionItem {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #374151;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.suggestionItem:hover {
+  background: #e0f2fe;
+  color: #0073a0;
+}
+
+.suggestionItem:not(:last-child) {
+  border-bottom: 1px solid #f3f4f6;
+}
+
 .helperText {
   margin-top: 0.4rem;
   font-size: 0.85rem;

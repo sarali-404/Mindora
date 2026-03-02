@@ -15,9 +15,15 @@ export default function GoalWizardStages({
   currentStep,
   formData,
   handleChange,
+  handleGoalTitleChange,
   handleFileUpload,
   removeFile,
   calculateDaysLeft,
+  suggestions = [],
+  showSuggestions = false,
+  loadingSuggestions = false,
+  selectSuggestion,
+  setShowSuggestions,
 }) {
   return (
     <div className={styles.stageContainer}>
@@ -35,14 +41,42 @@ export default function GoalWizardStages({
           <div className={styles.stageContent}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Your Goal</label>
-              <input
-                type="text"
-                className={styles.inputLarge}
-                placeholder="e.g., Get 80+ marks in Algorithm"
-                value={formData.goalTitle}
-                onChange={(e) => handleChange("goalTitle", e.target.value)}
-                autoFocus
-              />
+              <div className={styles.inputWrapper}>
+                <input
+                  type="text"
+                  className={styles.inputLarge}
+                  placeholder="e.g., Get 80+ marks in Algorithm"
+                  value={formData.goalTitle}
+                  onChange={(e) => handleGoalTitleChange ? handleGoalTitleChange(e.target.value) : handleChange("goalTitle", e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions && setShowSuggestions(false), 200)}
+                  autoFocus
+                />
+                {loadingSuggestions && (
+                  <span className={styles.loadingIndicator}>✨</span>
+                )}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className={styles.suggestionsDropdown}>
+                    <div className={styles.suggestionsHeader}>
+                      <MdLightbulb style={{ color: '#f59e0b' }} />
+                      <span>AI Suggestions</span>
+                    </div>
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className={styles.suggestionItem}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selectSuggestion && selectSuggestion(suggestion);
+                        }}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className={styles.fieldGroup}>
@@ -162,7 +196,7 @@ export default function GoalWizardStages({
       {currentStep === 4 && (
         <div className={styles.stage}>
           <div className={styles.stageTitleRow}>
-            <FiCheckCircle className={styles.stageIcon} />
+            <MdCheckCircle className={styles.stageIcon} style={{ color: '#10b981' }} />
             <h2 className={styles.stageTitle}>Review & Launch</h2>
           </div>
           <p className={styles.stageSubtitle}>

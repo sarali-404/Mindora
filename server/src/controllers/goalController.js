@@ -1,0 +1,1602 @@
+const Goal = require('../models/Goal');
+const GeneratedContent = require('../models/GeneratedContent');
+const { extractText, isSupportedFileType } = require('../utils/textExtractor');
+const aiService = require('../services/aiService');
+const path = require('path');
+const fs = require('fs');
+
+// Constants
+const MAX_MATERIALS = 5;
+const MAX_FILE_SIZE_MB = 10;
+const MAX_PAGES = 50;
+
+// ==================== AI SUGGESTIONS ====================
+
+/**
+ * Get real-time AI suggestions for goal title
+ */
+exports.getGoalSuggestions = async (req, res) => {
+  try {
+    const { partialGoal, subject } = req.query;
+    
+    if (!partialGoal || partialGoal.length < 3) {
+      return res.json({
+        success: true,
+        data: { suggestions: [], isVague: false }
+      });
+    }
+    
+    const result = await aiService.getGoalSuggestions(partialGoal, subject || '');
+    
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Goal suggestions error:', error);
+    res.json({
+      success: true,
+      data: { suggestions: [], isVague: false }
+    });
+  }
+};
+
+// ==================== GOAL CRUD ====================
+
+/**
+ * Create a new goal
+ */
+exports.createGoal = async (req, res) => {
+  try {
+    const { goalTitle, subject, targetMarks, deadline } = req.body;
+    const userId = req.user._id;
+
+    // Validate required fields
+    if (!goalTitle || !subject || !deadline) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide goal title, subject, and deadline'
+      });
+    }
+
+    // Create goal
+    const goal = new Goal({
+      user: userId,
+      title: goalTitle,
+      subject,
+      targetMarks,
+      deadline: new Date(deadline),
+      materials: [],
+      aiProcessingStatus: 'pending'
+    });
+
+    await goal.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Goal created successfully',
+      data: goal
+    });
+  } catch (error) {
+    console.error('Create goal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create goal',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Create goal with materials (multipart form)
+ */
+exports.createGoalWithMaterials = async (req, res) => {
+  try {
+    const { goalTitle, subject, targetMarks, deadline } = req.body;
+    const userId = req.user._id;
+    const files = req.files || [];
+
+    // Validate required fields
+    if (!goalTitle || !subject || !deadline) {
+      // Clean up uploaded files
+      files.forEach(file => {
+        fs.unlink(file.path, err => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide goal title, subject, and deadline'
+      });
+    }
+
+    // Validate file count
+    if (files.length > MAX_MATERIALS) {
+      files.forEach(file => {
+        fs.unlink(file.path, err => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      });
+      return res.status(400).json({
+        success: false,
+        message: `Maximum ${MAX_MATERIALS} materials allowed per goal`
+      });
+    }
+
+    // Validate file types
+    for (const file of files) {
+      if (!isSupportedFileType(file.mimetype)) {
+        files.forEach(f => {
+          fs.unlink(f.path, err => {
+            if (err) console.error('Error deleting file:', err);
+          });
+        });
+        return res.status(400).json({
+          success: false,
+          message: `Unsupported file type: ${file.originalname}. Supported: PDF, DOCX, TXT`
+        });
+      }
+    }
+
+    // Create materials array
+    const materials = files.map(file => ({
+      filename: file.filename,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      path: file.path,
+      extractionStatus: 'pending'
+    }));
+
+    // Create goal
+    const goal = new Goal({
+      user: userId,
+      title: goalTitle,
+      subject,
+      targetMarks,
+      deadline: new Date(deadline),
+      materials,
+      aiProcessingStatus: materials.length > 0 ? 'extracting' : 'pending'
+    });
+
+    await goal.save();
+
+    // Start background processing if materials exist
+    if (materials.length > 0) {
+      processGoalMaterials(goal._id).catch(err => {
+        console.error('Background processing error:', err);
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Goal created successfully. Materials are being processed.',
+      data: goal
+    });
+  } catch (error) {
+    console.error('Create goal with materials error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create goal',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all goals for the current user
+ */
+exports.getMyGoals = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { status, sort = '-createdAt' } = req.query;
+
+    const query = { user: userId };
+    if (status) {
+      query.status = status;
+    }
+
+    const goals = await Goal.find(query)
+      .sort(sort)
+      .select('-materials.extractedText'); // Don't send huge text in list
+
+    res.json({
+      success: true,
+      data: goals
+    });
+  } catch (error) {
+    console.error('Get goals error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch goals',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get a single goal by ID
+ */
+exports.getGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Get generated content for this goal
+    const content = await GeneratedContent.find({ goal: goalId, status: 'active' })
+      .select('-quizContent.questions.explanation') // Hide explanations initially
+      .sort({ contentType: 1, topic: 1 });
+
+    res.json({
+      success: true,
+      data: {
+        goal,
+        content
+      }
+    });
+  } catch (error) {
+    console.error('Get goal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch goal',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update a goal
+ */
+exports.updateGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+    const updates = req.body;
+
+    // Fields that can be updated
+    const allowedUpdates = ['title', 'subject', 'targetMarks', 'deadline', 'status'];
+    const filteredUpdates = {};
+    
+    for (const field of allowedUpdates) {
+      if (updates[field] !== undefined) {
+        filteredUpdates[field] = updates[field];
+      }
+    }
+
+    const goal = await Goal.findOneAndUpdate(
+      { _id: goalId, user: userId },
+      filteredUpdates,
+      { new: true, runValidators: true }
+    );
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Goal updated successfully',
+      data: goal
+    });
+  } catch (error) {
+    console.error('Update goal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update goal',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Delete a goal
+ */
+exports.deleteGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Delete associated files
+    for (const material of goal.materials) {
+      if (material.path && fs.existsSync(material.path)) {
+        fs.unlink(material.path, err => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      }
+    }
+
+    // Delete generated content
+    await GeneratedContent.deleteMany({ goal: goalId });
+
+    // Delete the goal
+    await Goal.deleteOne({ _id: goalId });
+
+    res.json({
+      success: true,
+      message: 'Goal deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete goal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete goal',
+      error: error.message
+    });
+  }
+};
+
+// ==================== MATERIAL PROCESSING ====================
+
+/**
+ * Background function to process goal materials
+ */
+async function processGoalMaterials(goalId) {
+  try {
+    const goal = await Goal.findById(goalId);
+    if (!goal) {
+      console.log('❌ Goal not found for processing:', goalId);
+      return;
+    }
+
+    console.log(`\n📚 Processing materials for goal: "${goal.title}"`);
+    console.log(`   Materials count: ${goal.materials.length}`);
+    
+    let allExtractedText = '';
+
+    // Extract text from each material
+    for (const material of goal.materials) {
+      try {
+        console.log(`   📄 Extracting: ${material.originalName}`);
+        material.extractionStatus = 'processing';
+        await goal.save();
+
+        const result = await extractText(material.path, material.mimeType, {
+          maxPages: MAX_PAGES,
+          maxSizeMB: MAX_FILE_SIZE_MB
+        });
+
+        material.extractedText = result.text;
+        material.pageCount = result.pageCount;
+        material.extractionStatus = 'completed';
+        
+        console.log(`   ✅ Extracted ${result.text.length} chars from ${material.originalName}`);
+        allExtractedText += `\n\n=== ${material.originalName} ===\n\n${result.text}`;
+      } catch (error) {
+        console.error(`   ❌ Error extracting ${material.originalName}:`, error.message);
+        material.extractionStatus = 'failed';
+        material.extractionError = error.message;
+      }
+    }
+
+    await goal.save();
+    console.log(`   📝 Total extracted text: ${allExtractedText.length} chars`);
+
+    // If we have extracted text, proceed with AI analysis
+    if (allExtractedText.trim()) {
+      goal.aiProcessingStatus = 'analyzing';
+      await goal.save();
+      console.log('\n🤖 Starting AI analysis...');
+
+      // Refine the goal
+      try {
+        console.log('   🎯 Refining goal...');
+        const refined = await aiService.refineGoal(
+          goal.title,
+          goal.subject,
+          goal.deadline,
+          goal.materials.map(m => m.originalName)
+        );
+        goal.refinedTitle = refined.refinedGoal;
+        console.log(`   ✅ Refined: "${refined.refinedGoal}"`);
+      } catch (error) {
+        console.error('   ❌ Goal refinement error:', error.message);
+      }
+
+      // Extract topics
+      try {
+        console.log('   📋 Extracting topics...');
+        const topics = await aiService.extractTopics(
+          allExtractedText,
+          goal.subject,
+          goal.title
+        );
+        goal.topics = topics;
+        console.log(`   ✅ Extracted ${topics.length} topics`);
+      } catch (error) {
+        console.error('   ❌ Topic extraction error:', error.message);
+      }
+
+      await goal.save();
+
+      // Generate initial content
+      goal.aiProcessingStatus = 'generating';
+      await goal.save();
+      console.log('\n📝 Generating initial content...');
+
+      await generateInitialContent(goal, allExtractedText);
+
+      goal.aiProcessingStatus = 'completed';
+      await goal.save();
+      console.log('\n✅ AI processing completed for goal:', goal.title);
+    } else {
+      console.log('   ⚠️ No text extracted from materials');
+      goal.aiProcessingStatus = 'failed';
+      goal.aiProcessingError = 'No text could be extracted from materials';
+      await goal.save();
+    }
+
+  } catch (error) {
+    console.error('❌ Process materials error:', error);
+    try {
+      await Goal.findByIdAndUpdate(goalId, {
+        aiProcessingStatus: 'failed',
+        aiProcessingError: error.message
+      });
+    } catch (e) {
+      console.error('Error updating goal status:', e);
+    }
+  }
+}
+
+// Delay between AI requests to avoid rate limits (Groq: 30 req/min = 2s minimum)
+const AI_REQUEST_DELAY = 2500; // 2.5 seconds for safety margin
+const INITIAL_TOPICS_COUNT = 2; // Only generate content for first 2 topics initially
+const INITIAL_ESSAY_TOPICS = 1; // Only generate essays for first 1 topic initially
+
+/**
+ * Helper to wait with logging
+ */
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Generate initial notes and quizzes for the goal
+ * Only generates for first 2 topics - users can generate more on-demand
+ */
+async function generateInitialContent(goal, extractedText) {
+  try {
+    // Track processed topics
+    goal.contentGeneration = goal.contentGeneration || {};
+    goal.contentGeneration.topicsWithContent = [];
+    
+    // Generate summary for the entire material
+    console.log('   📋 Generating summary...');
+    try {
+      const summaryResult = await aiService.generateSummary(
+        extractedText,
+        goal.title,
+        goal.subject
+      );
+
+      // summaryResult is an object: { title, content, keyPoints, quickReview }
+      if (summaryResult && summaryResult.content) {
+        await GeneratedContent.create({
+          goal: goal._id,
+          contentType: 'summary',
+          textContent: {
+            title: summaryResult.title || `Summary: ${goal.title}`,
+            content: summaryResult.content,
+            keyPoints: summaryResult.keyPoints || [],
+            sections: []
+          }
+        });
+        console.log('   ✅ Summary generated');
+        goal.contentGeneration.summariesGenerated = true;
+      } else {
+        console.log('   ⚠️ Summary was empty, skipping');
+      }
+    } catch (error) {
+      console.error('   ❌ Summary generation error:', error.message);
+    }
+
+    await delay(AI_REQUEST_DELAY);
+
+    // Generate content for first 2 topics (notes + quiz + summary) and essays for first 1 topic
+    const topicsToProcess = goal.topics.slice(0, INITIAL_TOPICS_COUNT);
+    console.log(`   📚 Generating content for first ${topicsToProcess.length} of ${goal.topics.length} topics...`);
+    console.log('   ℹ️  Users can generate content for remaining topics on-demand');
+    
+    for (let i = 0; i < topicsToProcess.length; i++) {
+      const topic = topicsToProcess[i];
+      console.log(`\n   📖 [${i + 1}/${topicsToProcess.length}] Topic: "${topic.name}"`);
+      
+      let topicHasContent = false;
+      
+      // Generate notes
+      try {
+        const notesResult = await aiService.generateNotes(
+          extractedText,
+          topic.name,
+          goal.subject
+        );
+
+        // notesResult is an object: { title, content, keyPoints, sections }
+        if (notesResult && notesResult.content) {
+          await GeneratedContent.create({
+            goal: goal._id,
+            topic: topic.name,
+            contentType: 'notes',
+            textContent: {
+              title: notesResult.title || `Notes: ${topic.name}`,
+              content: notesResult.content,
+              keyPoints: notesResult.keyPoints || [],
+              sections: notesResult.sections || []
+            }
+          });
+          console.log(`      ✅ Notes generated`);
+          topicHasContent = true;
+        } else {
+          console.log(`      ⚠️ Notes were empty, skipping`);
+        }
+      } catch (error) {
+        console.error(`      ❌ Notes error:`, error.message);
+        // If rate limited, wait longer and continue
+        if (error.status === 429 || error.message?.includes('rate')) {
+          console.log('      ⏳ Rate limited, waiting 60s...');
+          await delay(60000);
+        }
+      }
+
+      await delay(AI_REQUEST_DELAY);
+
+      // Generate quiz
+      try {
+        const quiz = await aiService.generateQuiz(
+          extractedText,
+          topic.name,
+          goal.subject,
+          'medium',
+          10
+        );
+
+        if (quiz && quiz.questions && quiz.questions.length > 0) {
+          await GeneratedContent.create({
+            goal: goal._id,
+            topic: topic.name,
+            contentType: 'quiz',
+            quizContent: quiz
+          });
+          console.log(`      ✅ Quiz generated (${quiz.questions.length} questions)`);
+          topicHasContent = true;
+        } else {
+          console.log(`      ⚠️ Quiz was empty, skipping`);
+        }
+      } catch (error) {
+        console.error(`      ❌ Quiz error:`, error.message);
+        if (error.status === 429 || error.message?.includes('rate')) {
+          console.log('      ⏳ Rate limited, waiting 60s...');
+          await delay(60000);
+        }
+      }
+
+      await delay(AI_REQUEST_DELAY);
+
+      // Generate per-topic summary
+      try {
+        const topicSummaryResult = await aiService.generateSummary(
+          extractedText,
+          topic.name,
+          goal.subject
+        );
+
+        if (topicSummaryResult && topicSummaryResult.content) {
+          await GeneratedContent.create({
+            goal: goal._id,
+            topic: topic.name,
+            contentType: 'summary',
+            textContent: {
+              title: topicSummaryResult.title || `Summary: ${topic.name}`,
+              content: topicSummaryResult.content,
+              keyPoints: topicSummaryResult.keyPoints || [],
+              sections: []
+            }
+          });
+          console.log(`      ✅ Topic summary generated`);
+          topicHasContent = true;
+        } else {
+          console.log(`      ⚠️ Topic summary was empty, skipping`);
+        }
+      } catch (error) {
+        console.error(`      ❌ Topic summary error:`, error.message);
+        if (error.status === 429 || error.message?.includes('rate')) {
+          console.log('      ⏳ Rate limited, waiting 60s...');
+          await delay(60000);
+        }
+      }
+
+      await delay(AI_REQUEST_DELAY);
+
+      // Generate essay questions (only for first topic)
+      if (i < INITIAL_ESSAY_TOPICS) {
+        try {
+          const essayResult = await aiService.generateEssayQuestions(
+            extractedText,
+            topic.name,
+            goal.subject,
+            'medium',
+            5
+          );
+
+          if (essayResult && essayResult.questions && essayResult.questions.length > 0) {
+            await GeneratedContent.create({
+              goal: goal._id,
+              topic: topic.name,
+              contentType: 'essay',
+              essayContent: essayResult
+            });
+            console.log(`      ✅ Essay questions generated (${essayResult.questions.length} questions)`);
+            topicHasContent = true;
+          } else {
+            console.log(`      ⚠️ Essay questions were empty, skipping`);
+          }
+        } catch (error) {
+          console.error(`      ❌ Essay error:`, error.message);
+          if (error.status === 429 || error.message?.includes('rate')) {
+            console.log('      ⏳ Rate limited, waiting 60s...');
+            await delay(60000);
+          }
+        }
+
+        await delay(AI_REQUEST_DELAY);
+      }
+
+      // Track which topics have content
+      if (topicHasContent) {
+        goal.contentGeneration.topicsWithContent.push(topic.name);
+      }
+
+      // Delay before next topic (if not the last one)
+      if (i < topicsToProcess.length - 1) {
+        await delay(AI_REQUEST_DELAY);
+      }
+    }
+
+    goal.contentGeneration.notesGenerated = true;
+    goal.contentGeneration.quizzesGenerated = true;
+    goal.contentGeneration.summariesGenerated = true;
+    goal.contentGeneration.essaysGenerated = true;
+    goal.contentGeneration.initialTopicsProcessed = topicsToProcess.length;
+    goal.contentGeneration.totalTopics = goal.topics.length;
+    await goal.save();
+    
+    console.log(`\n   ✅ Initial content generation complete`);
+    console.log(`      Topics with content: ${goal.contentGeneration.topicsWithContent.length}/${goal.topics.length}`);
+    console.log(`      Remaining topics available for on-demand generation: ${goal.topics.length - topicsToProcess.length}`);
+  } catch (error) {
+    console.error('❌ Generate initial content error:', error.message);
+    throw error;
+  }
+}
+
+// ==================== CONTENT GENERATION ====================
+
+/**
+ * Generate notes for a specific topic
+ */
+exports.generateTopicNotes = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName } = req.body;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Check if notes already exist
+    const existing = await GeneratedContent.findOne({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'notes',
+      status: 'active'
+    });
+
+    if (existing) {
+      return res.json({
+        success: true,
+        message: 'Notes already exist for this topic',
+        data: existing
+      });
+    }
+
+    // Get extracted text
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({
+        success: false,
+        message: 'No extracted text available for content generation'
+      });
+    }
+
+    const notesResult = await aiService.generateNotes(
+      extractedText,
+      topicName,
+      goal.subject
+    );
+
+    // notesResult is an object: { title, content, keyPoints, sections }
+    if (!notesResult || !notesResult.content) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate notes content'
+      });
+    }
+
+    const content = await GeneratedContent.create({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'notes',
+      textContent: {
+        title: notesResult.title || `Notes: ${topicName}`,
+        content: notesResult.content,
+        keyPoints: notesResult.keyPoints || [],
+        sections: notesResult.sections || []
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Notes generated successfully',
+      data: content
+    });
+  } catch (error) {
+    console.error('Generate notes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate notes',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate summary for a specific topic
+ */
+exports.generateTopicSummary = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName } = req.body;
+    const userId = req.user._id;
+
+    if (!topicName) {
+      return res.status(400).json({ success: false, message: 'Topic name is required' });
+    }
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
+    }
+
+    // Check if summary already exists for this topic
+    const existing = await GeneratedContent.findOne({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'summary',
+      status: 'active'
+    });
+
+    if (existing) {
+      return res.json({ success: true, message: 'Summary already exists', data: existing });
+    }
+
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({ success: false, message: 'No extracted text available' });
+    }
+
+    const summaryResult = await aiService.generateSummary(extractedText, topicName, goal.subject);
+
+    if (!summaryResult || !summaryResult.content) {
+      return res.status(500).json({ success: false, message: 'Failed to generate summary content' });
+    }
+
+    const content = await GeneratedContent.create({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'summary',
+      textContent: {
+        title: summaryResult.title || `Summary: ${topicName}`,
+        content: summaryResult.content,
+        keyPoints: summaryResult.keyPoints || [],
+        sections: []
+      }
+    });
+
+    res.json({ success: true, message: 'Summary generated successfully', data: content });
+  } catch (error) {
+    console.error('Generate summary error:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate summary', error: error.message });
+  }
+};
+
+/**
+ * Generate quiz for a specific topic
+ */
+exports.generateTopicQuiz = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName, difficulty = 'medium', questionCount = 10 } = req.body;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Get extracted text
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({
+        success: false,
+        message: 'No extracted text available for content generation'
+      });
+    }
+
+    const quiz = await aiService.generateQuiz(
+      extractedText,
+      topicName,
+      goal.subject,
+      difficulty,
+      Math.min(questionCount, 20) // Cap at 20 questions
+    );
+
+    const content = await GeneratedContent.create({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'quiz',
+      quizContent: quiz,
+      currentDifficulty: difficulty
+    });
+
+    res.json({
+      success: true,
+      message: 'Quiz generated successfully',
+      data: content
+    });
+  } catch (error) {
+    console.error('Generate quiz error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate quiz',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate essay questions for a topic
+ */
+exports.generateTopicEssay = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName, difficulty = 'medium', questionCount = 5 } = req.body;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({
+        success: false,
+        message: 'No extracted text available for content generation'
+      });
+    }
+
+    const essay = await aiService.generateEssayQuestions(
+      extractedText,
+      topicName,
+      goal.subject,
+      difficulty,
+      Math.min(questionCount, 10)
+    );
+
+    const content = await GeneratedContent.create({
+      goal: goalId,
+      topic: topicName,
+      contentType: 'essay',
+      essayContent: essay
+    });
+
+    res.json({
+      success: true,
+      message: 'Essay questions generated successfully',
+      data: content
+    });
+  } catch (error) {
+    console.error('Generate essay error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate essay questions',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate ALL content for a specific topic (notes, quiz, essay)
+ * This is the on-demand endpoint for topics beyond the initial 2
+ */
+exports.generateTopicContent = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName, includeEssay = false } = req.body;
+    const userId = req.user._id;
+
+    if (!topicName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Topic name is required'
+      });
+    }
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Check if topic exists in goal
+    const topicExists = goal.topics.some(t => t.name === topicName);
+    if (!topicExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Topic not found in this goal'
+      });
+    }
+
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({
+        success: false,
+        message: 'No extracted text available for content generation'
+      });
+    }
+
+    const results = {
+      notes: null,
+      quiz: null,
+      essay: null
+    };
+    const errors = [];
+
+    // Check existing content
+    const existingContent = await GeneratedContent.find({
+      goal: goalId,
+      topic: topicName,
+      status: 'active'
+    });
+
+    const hasNotes = existingContent.some(c => c.contentType === 'notes');
+    const hasQuiz = existingContent.some(c => c.contentType === 'quiz');
+    const hasEssay = existingContent.some(c => c.contentType === 'essay');
+
+    console.log(`\n📚 Generating content for topic: "${topicName}"`);
+    console.log(`   Existing: notes=${hasNotes}, quiz=${hasQuiz}, essay=${hasEssay}`);
+
+    // Generate notes if not exists
+    if (!hasNotes) {
+      try {
+        console.log('   📝 Generating notes...');
+        const notesResult = await aiService.generateNotes(extractedText, topicName, goal.subject);
+        
+        // notesResult is an object: { title, content, keyPoints, sections }
+        if (notesResult && notesResult.content) {
+          results.notes = await GeneratedContent.create({
+            goal: goalId,
+            topic: topicName,
+            contentType: 'notes',
+            textContent: {
+              title: notesResult.title || `Notes: ${topicName}`,
+              content: notesResult.content,
+              keyPoints: notesResult.keyPoints || [],
+              sections: notesResult.sections || []
+            }
+          });
+          console.log('   ✅ Notes generated');
+        }
+        await delay(AI_REQUEST_DELAY);
+      } catch (error) {
+        console.error('   ❌ Notes error:', error.message);
+        errors.push({ type: 'notes', error: error.message });
+        if (error.status === 429) await delay(60000);
+      }
+    } else {
+      results.notes = existingContent.find(c => c.contentType === 'notes');
+      console.log('   ℹ️ Notes already exist');
+    }
+
+    // Generate quiz if not exists
+    if (!hasQuiz) {
+      try {
+        console.log('   📝 Generating quiz...');
+        const quiz = await aiService.generateQuiz(extractedText, topicName, goal.subject, 'medium', 10);
+        
+        if (quiz && quiz.questions && quiz.questions.length > 0) {
+          results.quiz = await GeneratedContent.create({
+            goal: goalId,
+            topic: topicName,
+            contentType: 'quiz',
+            quizContent: quiz
+          });
+          console.log(`   ✅ Quiz generated (${quiz.questions.length} questions)`);
+        }
+        await delay(AI_REQUEST_DELAY);
+      } catch (error) {
+        console.error('   ❌ Quiz error:', error.message);
+        errors.push({ type: 'quiz', error: error.message });
+        if (error.status === 429) await delay(60000);
+      }
+    } else {
+      results.quiz = existingContent.find(c => c.contentType === 'quiz');
+      console.log('   ℹ️ Quiz already exists');
+    }
+
+    // Generate essay if requested and not exists
+    if (includeEssay && !hasEssay) {
+      try {
+        console.log('   📝 Generating essay questions...');
+        const essay = await aiService.generateEssayQuestions(extractedText, topicName, goal.subject, 'medium', 5);
+        
+        if (essay && essay.questions && essay.questions.length > 0) {
+          results.essay = await GeneratedContent.create({
+            goal: goalId,
+            topic: topicName,
+            contentType: 'essay',
+            essayContent: essay
+          });
+          console.log(`   ✅ Essay questions generated (${essay.questions.length} questions)`);
+        }
+      } catch (error) {
+        console.error('   ❌ Essay error:', error.message);
+        errors.push({ type: 'essay', error: error.message });
+      }
+    } else if (hasEssay) {
+      results.essay = existingContent.find(c => c.contentType === 'essay');
+    }
+
+    // Update goal's content tracking
+    if (!goal.contentGeneration) goal.contentGeneration = {};
+    if (!goal.contentGeneration.topicsWithContent) goal.contentGeneration.topicsWithContent = [];
+    
+    if (!goal.contentGeneration.topicsWithContent.includes(topicName)) {
+      goal.contentGeneration.topicsWithContent.push(topicName);
+      await goal.save();
+    }
+
+    console.log(`   ✅ Content generation complete for "${topicName}"`);
+
+    res.json({
+      success: true,
+      message: `Content generated for topic: ${topicName}`,
+      data: results,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error('Generate topic content error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate topic content',
+      error: error.message
+    });
+  }
+};
+
+// ==================== QUIZ & PROGRESS ====================
+
+/**
+ * Submit quiz attempt
+ */
+exports.submitQuizAttempt = async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { answers, timeTaken } = req.body;
+    const userId = req.user._id;
+
+    const content = await GeneratedContent.findById(contentId);
+    if (!content || content.contentType !== 'quiz') {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz not found'
+      });
+    }
+
+    // Verify goal ownership
+    const goal = await Goal.findOne({ _id: content.goal, user: userId });
+    if (!goal) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Grade the quiz
+    const questions = content.quizContent.questions;
+    let correctCount = 0;
+    const gradedAnswers = answers.map(answer => {
+      const question = questions.find(q => q._id.toString() === answer.questionId);
+      if (!question) return { ...answer, isCorrect: false };
+      
+      const correctOption = question.options.findIndex(o => o.isCorrect);
+      const isCorrect = answer.selectedOption === correctOption;
+      if (isCorrect) correctCount++;
+      
+      return {
+        questionId: answer.questionId,
+        selectedOption: answer.selectedOption,
+        isCorrect,
+        timeTaken: answer.timeTaken
+      };
+    });
+
+    const percentage = Math.round((correctCount / questions.length) * 100);
+
+    const attemptData = {
+      answers: gradedAnswers,
+      score: correctCount,
+      totalQuestions: questions.length,
+      percentage,
+      timeTaken
+    };
+
+    await content.recordQuizAttempt(attemptData);
+
+    // Update topic progress in goal
+    const topic = goal.topics.find(t => t.name === content.topic);
+    if (topic) {
+      topic.quizAttempts++;
+      topic.lastQuizScore = percentage;
+      topic.averageScore = topic.averageScore 
+        ? Math.round((topic.averageScore + percentage) / 2)
+        : percentage;
+      
+      // Update progress based on quiz performance
+      if (percentage >= 70) {
+        topic.progress = Math.min(100, topic.progress + 10);
+      }
+      
+      await goal.updateProgress();
+    }
+
+    // Calculate XP earned
+    const xpEarned = Math.round(percentage / 10) * 5; // 5 XP per 10% score
+    goal.xpEarned += xpEarned;
+    await goal.save();
+
+    // Get recommended next difficulty
+    const recommendedDifficulty = content.getRecommendedDifficulty();
+
+    res.json({
+      success: true,
+      message: 'Quiz submitted successfully',
+      data: {
+        score: correctCount,
+        total: questions.length,
+        percentage,
+        xpEarned,
+        recommendedDifficulty,
+        answers: gradedAnswers.map((a, i) => ({
+          ...a,
+          correctOption: questions[i]?.options.findIndex(o => o.isCorrect),
+          explanation: questions[i]?.explanation
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Submit quiz error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit quiz',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update topic progress
+ */
+exports.updateTopicProgress = async (req, res) => {
+  try {
+    const { goalId, topicId } = req.params;
+    const { progress, status } = req.body;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const topic = goal.topics.id(topicId);
+    if (!topic) {
+      return res.status(404).json({
+        success: false,
+        message: 'Topic not found'
+      });
+    }
+
+    if (progress !== undefined) {
+      topic.progress = Math.min(100, Math.max(0, progress));
+    }
+    if (status) {
+      topic.status = status;
+    }
+
+    await goal.updateProgress();
+
+    res.json({
+      success: true,
+      message: 'Topic progress updated',
+      data: goal
+    });
+  } catch (error) {
+    console.error('Update topic progress error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update progress',
+      error: error.message
+    });
+  }
+};
+
+// ==================== CONTENT RETRIEVAL ====================
+
+/**
+ * Get notes for a goal
+ */
+exports.getGoalNotes = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topic } = req.query;
+    const userId = req.user._id;
+
+    // Verify ownership
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const query = { goal: goalId, contentType: 'notes', status: 'active' };
+    if (topic) {
+      query.topic = topic;
+    }
+
+    const notes = await GeneratedContent.find(query).sort({ topic: 1 });
+
+    res.json({
+      success: true,
+      data: notes
+    });
+  } catch (error) {
+    console.error('Get notes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notes',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get quizzes for a goal
+ */
+exports.getGoalQuizzes = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topic } = req.query;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const query = { goal: goalId, contentType: 'quiz', status: 'active' };
+    if (topic) {
+      query.topic = topic;
+    }
+
+    const quizzes = await GeneratedContent.find(query)
+      .select('-quizContent.questions.explanation') // Hide explanations
+      .sort({ topic: 1 });
+
+    res.json({
+      success: true,
+      data: quizzes
+    });
+  } catch (error) {
+    console.error('Get quizzes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch quizzes',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get summaries for a goal
+ */
+exports.getGoalSummaries = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const summaries = await GeneratedContent.find({
+      goal: goalId,
+      contentType: 'summary',
+      status: 'active'
+    }).sort({ topic: 1 });
+
+    res.json({
+      success: true,
+      data: summaries
+    });
+  } catch (error) {
+    console.error('Get summaries error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch summaries',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get essay questions for a goal
+ */
+exports.getGoalEssays = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topic } = req.query;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const query = { goal: goalId, contentType: 'essay', status: 'active' };
+    if (topic) {
+      query.topic = topic;
+    }
+
+    const essays = await GeneratedContent.find(query).sort({ topic: 1 });
+
+    res.json({
+      success: true,
+      data: essays
+    });
+  } catch (error) {
+    console.error('Get essays error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch essays',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Submit an essay answer and get AI feedback
+ */
+exports.submitEssayAnswer = async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { questionId, userAnswer } = req.body;
+    const userId = req.user._id;
+
+    if (!questionId || !userAnswer || !userAnswer.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Question ID and answer are required'
+      });
+    }
+
+    const content = await GeneratedContent.findById(contentId);
+    if (!content || content.contentType !== 'essay') {
+      return res.status(404).json({
+        success: false,
+        message: 'Essay content not found'
+      });
+    }
+
+    // Verify goal ownership
+    const goal = await Goal.findOne({ _id: content.goal, user: userId });
+    if (!goal) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Find the question
+    const question = content.essayContent.questions.find(
+      q => q._id.toString() === questionId
+    );
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question not found'
+      });
+    }
+
+    // Check if already answered
+    const alreadyAnswered = content.essayAnswers.find(
+      a => a.questionId?.toString() === questionId
+    );
+    if (alreadyAnswered) {
+      return res.json({
+        success: true,
+        message: 'Already answered',
+        data: alreadyAnswered
+      });
+    }
+
+    // Grade with AI
+    console.log(`📝 Grading essay answer for question: "${question.question.substring(0, 50)}..."`);
+    const aiFeedback = await aiService.gradeEssayAnswer(
+      question.question,
+      question.sampleAnswer || '',
+      userAnswer,
+      question.keyPoints || []
+    );
+
+    const answerData = {
+      questionId: question._id,
+      userAnswer: userAnswer.trim(),
+      aiFeedback: {
+        score: aiFeedback.score || 0,
+        feedback: aiFeedback.feedback || '',
+        strengths: aiFeedback.strengths || [],
+        improvements: aiFeedback.improvements || []
+      }
+    };
+
+    await content.recordEssayAnswer(answerData);
+
+    // Update topic progress
+    const topic = goal.topics.find(t => t.name === content.topic);
+    if (topic) {
+      const score = aiFeedback.score || 0;
+      if (score >= 60) {
+        topic.progress = Math.min(100, topic.progress + 5);
+      }
+      await goal.updateProgress();
+    }
+
+    // Award XP
+    const xpEarned = Math.round((aiFeedback.score || 0) / 10) * 3;
+    goal.xpEarned = (goal.xpEarned || 0) + xpEarned;
+    await goal.save();
+
+    console.log(`✅ Essay graded: ${aiFeedback.score}% | XP: +${xpEarned}`);
+
+    res.json({
+      success: true,
+      message: 'Essay answer submitted and graded',
+      data: {
+        ...answerData,
+        xpEarned
+      }
+    });
+  } catch (error) {
+    console.error('Submit essay error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit essay answer',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get study recommendation
+ */
+exports.getStudyRecommendation = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const recommendation = await aiService.getStudyRecommendation(
+      goal.topics,
+      goal.learningProfile,
+      goal.daysRemaining
+    );
+
+    res.json({
+      success: true,
+      data: recommendation
+    });
+  } catch (error) {
+    console.error('Get recommendation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get recommendation',
+      error: error.message
+    });
+  }
+};

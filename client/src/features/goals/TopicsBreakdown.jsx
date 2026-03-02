@@ -1,44 +1,30 @@
+import { useState } from "react";
 import styles from "./TopicsBreakdown.module.css";
-import { MdEmojiEvents, MdWarningAmber } from "react-icons/md";
+import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome } from "react-icons/md";
 
-const SECTIONS = [
-  {
-    id: "arrays",
-    title: "Arrays & Strings",
-    progress: 85,
-    topics: [
-      { id: "array-basics", title: "Array Basics", progress: 100, active: true },
-      { id: "two-pointer", title: "Two Pointer Technique", progress: 90 },
-      { id: "sliding-window", title: "Sliding Window", progress: 65 },
-    ],
-  },
-  { id: "linked-lists", title: "Linked Lists", progress: 70 },
-  { id: "stacks-queues", title: "Stacks & Queues", progress: 45 },
-  { id: "trees-graphs", title: "Trees & Graphs", progress: 30 },
-];
+export default function TopicsBreakdown({ 
+  topics = [], 
+  onProgressUpdate, 
+  goalId,
+  topicsWithContent = new Set(),
+  onGenerateContent 
+}) {
+  // Identify weak topics (low progress or low quiz scores)
+  const weakTopics = topics.filter(t => 
+    t.progress < 50 || (t.averageScore && t.averageScore < 60)
+  );
 
-const WEAK_AREAS = [
-  {
-    id: "circular-ll",
-    title: "Circular Linked List",
-    level: "High",
-    description: "Practice more problems on detecting cycles and circular references.",
-  },
-  {
-    id: "priority-queues",
-    title: "Priority Queues",
-    level: "High",
-    description: "Review heap data structure implementation.",
-  },
-  {
-    id: "sliding-window",
-    title: "Sliding Window",
-    level: "Medium",
-    description: "Complete 5 more sliding window problems.",
-  },
-];
+  // No topics yet
+  if (topics.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <div className={styles.emptyIcon}>📚</div>
+        <h3>No Topics Yet</h3>
+        <p>AI is analyzing your materials to extract topics. This may take a few minutes.</p>
+      </div>
+    );
+  }
 
-export default function TopicsBreakdown() {
   return (
     <div className={styles.layout}>
       {/* Left: topics */}
@@ -49,8 +35,14 @@ export default function TopicsBreakdown() {
         </div>
 
         <div className={styles.sections}>
-          {SECTIONS.map((section) => (
-            <SectionRow key={section.id} section={section} />
+          {topics.map((topic, index) => (
+            <TopicRow 
+              key={topic._id || index} 
+              topic={topic}
+              onProgressUpdate={onProgressUpdate}
+              hasContent={topicsWithContent.has(topic.name)}
+              onGenerateContent={onGenerateContent}
+            />
           ))}
         </div>
       </section>
@@ -62,55 +54,132 @@ export default function TopicsBreakdown() {
           <h3 className={styles.weakTitle}>Weak Areas</h3>
         </div>
 
-        <div className={styles.weakList}>
-          {WEAK_AREAS.map((item) => (
-            <WeakArea key={item.id} item={item} />
-          ))}
-        </div>
+        {weakTopics.length === 0 ? (
+          <div className={styles.noWeakAreas}>
+            <p>Great job! No weak areas identified yet.</p>
+          </div>
+        ) : (
+          <div className={styles.weakList}>
+            {weakTopics.map((topic, index) => (
+              <WeakArea key={topic._id || index} topic={topic} />
+            ))}
+          </div>
+        )}
       </aside>
     </div>
   );
 }
 
-function SectionRow({ section }) {
+function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent }) {
+  const [expanded, setExpanded] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState(null);
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'easy': return '#10b981';
+      case 'hard': return '#ef4444';
+      default: return '#f59e0b';
+    }
+  };
+
+  const handleGenerateContent = async () => {
+    setGenerating(true);
+    setError(null);
+    try {
+      await onGenerateContent(topic.name, false);
+    } catch (err) {
+      setError(err.message || 'Failed to generate content');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className={styles.sectionRow}>
       <div className={styles.sectionHeader}>
-        <button type="button" className={styles.chevronButton}>
+        <button 
+          type="button" 
+          className={styles.chevronButton}
+          onClick={() => setExpanded(!expanded)}
+          style={{ transform: expanded ? 'rotate(90deg)' : 'none' }}
+        >
           &gt;
         </button>
-        <span className={styles.sectionTitle}>{section.title}</span>
-        <span className={styles.sectionPercent}>{section.progress}%</span>
+        <span className={styles.sectionTitle}>{topic.name}</span>
+        <span 
+          className={styles.difficultyBadge}
+          style={{ backgroundColor: getDifficultyColor(topic.difficultyLevel) }}
+        >
+          {topic.difficultyLevel || 'medium'}
+        </span>
+        
+        {/* Content status indicator */}
+        {hasContent ? (
+          <span className={styles.contentBadge} title="Content generated">
+            ✓
+          </span>
+        ) : (
+          <button
+            className={styles.generateButton}
+            onClick={handleGenerateContent}
+            disabled={generating}
+            title="Generate notes and quiz for this topic"
+          >
+            {generating ? (
+              <>
+                <span className={styles.spinnerSmall}></span>
+                Generating...
+              </>
+            ) : (
+              <>
+                <MdAutoAwesome size={14} />
+                Generate
+              </>
+            )}
+          </button>
+        )}
+        
+        <span className={styles.sectionPercent}>{topic.progress || 0}%</span>
       </div>
 
-      <ProgressBar value={section.progress} />
+      <ProgressBar value={topic.progress || 0} />
 
-      {section.topics && (
-        <div className={styles.subtopics}>
-          {section.topics.map((topic) => (
-            <SubtopicRow key={topic.id} topic={topic} />
-          ))}
+      {expanded && (
+        <div className={styles.topicDescription}>
+          {topic.description && <p>{topic.description}</p>}
+
+          {topic.subTopics?.length > 0 && (
+            <div className={styles.subTopicsList}>
+              <h4 className={styles.subTopicsTitle}>Sub-topics</h4>
+              {topic.subTopics.map((sub, i) => (
+                <div key={i} className={styles.subTopicItem}>
+                  <span className={styles.subTopicDot} />
+                  <div>
+                    <span className={styles.subTopicName}>{sub.name}</span>
+                    {sub.description && (
+                      <p className={styles.subTopicDesc}>{sub.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {topic.quizAttempts > 0 && (
+            <div className={styles.topicStats}>
+              <span>Quiz attempts: {topic.quizAttempts}</span>
+              <span>Avg score: {topic.averageScore || 'N/A'}%</span>
+            </div>
+          )}
+          {error && <p className={styles.errorText}>{error}</p>}
+          {!hasContent && !generating && (
+            <p className={styles.noContentText}>
+              Click "Generate" to create notes and quiz for this topic.
+            </p>
+          )}
         </div>
       )}
-    </div>
-  );
-}
-
-function SubtopicRow({ topic }) {
-  return (
-    <div className={styles.subtopicRow}>
-      <div className={styles.subtopicLeft}>
-        <span
-          className={`${styles.radio} ${
-            topic.active ? styles.radioActive : ""
-          }`}
-        />
-        <span className={styles.subtopicTitle}>{topic.title}</span>
-      </div>
-      <div className={styles.subtopicRight}>
-        <ProgressBar value={topic.progress} small />
-        <span className={styles.subtopicPercent}>{topic.progress}%</span>
-      </div>
     </div>
   );
 }
@@ -130,21 +199,33 @@ function ProgressBar({ value, small = false }) {
   );
 }
 
-function WeakArea({ item }) {
+function WeakArea({ topic }) {
+  const level = topic.progress < 30 || (topic.averageScore && topic.averageScore < 50) ? 'High' : 'Medium';
+  
+  const getRecommendation = () => {
+    if (topic.averageScore && topic.averageScore < 60) {
+      return `Quiz average is ${topic.averageScore}%. Review notes and try again.`;
+    }
+    if (topic.progress < 30) {
+      return 'Start with the basics and build up gradually.';
+    }
+    return 'Continue practicing to improve your understanding.';
+  };
+
   return (
     <div className={styles.weakItem}>
       <div className={styles.weakTopRow}>
-        <h4 className={styles.weakItemTitle}>{item.title}</h4>
+        <h4 className={styles.weakItemTitle}>{topic.name}</h4>
         <span
           className={`${styles.badge} ${
-            item.level === "High" ? styles.badgeHigh : styles.badgeMedium
+            level === "High" ? styles.badgeHigh : styles.badgeMedium
           }`}
         >
-          {item.level}
+          {level}
         </span>
       </div>
-      <ProgressBar value={item.level === "High" ? 75 : 50} small />
-      <p className={styles.weakDescription}>{item.description}</p>
+      <ProgressBar value={topic.progress || 0} small />
+      <p className={styles.weakDescription}>{getRecommendation()}</p>
     </div>
   );
 }
