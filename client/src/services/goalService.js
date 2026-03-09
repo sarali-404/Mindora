@@ -14,7 +14,7 @@ class GoalService {
   // Helper for API requests
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config = {
       ...options,
       credentials: 'include',
@@ -198,6 +198,16 @@ class GoalService {
   // Get study recommendation
   async getStudyRecommendation(goalId) {
     return this.request(`/${goalId}/recommendation`);
+  }
+
+  // ==================== ACTIVITY TRACKING (ML) ====================
+
+  // Track a learning activity (note view, time spent, flashcard review)
+  async trackActivity(goalId, topicName, activityType, data = {}) {
+    return this.request(`/${goalId}/track-activity`, {
+      method: 'POST',
+      body: JSON.stringify({ topicName, activityType, data }),
+    });
   }
 }
 

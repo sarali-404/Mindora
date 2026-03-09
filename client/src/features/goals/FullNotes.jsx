@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import styles from "./FullNotes.module.css";
 import goalService from "../../services/goalService";
@@ -8,6 +8,32 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
   const [selectedNote, setSelectedNote] = useState(null);
   const [generating, setGenerating] = useState(null);
   const [error, setError] = useState(null);
+  const viewStartTime = useRef(null);
+  const currentTopic = useRef(null);
+
+  // --- ML Activity Tracking: note view + time spent ---
+  useEffect(() => {
+    if (selectedNote && goalId) {
+      const topicName = selectedNote.topic;
+      currentTopic.current = topicName;
+      viewStartTime.current = Date.now();
+
+      // Log note_view event
+      goalService.trackActivity(goalId, topicName, 'note_view').catch(() => { });
+
+      // Cleanup: log time spent when navigating away
+      return () => {
+        if (viewStartTime.current && currentTopic.current) {
+          const duration = Math.round((Date.now() - viewStartTime.current) / 1000);
+          if (duration >= 5) { // Only log if they spent at least 5 seconds
+            goalService.trackActivity(goalId, currentTopic.current, 'note_time_spent', { duration }).catch(() => { });
+          }
+        }
+        viewStartTime.current = null;
+        currentTopic.current = null;
+      };
+    }
+  }, [selectedNote, goalId]);
 
   // Generate notes for a topic
   const handleGenerateNotes = async (topicName) => {
@@ -31,10 +57,10 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -55,7 +81,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
   // ── Full note view ──
   if (selectedNote) {
     const content = getTextContent(selectedNote);
-    
+
     return (
       <section className={styles.card}>
         <header className={styles.header}>
@@ -67,7 +93,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
           <h2 className={styles.fullNoteTitle}>
             {content.title || selectedNote.topic}
           </h2>
-          
+
           {content.keyPoints?.length > 0 && (
             <div className={styles.keyPoints}>
               <h3>📌 Key Points</h3>
@@ -78,7 +104,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
               </ul>
             </div>
           )}
-          
+
           {/* Render markdown content properly */}
           <div className={styles.noteMarkdown}>
             <ReactMarkdown>{content.content || 'No content available'}</ReactMarkdown>
@@ -126,8 +152,8 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
               {notes.map((note) => {
                 const content = getTextContent(note);
                 return (
-                  <article 
-                    key={note._id} 
+                  <article
+                    key={note._id}
                     className={styles.noteCard}
                     onClick={() => setSelectedNote(note)}
                   >

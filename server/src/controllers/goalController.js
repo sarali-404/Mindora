@@ -1,5 +1,6 @@
 const Goal = require('../models/Goal');
 const GeneratedContent = require('../models/GeneratedContent');
+const ActivityLog = require('../models/ActivityLog');
 const { extractText, isSupportedFileType } = require('../utils/textExtractor');
 const aiService = require('../services/aiService');
 const path = require('path');
@@ -18,16 +19,16 @@ const MAX_PAGES = 50;
 exports.getGoalSuggestions = async (req, res) => {
   try {
     const { partialGoal, subject } = req.query;
-    
+
     if (!partialGoal || partialGoal.length < 3) {
       return res.json({
         success: true,
         data: { suggestions: [], isVague: false }
       });
     }
-    
+
     const result = await aiService.getGoalSuggestions(partialGoal, subject || '');
-    
+
     res.json({
       success: true,
       data: result
@@ -265,7 +266,7 @@ exports.updateGoal = async (req, res) => {
     // Fields that can be updated
     const allowedUpdates = ['title', 'subject', 'targetMarks', 'deadline', 'status'];
     const filteredUpdates = {};
-    
+
     for (const field of allowedUpdates) {
       if (updates[field] !== undefined) {
         filteredUpdates[field] = updates[field];
@@ -361,7 +362,7 @@ async function processGoalMaterials(goalId) {
 
     console.log(`\n📚 Processing materials for goal: "${goal.title}"`);
     console.log(`   Materials count: ${goal.materials.length}`);
-    
+
     let allExtractedText = '';
 
     // Extract text from each material
@@ -379,7 +380,7 @@ async function processGoalMaterials(goalId) {
         material.extractedText = result.text;
         material.pageCount = result.pageCount;
         material.extractionStatus = 'completed';
-        
+
         console.log(`   ✅ Extracted ${result.text.length} chars from ${material.originalName}`);
         allExtractedText += `\n\n=== ${material.originalName} ===\n\n${result.text}`;
       } catch (error) {
@@ -480,7 +481,7 @@ async function generateInitialContent(goal, extractedText) {
     // Track processed topics
     goal.contentGeneration = goal.contentGeneration || {};
     goal.contentGeneration.topicsWithContent = [];
-    
+
     // Generate summary for the entire material
     console.log('   📋 Generating summary...');
     try {
@@ -517,13 +518,13 @@ async function generateInitialContent(goal, extractedText) {
     const topicsToProcess = goal.topics.slice(0, INITIAL_TOPICS_COUNT);
     console.log(`   📚 Generating content for first ${topicsToProcess.length} of ${goal.topics.length} topics...`);
     console.log('   ℹ️  Users can generate content for remaining topics on-demand');
-    
+
     for (let i = 0; i < topicsToProcess.length; i++) {
       const topic = topicsToProcess[i];
       console.log(`\n   📖 [${i + 1}/${topicsToProcess.length}] Topic: "${topic.name}"`);
-      
+
       let topicHasContent = false;
-      
+
       // Generate notes
       try {
         const notesResult = await aiService.generateNotes(
@@ -680,7 +681,7 @@ async function generateInitialContent(goal, extractedText) {
     goal.contentGeneration.initialTopicsProcessed = topicsToProcess.length;
     goal.contentGeneration.totalTopics = goal.topics.length;
     await goal.save();
-    
+
     console.log(`\n   ✅ Initial content generation complete`);
     console.log(`      Topics with content: ${goal.contentGeneration.topicsWithContent.length}/${goal.topics.length}`);
     console.log(`      Remaining topics available for on-demand generation: ${goal.topics.length - topicsToProcess.length}`);
@@ -1035,7 +1036,7 @@ exports.generateTopicContent = async (req, res) => {
       try {
         console.log('   📝 Generating notes...');
         const notesResult = await aiService.generateNotes(extractedText, topicName, goal.subject);
-        
+
         // notesResult is an object: { title, content, keyPoints, sections }
         if (notesResult && notesResult.content) {
           results.notes = await GeneratedContent.create({
@@ -1067,7 +1068,7 @@ exports.generateTopicContent = async (req, res) => {
       try {
         console.log('   📝 Generating quiz...');
         const quiz = await aiService.generateQuiz(extractedText, topicName, goal.subject, 'medium', 10);
-        
+
         if (quiz && quiz.questions && quiz.questions.length > 0) {
           results.quiz = await GeneratedContent.create({
             goal: goalId,
@@ -1093,7 +1094,7 @@ exports.generateTopicContent = async (req, res) => {
       try {
         console.log('   📝 Generating essay questions...');
         const essay = await aiService.generateEssayQuestions(extractedText, topicName, goal.subject, 'medium', 5);
-        
+
         if (essay && essay.questions && essay.questions.length > 0) {
           results.essay = await GeneratedContent.create({
             goal: goalId,
@@ -1114,7 +1115,7 @@ exports.generateTopicContent = async (req, res) => {
     // Update goal's content tracking
     if (!goal.contentGeneration) goal.contentGeneration = {};
     if (!goal.contentGeneration.topicsWithContent) goal.contentGeneration.topicsWithContent = [];
-    
+
     if (!goal.contentGeneration.topicsWithContent.includes(topicName)) {
       goal.contentGeneration.topicsWithContent.push(topicName);
       await goal.save();
@@ -1172,11 +1173,11 @@ exports.submitQuizAttempt = async (req, res) => {
     const gradedAnswers = answers.map(answer => {
       const question = questions.find(q => q._id.toString() === answer.questionId);
       if (!question) return { ...answer, isCorrect: false };
-      
+
       const correctOption = question.options.findIndex(o => o.isCorrect);
       const isCorrect = answer.selectedOption === correctOption;
       if (isCorrect) correctCount++;
-      
+
       return {
         questionId: answer.questionId,
         selectedOption: answer.selectedOption,
@@ -1202,15 +1203,15 @@ exports.submitQuizAttempt = async (req, res) => {
     if (topic) {
       topic.quizAttempts++;
       topic.lastQuizScore = percentage;
-      topic.averageScore = topic.averageScore 
+      topic.averageScore = topic.averageScore
         ? Math.round((topic.averageScore + percentage) / 2)
         : percentage;
-      
+
       // Update progress based on quiz performance
       if (percentage >= 70) {
         topic.progress = Math.min(100, topic.progress + 10);
       }
-      
+
       await goal.updateProgress();
     }
 
@@ -1218,6 +1219,34 @@ exports.submitQuizAttempt = async (req, res) => {
     const xpEarned = Math.round(percentage / 10) * 5; // 5 XP per 10% score
     goal.xpEarned += xpEarned;
     await goal.save();
+
+    // --- Log activity for ML knowledge state ---
+    try {
+      await ActivityLog.create({
+        user: userId,
+        goal: content.goal,
+        topicName: content.topic,
+        activityType: 'quiz_attempt',
+        data: {
+          score: percentage,
+          totalQuestions: questions.length,
+          correctCount,
+          timeTaken,
+          difficulty: content.currentDifficulty || 'medium',
+          questionResults: gradedAnswers.map(a => {
+            const q = questions.find(q => q._id.toString() === a.questionId);
+            return {
+              questionId: a.questionId,
+              isCorrect: a.isCorrect,
+              timeTaken: a.timeTaken,
+              difficulty: q?.difficulty || content.currentDifficulty || 'medium'
+            };
+          })
+        }
+      });
+    } catch (logErr) {
+      console.error('ActivityLog (quiz) error:', logErr.message);
+    }
 
     // Get recommended next difficulty
     const recommendedDifficulty = content.getRecommendedDifficulty();
@@ -1545,6 +1574,24 @@ exports.submitEssayAnswer = async (req, res) => {
     goal.xpEarned = (goal.xpEarned || 0) + xpEarned;
     await goal.save();
 
+    // --- Log activity for ML knowledge state ---
+    try {
+      await ActivityLog.create({
+        user: userId,
+        goal: content.goal,
+        topicName: content.topic,
+        activityType: 'essay_submission',
+        data: {
+          score: aiFeedback.score || 0,
+          totalQuestions: 1,
+          timeTaken: null,
+          difficulty: question.difficulty || 'medium'
+        }
+      });
+    } catch (logErr) {
+      console.error('ActivityLog (essay) error:', logErr.message);
+    }
+
     console.log(`✅ Essay graded: ${aiFeedback.score}% | XP: +${xpEarned}`);
 
     res.json({
@@ -1596,6 +1643,70 @@ exports.getStudyRecommendation = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get recommendation',
+      error: error.message
+    });
+  }
+};
+
+// ==================== ACTIVITY TRACKING (ML) ====================
+
+/**
+ * Track a learning activity (note view, summary view, time spent, flashcard review)
+ * Used by the frontend to log engagement for the knowledge state engine.
+ */
+exports.trackActivity = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName, activityType, data } = req.body;
+    const userId = req.user._id;
+
+    if (!topicName || !activityType) {
+      return res.status(400).json({
+        success: false,
+        message: 'topicName and activityType are required'
+      });
+    }
+
+    // Validate activityType
+    const allowedTypes = ['note_view', 'summary_view', 'flashcard_review', 'note_time_spent'];
+    if (!allowedTypes.includes(activityType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid activityType. Allowed: ${allowedTypes.join(', ')}`
+      });
+    }
+
+    // Verify goal ownership
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const logEntry = await ActivityLog.create({
+      user: userId,
+      goal: goalId,
+      topicName,
+      activityType,
+      data: {
+        duration: data?.duration || null,
+        cardsReviewed: data?.cardsReviewed || null,
+        cardsMastered: data?.cardsMastered || null
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Activity tracked',
+      data: logEntry
+    });
+  } catch (error) {
+    console.error('Track activity error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to track activity',
       error: error.message
     });
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import styles from "./Summaries.module.css";
 import { MdDescription, MdEmojiEvents } from "react-icons/md";
@@ -9,13 +9,39 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
   const [selectedSummary, setSelectedSummary] = useState(null);
   const [generating, setGenerating] = useState(null);
   const [error, setError] = useState(null);
+  const viewStartTime = useRef(null);
+  const currentTopic = useRef(null);
+
+  // --- ML Activity Tracking: summary view + time spent ---
+  useEffect(() => {
+    if (selectedSummary && goalId) {
+      const topicName = selectedSummary.topic;
+      currentTopic.current = topicName;
+      viewStartTime.current = Date.now();
+
+      // Log summary_view event
+      goalService.trackActivity(goalId, topicName, 'summary_view').catch(() => { });
+
+      // Cleanup: log time spent when navigating away
+      return () => {
+        if (viewStartTime.current && currentTopic.current) {
+          const duration = Math.round((Date.now() - viewStartTime.current) / 1000);
+          if (duration >= 5) {
+            goalService.trackActivity(goalId, currentTopic.current, 'note_time_spent', { duration }).catch(() => { });
+          }
+        }
+        viewStartTime.current = null;
+        currentTopic.current = null;
+      };
+    }
+  }, [selectedSummary, goalId]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -48,7 +74,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
     return (
       <section className={styles.card}>
         <header className={styles.header}>
-          <button 
+          <button
             onClick={() => setSelectedSummary(null)}
             className={styles.backButton}
           >
@@ -59,13 +85,13 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
           <h2 className={styles.fullTitle}>
             {content.title || 'Summary'}
           </h2>
-          
+
           {content.quickReview && (
             <div className={styles.quickReview}>
               <strong>Quick Review:</strong> {content.quickReview}
             </div>
           )}
-          
+
           {content.keyPoints?.length > 0 && (
             <div className={styles.keyPoints}>
               <h3>📌 Key Points</h3>
@@ -76,7 +102,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
               </ul>
             </div>
           )}
-          
+
           <div className={styles.summaryMarkdown}>
             <ReactMarkdown>{content.content || 'No content available'}</ReactMarkdown>
           </div>
@@ -109,8 +135,8 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
               {summaries.map((item) => {
                 const content = getTextContent(item);
                 return (
-                  <article 
-                    key={item._id} 
+                  <article
+                    key={item._id}
                     className={styles.summaryRow}
                     onClick={() => setSelectedSummary(item)}
                   >
@@ -123,9 +149,9 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
                         <span className={styles.summaryDate}>{formatDate(item.createdAt)}</span>
                       </div>
                       <p className={styles.summaryText}>
-                        {content.quickReview || 
-                         content.keyPoints?.[0] || 
-                         'Click to view summary'}
+                        {content.quickReview ||
+                          content.keyPoints?.[0] ||
+                          'Click to view summary'}
                       </p>
                     </div>
                   </article>

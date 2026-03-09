@@ -31,7 +31,7 @@ const fileFilter = (req, file, cb) => {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain'
   ];
-  
+
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -152,5 +152,10 @@ router.patch('/:goalId/topics/:topicId/progress', protect, goalController.update
 
 // Get study recommendation
 router.get('/:goalId/recommendation', protect, goalController.getStudyRecommendation);
+
+// ==================== ACTIVITY TRACKING (ML) ====================
+
+// Track learning activity (note view, time spent, flashcard review)
+router.post('/:goalId/track-activity', protect, goalController.trackActivity);
 
 module.exports = router;
