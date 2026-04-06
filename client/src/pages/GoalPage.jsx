@@ -6,6 +6,7 @@ import FullNotes from "../features/goals/FullNotes";
 import Summaries from "../features/goals/Summaries";
 import Quizzes from "../features/goals/Quizzes";
 import EssayQuestions from "../features/goals/EssayQuestions";
+import KnowledgeDashboard from "../features/goals/KnowledgeDashboard";
 import goalService from "../services/goalService";
 
 export default function GoalPage() {
@@ -50,10 +51,10 @@ export default function GoalPage() {
   // Poll for updates while processing
   useEffect(() => {
     if (!goal) return;
-    
-    const isProcessing = goal.aiProcessingStatus && 
+
+    const isProcessing = goal.aiProcessingStatus &&
       !['completed', 'failed'].includes(goal.aiProcessingStatus);
-    
+
     if (isProcessing) {
       const pollInterval = setInterval(() => {
         console.log('Polling for goal updates...');
@@ -220,13 +221,13 @@ export default function GoalPage() {
             </div>
           </div>
           <div className={styles.headerActions}>
-            <button 
+            <button
               className={styles.newGoalButton}
               onClick={() => navigate('/app/goals/create')}
             >
               + New Goal
             </button>
-            <button 
+            <button
               className={styles.deleteGoalButton}
               onClick={() => setShowDeleteConfirm(true)}
             >
@@ -257,6 +258,12 @@ export default function GoalPage() {
 
       {/* Tab navigation */}
       <nav className={styles.tabsBar}>
+        <Tab
+          id="knowledge"
+          label="🧠 Knowledge"
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
         <Tab
           id="topics"
           label="Topics Breakdown"
@@ -295,8 +302,14 @@ export default function GoalPage() {
 
       {/* Content under tabs */}
       <section className={styles.contentArea}>
+        {activeTab === "knowledge" && (
+          <KnowledgeDashboard
+            goalId={goalId}
+            topics={goal.topics || []}
+          />
+        )}
         {activeTab === "topics" && (
-          <TopicsBreakdown 
+          <TopicsBreakdown
             topics={goal.topics || []}
             onProgressUpdate={handleTopicProgressUpdate}
             goalId={goalId}
@@ -305,28 +318,28 @@ export default function GoalPage() {
           />
         )}
         {activeTab === "notes" && (
-          <FullNotes 
+          <FullNotes
             notes={getContentByType('notes')}
             topics={goal.topics || []}
             goalId={goalId}
           />
         )}
         {activeTab === "summaries" && (
-          <Summaries 
+          <Summaries
             summaries={getContentByType('summary')}
             topics={goal.topics || []}
             goalId={goalId}
           />
         )}
         {activeTab === "quizzes" && (
-          <Quizzes 
+          <Quizzes
             quizzes={getContentByType('quiz')}
             topics={goal.topics || []}
             goalId={goalId}
           />
         )}
         {activeTab === "essays" && (
-          <EssayQuestions 
+          <EssayQuestions
             essays={getContentByType('essay')}
             topics={goal.topics || []}
             goalId={goalId}
@@ -340,18 +353,18 @@ export default function GoalPage() {
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
             <h3 className={styles.confirmTitle}>Delete Goal</h3>
             <p className={styles.confirmText}>
-              Are you sure you want to delete <strong>"{goal.refinedTitle || goal.title}"</strong>? 
+              Are you sure you want to delete <strong>"{goal.refinedTitle || goal.title}"</strong>?
               This will permanently remove all notes, quizzes, summaries, and essays associated with this goal.
             </p>
             <div className={styles.confirmActions}>
-              <button 
+              <button
                 className={styles.cancelButton}
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleting}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className={styles.confirmDeleteButton}
                 onClick={handleDeleteGoal}
                 disabled={deleting}

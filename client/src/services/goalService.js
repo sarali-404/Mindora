@@ -209,6 +209,24 @@ class GoalService {
       body: JSON.stringify({ topicName, activityType, data }),
     });
   }
+
+  // Get knowledge state (ML knowledge scores per topic)
+  async getKnowledgeState(goalId) {
+    return this.request(`/${goalId}/knowledge-state`);
+  }
+
+  // Regenerate content at user's current knowledge level
+  async regenerateContent(goalId, topicName, contentType) {
+    return this.request(`/${goalId}/regenerate`, {
+      method: 'POST',
+      body: JSON.stringify({ topicName, contentType }),
+    });
+  }
+
+  // Get ML predictions (quiz pass probability, exam readiness)
+  async getPredictions(goalId) {
+    return this.request(`/${goalId}/predictions`);
+  }
 }
 
 // Create and export singleton instance

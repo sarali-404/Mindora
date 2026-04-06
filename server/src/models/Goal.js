@@ -82,7 +82,7 @@ const goalSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  
+
   // Goal details
   title: {
     type: String,
@@ -108,13 +108,13 @@ const goalSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'Deadline is required']
   },
-  
+
   // Study materials uploaded by user
   materials: [materialFileSchema],
-  
+
   // AI-extracted topics from materials
   topics: [topicSchema],
-  
+
   // Overall progress
   progress: {
     type: Number,
@@ -122,7 +122,7 @@ const goalSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
-  
+
   // Gamification
   xpEarned: {
     type: Number,
@@ -133,7 +133,7 @@ const goalSchema = new mongoose.Schema({
     default: 0
   },
   lastStudyDate: Date,
-  
+
   // AI processing status
   aiProcessingStatus: {
     type: String,
@@ -141,7 +141,7 @@ const goalSchema = new mongoose.Schema({
     default: 'pending'
   },
   aiProcessingError: String,
-  
+
   // Content generation flags
   contentGeneration: {
     notesGenerated: { type: Boolean, default: false },
@@ -149,7 +149,7 @@ const goalSchema = new mongoose.Schema({
     quizzesGenerated: { type: Boolean, default: false },
     essaysGenerated: { type: Boolean, default: false }
   },
-  
+
   // Adaptive learning data
   learningProfile: {
     // Tracks performance patterns
@@ -161,7 +161,29 @@ const goalSchema = new mongoose.Schema({
     recommendedFocus: String,
     lastAnalyzedAt: Date
   },
-  
+
+  // Cached knowledge state (updated by knowledgeStateService)
+  knowledgeState: {
+    overallScore: { type: Number, default: 0 },
+    overallTrend: { type: String, enum: ['improving', 'stable', 'declining', 'none'], default: 'none' },
+    coverage: { type: Number, default: 0 },
+    topicScores: {
+      type: Map, of: new mongoose.Schema({
+        score: { type: Number, default: 0 },
+        level: { type: String, enum: ['untouched', 'weak', 'developing', 'strong', 'mastered'], default: 'untouched' },
+        quizAttempts: { type: Number, default: 0 },
+        avgQuizScore: { type: Number, default: 0 },
+        trend: { type: String, default: 'none' }
+      }, { _id: false })
+    },
+    calculatedAt: Date
+  },
+
+  // Predictive ML model weights (logistic regression, stored per model type)
+  predictiveModels: {
+    quizPass: { type: mongoose.Schema.Types.Mixed, default: null }
+  },
+
   // Status
   status: {
     type: String,
@@ -178,7 +200,7 @@ goalSchema.index({ user: 1, status: 1 });
 goalSchema.index({ user: 1, createdAt: -1 });
 
 // Virtual for days until deadline
-goalSchema.virtual('daysRemaining').get(function() {
+goalSchema.virtual('daysRemaining').get(function () {
   if (!this.deadline) return null;
   const today = new Date();
   const deadline = new Date(this.deadline);
@@ -195,27 +217,27 @@ goalSchema.virtual('studySessionsCount', {
 });
 
 // Method to calculate overall progress from topics
-goalSchema.methods.calculateProgress = function() {
+goalSchema.methods.calculateProgress = function () {
   if (!this.topics || this.topics.length === 0) return 0;
-  
+
   const totalProgress = this.topics.reduce((sum, topic) => sum + (topic.progress || 0), 0);
   return Math.round(totalProgress / this.topics.length);
 };
 
 // Method to update progress and check completion
-goalSchema.methods.updateProgress = async function() {
+goalSchema.methods.updateProgress = async function () {
   this.progress = this.calculateProgress();
-  
+
   if (this.progress === 100 && this.status !== 'completed') {
     this.status = 'completed';
     this.completedAt = new Date();
   }
-  
+
   return this.save();
 };
 
 // Pre-save hook to ensure consistency
-goalSchema.pre('save', function() {
+goalSchema.pre('save', function () {
   // Recalculate progress before saving
   if (this.isModified('topics')) {
     this.progress = this.calculateProgress();

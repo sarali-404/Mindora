@@ -158,4 +158,13 @@ router.get('/:goalId/recommendation', protect, goalController.getStudyRecommenda
 // Track learning activity (note view, time spent, flashcard review)
 router.post('/:goalId/track-activity', protect, goalController.trackActivity);
 
+// Get knowledge state (ML-calculated knowledge scores)
+router.get('/:goalId/knowledge-state', protect, goalController.getKnowledgeState);
+
+// Regenerate content at user's current knowledge level
+router.post('/:goalId/regenerate', protect, goalController.regenerateContent);
+
+// Get ML predictions (quiz pass probability, exam readiness)
+router.get('/:goalId/predictions', protect, goalController.getPredictions);
+
 module.exports = router;

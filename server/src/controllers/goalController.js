@@ -3,6 +3,8 @@ const GeneratedContent = require('../models/GeneratedContent');
 const ActivityLog = require('../models/ActivityLog');
 const { extractText, isSupportedFileType } = require('../utils/textExtractor');
 const aiService = require('../services/aiService');
+const knowledgeService = require('../services/knowledgeStateService');
+const predictiveModel = require('../services/predictiveModel');
 const path = require('path');
 const fs = require('fs');
 
@@ -739,10 +741,17 @@ exports.generateTopicNotes = async (req, res) => {
       });
     }
 
+    // Fetch knowledge context for adaptive content generation
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+    } catch (e) { /* non-critical */ }
+
     const notesResult = await aiService.generateNotes(
       extractedText,
       topicName,
-      goal.subject
+      goal.subject,
+      knowledgeContext
     );
 
     // notesResult is an object: { title, content, keyPoints, sections }
@@ -819,7 +828,13 @@ exports.generateTopicSummary = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No extracted text available' });
     }
 
-    const summaryResult = await aiService.generateSummary(extractedText, topicName, goal.subject);
+    // Fetch knowledge context for adaptive content generation
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+    } catch (e) { /* non-critical */ }
+
+    const summaryResult = await aiService.generateSummary(extractedText, topicName, goal.subject, knowledgeContext);
 
     if (!summaryResult || !summaryResult.content) {
       return res.status(500).json({ success: false, message: 'Failed to generate summary content' });
@@ -874,12 +889,23 @@ exports.generateTopicQuiz = async (req, res) => {
       });
     }
 
+    // Fetch knowledge context for adaptive quiz generation
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+    } catch (e) { /* non-critical */ }
+
+    // Auto-select difficulty from topic's knowledge-driven difficulty level
+    const topic = goal.topics.find(t => t.name === topicName);
+    const adaptiveDifficulty = topic?.difficultyLevel || difficulty;
+
     const quiz = await aiService.generateQuiz(
       extractedText,
       topicName,
       goal.subject,
-      difficulty,
-      Math.min(questionCount, 20) // Cap at 20 questions
+      adaptiveDifficulty,
+      Math.min(questionCount, 20),
+      knowledgeContext
     );
 
     const content = await GeneratedContent.create({
@@ -934,12 +960,19 @@ exports.generateTopicEssay = async (req, res) => {
       });
     }
 
+    // Fetch knowledge context for adaptive essay generation
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+    } catch (e) { /* non-critical */ }
+
     const essay = await aiService.generateEssayQuestions(
       extractedText,
       topicName,
       goal.subject,
       difficulty,
-      Math.min(questionCount, 10)
+      Math.min(questionCount, 10),
+      knowledgeContext
     );
 
     const content = await GeneratedContent.create({
@@ -1031,11 +1064,18 @@ exports.generateTopicContent = async (req, res) => {
     console.log(`\n📚 Generating content for topic: "${topicName}"`);
     console.log(`   Existing: notes=${hasNotes}, quiz=${hasQuiz}, essay=${hasEssay}`);
 
+    // Fetch knowledge context for adaptive content generation
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+      console.log('   🧠 Knowledge context loaded for adaptive generation');
+    } catch (e) { /* non-critical */ }
+
     // Generate notes if not exists
     if (!hasNotes) {
       try {
         console.log('   📝 Generating notes...');
-        const notesResult = await aiService.generateNotes(extractedText, topicName, goal.subject);
+        const notesResult = await aiService.generateNotes(extractedText, topicName, goal.subject, knowledgeContext);
 
         // notesResult is an object: { title, content, keyPoints, sections }
         if (notesResult && notesResult.content) {
@@ -1067,7 +1107,7 @@ exports.generateTopicContent = async (req, res) => {
     if (!hasQuiz) {
       try {
         console.log('   📝 Generating quiz...');
-        const quiz = await aiService.generateQuiz(extractedText, topicName, goal.subject, 'medium', 10);
+        const quiz = await aiService.generateQuiz(extractedText, topicName, goal.subject, 'medium', 10, knowledgeContext);
 
         if (quiz && quiz.questions && quiz.questions.length > 0) {
           results.quiz = await GeneratedContent.create({
@@ -1093,7 +1133,7 @@ exports.generateTopicContent = async (req, res) => {
     if (includeEssay && !hasEssay) {
       try {
         console.log('   📝 Generating essay questions...');
-        const essay = await aiService.generateEssayQuestions(extractedText, topicName, goal.subject, 'medium', 5);
+        const essay = await aiService.generateEssayQuestions(extractedText, topicName, goal.subject, 'medium', 5, knowledgeContext);
 
         if (essay && essay.questions && essay.questions.length > 0) {
           results.essay = await GeneratedContent.create({
@@ -1134,6 +1174,126 @@ exports.generateTopicContent = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to generate topic content',
+      error: error.message
+    });
+  }
+};
+
+// ==================== ADAPTIVE REGENERATION (ML) ====================
+
+/**
+ * Regenerate content at the user's current knowledge level
+ * Archives old content and generates fresh content with knowledge context
+ */
+exports.regenerateContent = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { topicName, contentType } = req.body;
+    const userId = req.user._id;
+
+    if (!topicName || !contentType) {
+      return res.status(400).json({
+        success: false,
+        message: 'topicName and contentType are required'
+      });
+    }
+
+    const allowedTypes = ['notes', 'quiz', 'essay', 'summary'];
+    if (!allowedTypes.includes(contentType)) {
+      return res.status(400).json({
+        success: false,
+        message: `contentType must be one of: ${allowedTypes.join(', ')}`
+      });
+    }
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
+    }
+
+    const extractedText = goal.materials
+      .filter(m => m.extractedText)
+      .map(m => m.extractedText)
+      .join('\n\n');
+
+    if (!extractedText) {
+      return res.status(400).json({ success: false, message: 'No extracted text available' });
+    }
+
+    // Archive existing content for this topic + type
+    await GeneratedContent.updateMany(
+      { goal: goalId, topic: topicName, contentType, status: 'active' },
+      { $set: { status: 'archived' } }
+    );
+
+    // Fetch knowledge context
+    let knowledgeContext = '';
+    try {
+      knowledgeContext = await knowledgeService.getKnowledgeContext(goalId, topicName);
+    } catch (e) { /* non-critical */ }
+
+    // Get adaptive difficulty from topic
+    const topic = goal.topics.find(t => t.name === topicName);
+    const adaptiveDifficulty = topic?.difficultyLevel || 'medium';
+
+    let result;
+    switch (contentType) {
+      case 'notes': {
+        const notesResult = await aiService.generateNotes(extractedText, topicName, goal.subject, knowledgeContext);
+        if (notesResult?.content) {
+          result = await GeneratedContent.create({
+            goal: goalId, topic: topicName, contentType: 'notes',
+            textContent: { title: notesResult.title, content: notesResult.content, keyPoints: notesResult.keyPoints || [], sections: notesResult.sections || [] }
+          });
+        }
+        break;
+      }
+      case 'quiz': {
+        const quiz = await aiService.generateQuiz(extractedText, topicName, goal.subject, adaptiveDifficulty, 10, knowledgeContext);
+        if (quiz?.questions?.length > 0) {
+          result = await GeneratedContent.create({
+            goal: goalId, topic: topicName, contentType: 'quiz',
+            quizContent: quiz, currentDifficulty: adaptiveDifficulty
+          });
+        }
+        break;
+      }
+      case 'essay': {
+        const essay = await aiService.generateEssayQuestions(extractedText, topicName, goal.subject, adaptiveDifficulty, 5, knowledgeContext);
+        if (essay?.questions?.length > 0) {
+          result = await GeneratedContent.create({
+            goal: goalId, topic: topicName, contentType: 'essay',
+            essayContent: essay
+          });
+        }
+        break;
+      }
+      case 'summary': {
+        const summaryResult = await aiService.generateSummary(extractedText, topicName, goal.subject, knowledgeContext);
+        if (summaryResult?.content) {
+          result = await GeneratedContent.create({
+            goal: goalId, topic: topicName, contentType: 'summary',
+            textContent: { title: summaryResult.title, content: summaryResult.content, keyPoints: summaryResult.keyPoints || [], sections: [] }
+          });
+        }
+        break;
+      }
+    }
+
+    if (!result) {
+      return res.status(500).json({ success: false, message: 'Failed to regenerate content' });
+    }
+
+    res.json({
+      success: true,
+      message: `${contentType} regenerated at your current knowledge level`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Regenerate content error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to regenerate content',
       error: error.message
     });
   }
@@ -1247,6 +1407,16 @@ exports.submitQuizAttempt = async (req, res) => {
     } catch (logErr) {
       console.error('ActivityLog (quiz) error:', logErr.message);
     }
+
+    // Fire-and-forget: update knowledge state
+    knowledgeService.updateGoalLearningProfile(content.goal).catch(e =>
+      console.error('Knowledge state update error:', e.message)
+    );
+
+    // Fire-and-forget: retrain predictive model
+    predictiveModel.trainQuizPassModel(content.goal).catch(e =>
+      console.error('Predictive model training error:', e.message)
+    );
 
     // Get recommended next difficulty
     const recommendedDifficulty = content.getRecommendedDifficulty();
@@ -1592,6 +1762,11 @@ exports.submitEssayAnswer = async (req, res) => {
       console.error('ActivityLog (essay) error:', logErr.message);
     }
 
+    // Fire-and-forget: update knowledge state
+    knowledgeService.updateGoalLearningProfile(content.goal).catch(e =>
+      console.error('Knowledge state update error:', e.message)
+    );
+
     console.log(`✅ Essay graded: ${aiFeedback.score}% | XP: +${xpEarned}`);
 
     res.json({
@@ -1702,11 +1877,106 @@ exports.trackActivity = async (req, res) => {
       message: 'Activity tracked',
       data: logEntry
     });
+
+    // Fire-and-forget: update knowledge state
+    knowledgeService.updateGoalLearningProfile(goalId).catch(e =>
+      console.error('Knowledge state update error:', e.message)
+    );
   } catch (error) {
     console.error('Track activity error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to track activity',
+      error: error.message
+    });
+  }
+};
+
+// ==================== KNOWLEDGE STATE (ML) ====================
+
+/**
+ * Get the current knowledge state for a goal
+ */
+exports.getKnowledgeState = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    // Calculate fresh knowledge state
+    const knowledgeState = await knowledgeService.calculateGoalKnowledge(goalId);
+
+    // Cache the result on the goal document
+    goal.knowledgeState = {
+      overallScore: knowledgeState.overallScore,
+      overallTrend: knowledgeState.overallTrend,
+      coverage: knowledgeState.coverage,
+      topicScores: new Map(
+        Object.entries(knowledgeState.topicScores).map(([name, data]) => [
+          name,
+          {
+            score: data.score,
+            level: data.level,
+            quizAttempts: data.details.quizAttempts,
+            avgQuizScore: data.details.avgQuizScore,
+            trend: data.details.trend
+          }
+        ])
+      ),
+      calculatedAt: new Date()
+    };
+    await goal.save();
+
+    res.json({
+      success: true,
+      data: knowledgeState
+    });
+  } catch (error) {
+    console.error('Get knowledge state error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get knowledge state',
+      error: error.message
+    });
+  }
+};
+
+// ==================== PREDICTIONS (ML) ====================
+
+/**
+ * Get ML predictions for a goal (quiz pass probability + exam readiness)
+ */
+exports.getPredictions = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goal not found'
+      });
+    }
+
+    const predictions = await predictiveModel.getPredictions(goalId);
+
+    res.json({
+      success: true,
+      data: predictions
+    });
+  } catch (error) {
+    console.error('Get predictions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get predictions',
       error: error.message
     });
   }
