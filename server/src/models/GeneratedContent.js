@@ -195,6 +195,14 @@ const generatedContentSchema = new mongoose.Schema({
     version: Number,
     content: mongoose.Schema.Types.Mixed,
     createdAt: Date
+  }],
+
+  // Reading completion tracking (per user)
+  readBy: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    completedAt: { type: Date, default: Date.now },
+    duration: Number,     // seconds spent reading
+    scrollPercent: Number // how far user scrolled (0-100)
   }]
 }, {
   timestamps: true

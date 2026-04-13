@@ -227,6 +227,16 @@ class GoalService {
   async getPredictions(goalId) {
     return this.request(`/${goalId}/predictions`);
   }
+
+  // Get difficulty adjustment suggestions (ML-based)
+  async getDifficultySuggestions(goalId) {
+    return this.request(`/${goalId}/difficulty-suggestions`);
+  }
+
+  // Get per-topic analytics (reading status, quiz stats, engagement)
+  async getTopicAnalytics(goalId) {
+    return this.request(`/${goalId}/topic-analytics`);
+  }
 }
 
 // Create and export singleton instance

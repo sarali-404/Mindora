@@ -7,6 +7,7 @@ const knowledgeService = require('../services/knowledgeStateService');
 const predictiveModel = require('../services/predictiveModel');
 const gamificationService = require('../services/gamificationService');
 const notificationService = require('../services/notificationService');
+const difficultyAnalyzer = require('../services/difficultyAnalyzer');
 const path = require('path');
 const fs = require('fs');
 
@@ -1895,7 +1896,7 @@ exports.trackActivity = async (req, res) => {
     }
 
     // Validate activityType
-    const allowedTypes = ['note_view', 'summary_view', 'flashcard_review', 'note_time_spent', 'summary_time_spent'];
+    const allowedTypes = ['note_view', 'summary_view', 'flashcard_review', 'note_time_spent', 'summary_time_spent', 'note_completed', 'summary_completed'];
     if (!allowedTypes.includes(activityType)) {
       return res.status(400).json({
         success: false,
@@ -1920,7 +1921,8 @@ exports.trackActivity = async (req, res) => {
       data: {
         duration: data?.duration || null,
         cardsReviewed: data?.cardsReviewed || null,
-        cardsMastered: data?.cardsMastered || null
+        cardsMastered: data?.cardsMastered || null,
+        scrollPercent: data?.scrollPercent || null
       }
     });
 
@@ -1929,6 +1931,15 @@ exports.trackActivity = async (req, res) => {
       message: 'Activity tracked',
       data: logEntry
     });
+
+    // Fire-and-forget: mark content as read when completed
+    if (activityType === 'note_completed' || activityType === 'summary_completed') {
+      const contentType = activityType === 'note_completed' ? 'notes' : 'summary';
+      GeneratedContent.findOneAndUpdate(
+        { goal: goalId, topic: topicName, contentType, status: 'active', 'readBy.userId': { $ne: userId } },
+        { $push: { readBy: { userId, duration: data?.duration || 0, scrollPercent: data?.scrollPercent || 0 } } }
+      ).catch(e => console.error('Mark content read error:', e.message));
+    }
 
     // Fire-and-forget: update knowledge state
     knowledgeService.updateGoalLearningProfile(goalId).catch(e =>
@@ -2029,6 +2040,146 @@ exports.getPredictions = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get predictions',
+      error: error.message
+    });
+  }
+};
+
+// ==================== DIFFICULTY SUGGESTIONS (ML) ====================
+
+/**
+ * Get adaptive difficulty suggestions based on recent quiz/essay performance.
+ * Returns an array of per-topic suggestions (harder/easier).
+ */
+exports.getDifficultySuggestions = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
+    }
+
+    const suggestions = await difficultyAnalyzer.analyze(goalId);
+
+    res.json({
+      success: true,
+      data: suggestions
+    });
+  } catch (error) {
+    console.error('Get difficulty suggestions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get difficulty suggestions',
+      error: error.message
+    });
+  }
+};
+
+// ==================== TOPIC ANALYTICS ====================
+
+/**
+ * Get detailed per-topic analytics: reading status, quiz stats, engagement.
+ */
+exports.getTopicAnalytics = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findOne({ _id: goalId, user: userId });
+    if (!goal) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
+    }
+
+    // Fetch all active content for this goal
+    const allContent = await GeneratedContent.find({ goal: goalId, status: 'active' });
+
+    // Fetch all activity logs for this goal
+    const allLogs = await ActivityLog.find({ goal: goalId });
+
+    const analytics = {};
+
+    for (const topic of goal.topics) {
+      const topicName = topic.name;
+      const topicContent = allContent.filter(c => c.topic === topicName);
+      const topicLogs = allLogs.filter(l => l.topicName === topicName);
+
+      // Notes stats
+      const notes = topicContent.filter(c => c.contentType === 'notes');
+      const notesRead = notes.filter(n => n.readBy?.some(r => r.userId?.toString() === userId.toString())).length;
+      const noteTimeLogs = topicLogs.filter(l => l.activityType === 'note_time_spent');
+      const totalNoteTime = noteTimeLogs.reduce((sum, l) => sum + (l.data?.duration || 0), 0);
+
+      // Summaries stats
+      const summaries = topicContent.filter(c => c.contentType === 'summary');
+      const summariesRead = summaries.filter(s => s.readBy?.some(r => r.userId?.toString() === userId.toString())).length;
+      const summaryTimeLogs = topicLogs.filter(l => l.activityType === 'summary_time_spent');
+      const totalSummaryTime = summaryTimeLogs.reduce((sum, l) => sum + (l.data?.duration || 0), 0);
+
+      // Quiz stats
+      const quizLogs = topicLogs.filter(l => l.activityType === 'quiz_attempt');
+      const quizScores = quizLogs.map(l => l.data?.score || 0);
+      const avgQuizScore = quizScores.length > 0
+        ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length)
+        : 0;
+      const bestQuizScore = quizScores.length > 0 ? Math.max(...quizScores) : 0;
+
+      // Quiz trend
+      let quizTrend = 'stable';
+      if (quizScores.length >= 3) {
+        const recent = quizScores.slice(-2);
+        const older = quizScores.slice(-4, -2);
+        if (older.length > 0) {
+          const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+          const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
+          if (recentAvg > olderAvg + 5) quizTrend = 'improving';
+          else if (recentAvg < olderAvg - 5) quizTrend = 'declining';
+        }
+      }
+
+      // Essay stats
+      const essayLogs = topicLogs.filter(l => l.activityType === 'essay_submission');
+      const essayScores = essayLogs.map(l => l.data?.score || 0);
+      const avgEssayScore = essayScores.length > 0
+        ? Math.round(essayScores.reduce((a, b) => a + b, 0) / essayScores.length)
+        : 0;
+
+      // Last activity
+      const lastLog = topicLogs.length > 0
+        ? topicLogs.reduce((latest, l) => l.createdAt > latest.createdAt ? l : latest)
+        : null;
+
+      // Engagement score (composite)
+      const engagementScore = Math.min(100, Math.round(
+        (notesRead > 0 ? 15 : 0) +
+        (summariesRead > 0 ? 10 : 0) +
+        Math.min(25, (totalNoteTime + totalSummaryTime) / 60 * 2) + // up to 25 for reading time
+        Math.min(30, quizLogs.length * 10) + // up to 30 for quizzes
+        Math.min(20, essayLogs.length * 10)  // up to 20 for essays
+      ));
+
+      analytics[topicName] = {
+        notes: { total: notes.length, read: notesRead, totalReadingTime: totalNoteTime },
+        summaries: { total: summaries.length, read: summariesRead, totalReadingTime: totalSummaryTime },
+        quizzes: { attempts: quizLogs.length, avgScore: avgQuizScore, bestScore: bestQuizScore, trend: quizTrend },
+        essays: { submissions: essayLogs.length, avgScore: avgEssayScore },
+        totalStudyTime: totalNoteTime + totalSummaryTime,
+        engagementScore,
+        lastActivity: lastLog?.createdAt || null,
+        needsAttention: engagementScore < 20 && quizLogs.length < 2
+      };
+    }
+
+    res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    console.error('Get topic analytics error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get topic analytics',
       error: error.message
     });
   }

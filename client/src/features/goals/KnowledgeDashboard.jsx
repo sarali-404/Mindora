@@ -8,6 +8,8 @@ import goalService from '../../services/goalService';
 
 export default function KnowledgeDashboard({ goalId, topics = [] }) {
     const [knowledgeState, setKnowledgeState] = useState(null);
+    const [predictions, setPredictions] = useState(null);
+    const [recommendation, setRecommendation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('overview');
@@ -15,6 +17,8 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
     useEffect(() => {
         if (!goalId) return;
         fetchKnowledgeState();
+        fetchPredictions();
+        fetchRecommendation();
     }, [goalId]);
 
     const fetchKnowledgeState = async () => {
@@ -27,6 +31,24 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             setError('Unable to load knowledge insights yet. Take a quiz to get started!');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchPredictions = async () => {
+        try {
+            const response = await goalService.getPredictions(goalId);
+            if (response.success) setPredictions(response.data);
+        } catch (err) {
+            // Non-critical — predictions just won't show
+        }
+    };
+
+    const fetchRecommendation = async () => {
+        try {
+            const response = await goalService.getStudyRecommendation(goalId);
+            if (response.success) setRecommendation(response.data);
+        } catch (err) {
+            // Non-critical
         }
     };
 
@@ -133,7 +155,8 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                 {[
                     { key: 'overview', label: '📊 Radar' },
                     { key: 'velocity', label: '📈 Velocity' },
-                    { key: 'topics', label: '📋 Topics' }
+                    { key: 'topics', label: '📋 Topics' },
+                    { key: 'predictions', label: '🎯 Predictions' }
                 ].map(tab => (
                     <button
                         key={tab.key}
@@ -226,7 +249,89 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                             ))}
                     </div>
                 )}
+
+                {activeTab === 'predictions' && (
+                    <div className={styles.predictionsContainer}>
+                        {predictions?.examReadiness ? (
+                            <>
+                                {/* Exam readiness gauge */}
+                                <div className={styles.readinessGauge}>
+                                    <div className={styles.gaugeCircle} style={{
+                                        '--readiness-color': predictions.examReadiness.readiness >= 70 ? '#10b981'
+                                            : predictions.examReadiness.readiness >= 40 ? '#f59e0b' : '#ef4444',
+                                        '--readiness-pct': `${predictions.examReadiness.readiness}%`
+                                    }}>
+                                        <span className={styles.gaugeValue}>{predictions.examReadiness.readiness}</span>
+                                        <span className={styles.gaugeLabel}>/ 100</span>
+                                    </div>
+                                    <div className={styles.gaugeInfo}>
+                                        <h3>Exam Readiness</h3>
+                                        <p className={styles.gaugeSubtext}>
+                                            {predictions.examReadiness.readyTopics} of {predictions.examReadiness.totalTopics} topics ready
+                                        </p>
+                                        <p className={styles.gaugeSummary}>
+                                            {predictions.examReadiness.recommendation}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Per-topic readiness breakdown */}
+                                <div className={styles.readinessBreakdown}>
+                                    <h4 className={styles.breakdownTitle}>Topic Readiness</h4>
+                                    {predictions.examReadiness.breakdown.map((item) => (
+                                        <div key={item.topic} className={styles.readinessRow}>
+                                            <div className={styles.readinessInfo}>
+                                                <span className={styles.readinessStatus}>
+                                                    {item.ready ? '✅' : item.combinedScore >= 40 ? '⚠️' : '🔴'}
+                                                </span>
+                                                <div>
+                                                    <span className={styles.readinessTopicName}>{item.topic}</span>
+                                                    <span className={styles.readinessMeta}>
+                                                        Knowledge: {item.knowledgeScore}% • Quiz Pass: {item.quizPassProbability}%
+                                                        {item.confidence !== 'none' && ` • ${item.confidence} confidence`}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className={styles.readinessBar}>
+                                                <div className={styles.progressBar}>
+                                                    <div
+                                                        className={styles.progressFill}
+                                                        style={{
+                                                            width: `${item.combinedScore}%`,
+                                                            background: item.ready ? '#10b981' : item.combinedScore >= 40 ? '#f59e0b' : '#ef4444'
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className={styles.scoreText}>{item.combinedScore}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className={styles.predictionsEmpty}>
+                                <div className={styles.emptyIcon}>🎯</div>
+                                <h3>Not Enough Data Yet</h3>
+                                <p>Complete at least 3 quizzes to unlock exam readiness predictions.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
+
+            {/* Study Recommendation */}
+            {recommendation?.recommendation && (
+                <div className={styles.studyRecommendation}>
+                    <h4 className={styles.recTitle}>📝 What to Study Next</h4>
+                    <p className={styles.recText}>{recommendation.recommendation}</p>
+                    {recommendation.reason && (
+                        <p className={styles.recReason}>{recommendation.reason}</p>
+                    )}
+                    {recommendation.estimatedTime && (
+                        <span className={styles.recTime}>⏱️ {recommendation.estimatedTime}</span>
+                    )}
+                </div>
+            )}
 
             {/* Study Recommendations */}
             {(weakTopics?.length > 0 || untouchedTopics?.length > 0) && (

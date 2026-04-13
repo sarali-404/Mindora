@@ -167,4 +167,10 @@ router.post('/:goalId/regenerate', protect, goalController.regenerateContent);
 // Get ML predictions (quiz pass probability, exam readiness)
 router.get('/:goalId/predictions', protect, goalController.getPredictions);
 
+// Get difficulty adjustment suggestions (ML)
+router.get('/:goalId/difficulty-suggestions', protect, goalController.getDifficultySuggestions);
+
+// Get per-topic analytics (reading status, quiz stats, engagement)
+router.get('/:goalId/topic-analytics', protect, goalController.getTopicAnalytics);
+
 module.exports = router;

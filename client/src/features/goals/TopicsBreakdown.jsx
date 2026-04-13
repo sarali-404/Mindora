@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./TopicsBreakdown.module.css";
 import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome } from "react-icons/md";
+import goalService from "../../services/goalService";
 
 export default function TopicsBreakdown({ 
   topics = [], 
@@ -9,6 +10,16 @@ export default function TopicsBreakdown({
   topicsWithContent = new Set(),
   onGenerateContent 
 }) {
+  const [analytics, setAnalytics] = useState(null);
+
+  // Fetch topic analytics
+  useEffect(() => {
+    if (!goalId) return;
+    goalService.getTopicAnalytics(goalId)
+      .then(res => { if (res.success) setAnalytics(res.data); })
+      .catch(() => {});
+  }, [goalId]);
+
   // Identify weak topics (low progress or low quiz scores)
   const weakTopics = topics.filter(t => 
     t.progress < 50 || (t.averageScore && t.averageScore < 60)
@@ -42,6 +53,7 @@ export default function TopicsBreakdown({
               onProgressUpdate={onProgressUpdate}
               hasContent={topicsWithContent.has(topic.name)}
               onGenerateContent={onGenerateContent}
+              analytics={analytics?.[topic.name]}
             />
           ))}
         </div>
@@ -70,7 +82,7 @@ export default function TopicsBreakdown({
   );
 }
 
-function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent }) {
+function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, analytics }) {
   const [expanded, setExpanded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
@@ -81,6 +93,18 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent }) {
       case 'hard': return '#ef4444';
       default: return '#f59e0b';
     }
+  };
+
+  const getTrendIcon = (trend) => {
+    if (trend === 'improving') return '📈';
+    if (trend === 'declining') return '📉';
+    return '';
+  };
+
+  const formatTime = (seconds) => {
+    if (!seconds || seconds < 60) return seconds ? `${seconds}s` : '0m';
+    const min = Math.round(seconds / 60);
+    return min >= 60 ? `${Math.round(min / 60)}h ${min % 60}m` : `${min}m`;
   };
 
   const handleGenerateContent = async () => {
@@ -139,6 +163,24 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent }) {
             )}
           </button>
         )}
+
+        {/* Reading status icons */}
+        {analytics && (
+          <span className={styles.readingIcons}>
+            <span title={`Notes: ${analytics.notes.read}/${analytics.notes.total} read`}>
+              {analytics.notes.total > 0 ? (analytics.notes.read >= analytics.notes.total ? '📖✓' : '📖') : ''}
+            </span>
+            <span title={`Summaries: ${analytics.summaries.read}/${analytics.summaries.total} read`}>
+              {analytics.summaries.total > 0 ? (analytics.summaries.read >= analytics.summaries.total ? '📋✓' : '📋') : ''}
+            </span>
+            {analytics.quizzes.trend && analytics.quizzes.trend !== 'stable' && (
+              <span title={`Quiz trend: ${analytics.quizzes.trend}`}>{getTrendIcon(analytics.quizzes.trend)}</span>
+            )}
+            {analytics.needsAttention && (
+              <span className={styles.attentionBadge} title="Needs attention">!</span>
+            )}
+          </span>
+        )}
         
         <span className={styles.sectionPercent}>{topic.progress || 0}%</span>
       </div>
@@ -170,6 +212,40 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent }) {
             <div className={styles.topicStats}>
               <span>Quiz attempts: {topic.quizAttempts}</span>
               <span>Avg score: {topic.averageScore || 'N/A'}%</span>
+            </div>
+          )}
+
+          {/* Detailed analytics */}
+          {analytics && (
+            <div className={styles.analyticsGrid}>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Study Time</span>
+                <span className={styles.analyticValue}>{formatTime(analytics.totalStudyTime)}</span>
+              </div>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Notes</span>
+                <span className={styles.analyticValue}>{analytics.notes.read}/{analytics.notes.total} read</span>
+              </div>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Summaries</span>
+                <span className={styles.analyticValue}>{analytics.summaries.read}/{analytics.summaries.total} read</span>
+              </div>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Quizzes</span>
+                <span className={styles.analyticValue}>
+                  {analytics.quizzes.attempts > 0 ? `${analytics.quizzes.avgScore}% avg (${analytics.quizzes.attempts})` : 'None'}
+                </span>
+              </div>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Essays</span>
+                <span className={styles.analyticValue}>
+                  {analytics.essays.submissions > 0 ? `${analytics.essays.avgScore}% avg (${analytics.essays.submissions})` : 'None'}
+                </span>
+              </div>
+              <div className={styles.analyticItem}>
+                <span className={styles.analyticLabel}>Engagement</span>
+                <span className={styles.analyticValue}>{analytics.engagementScore}%</span>
+              </div>
             </div>
           )}
           {error && <p className={styles.errorText}>{error}</p>}

@@ -20,6 +20,12 @@ export default function GoalPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // ML state
+  const [difficultySuggestions, setDifficultySuggestions] = useState([]);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState(new Set());
+  const [regenerating, setRegenerating] = useState(null);
+  const [healthData, setHealthData] = useState(null);
+
   // Fetch goal data
   const fetchGoal = async () => {
     try {
@@ -64,6 +70,54 @@ export default function GoalPage() {
       return () => clearInterval(pollInterval);
     }
   }, [goal?.aiProcessingStatus, goalId]);
+
+  // Fetch ML data once goal is loaded and processing is complete
+  useEffect(() => {
+    if (!goal || goal.aiProcessingStatus !== 'completed') return;
+
+    // Difficulty suggestions
+    goalService.getDifficultySuggestions(goalId)
+      .then(res => { if (res.success) setDifficultySuggestions(res.data || []); })
+      .catch(() => {});
+
+    // Health data: predictions + knowledge state
+    Promise.all([
+      goalService.getPredictions(goalId).catch(() => null),
+      goalService.getKnowledgeState(goalId).catch(() => null)
+    ]).then(([predictions, knowledge]) => {
+      if (predictions?.data || knowledge?.data) {
+        setHealthData({
+          examReadiness: predictions?.data?.examReadiness?.readiness ?? null,
+          overallKnowledge: knowledge?.data?.overallScore ?? null,
+          overallTrend: knowledge?.data?.overallTrend ?? null,
+          weakCount: knowledge?.data?.weakTopics?.length ?? 0,
+          untouchedCount: knowledge?.data?.untouchedTopics?.length ?? 0
+        });
+      }
+    });
+  }, [goal?.aiProcessingStatus, goalId]);
+
+  // Handle regeneration from difficulty suggestion
+  const handleRegenerate = async (suggestion) => {
+    const key = `${suggestion.topicName}-${suggestion.direction}`;
+    setRegenerating(key);
+    try {
+      for (const contentType of suggestion.contentTypes) {
+        await goalService.regenerateContent(goalId, suggestion.topicName, contentType);
+      }
+      setDismissedSuggestions(prev => new Set(prev).add(key));
+      await fetchGoal();
+    } catch (err) {
+      console.error('Regeneration error:', err);
+    } finally {
+      setRegenerating(null);
+    }
+  };
+
+  const dismissSuggestion = (suggestion) => {
+    const key = `${suggestion.topicName}-${suggestion.direction}`;
+    setDismissedSuggestions(prev => new Set(prev).add(key));
+  };
 
   // Calculate days remaining
   const calculateDaysRemaining = () => {
@@ -204,6 +258,41 @@ export default function GoalPage() {
         </div>
       )}
 
+      {/* Difficulty suggestion banners */}
+      {difficultySuggestions
+        .filter(s => !dismissedSuggestions.has(`${s.topicName}-${s.direction}`))
+        .map((suggestion, i) => {
+          const key = `${suggestion.topicName}-${suggestion.direction}`;
+          return (
+            <div key={i} className={styles.suggestionBanner}>
+              <div className={styles.suggestionContent}>
+                <span className={styles.suggestionIcon}>
+                  {suggestion.direction === 'harder' ? '🚀' : '📘'}
+                </span>
+                <div>
+                  <strong>{suggestion.topicName}</strong>
+                  <p className={styles.suggestionText}>{suggestion.reason}</p>
+                </div>
+              </div>
+              <div className={styles.suggestionActions}>
+                <button
+                  className={styles.regenerateButton}
+                  onClick={() => handleRegenerate(suggestion)}
+                  disabled={regenerating === key}
+                >
+                  {regenerating === key ? 'Regenerating...' : `Regenerate (${suggestion.suggestedDifficulty})`}
+                </button>
+                <button
+                  className={styles.dismissButton}
+                  onClick={() => dismissSuggestion(suggestion)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
       {/* Header card */}
       <section className={styles.headerCard}>
         <div className={styles.topRow}>
@@ -254,6 +343,42 @@ export default function GoalPage() {
             </span>
           </div>
         </div>
+
+        {/* Goal health summary */}
+        {healthData && (
+          <div className={styles.healthRow}>
+            {healthData.overallKnowledge !== null && (
+              <div className={styles.healthStat}>
+                <span className={styles.healthValue}>{healthData.overallKnowledge}%</span>
+                <span className={styles.healthLabel}>Knowledge</span>
+              </div>
+            )}
+            {healthData.examReadiness !== null && (
+              <div className={styles.healthStat}>
+                <span className={styles.healthValue}>{healthData.examReadiness}%</span>
+                <span className={styles.healthLabel}>Exam Ready</span>
+              </div>
+            )}
+            {daysRemaining !== null && (
+              <div className={styles.healthStat}>
+                <span className={styles.healthValue}>
+                  {healthData.overallKnowledge !== null && daysRemaining > 0
+                    ? (healthData.overallKnowledge >= 70 ? '✅' : healthData.overallKnowledge >= 40 ? '⚠️' : '🔴')
+                    : '—'}
+                </span>
+                <span className={styles.healthLabel}>
+                  {healthData.overallKnowledge >= 70 ? 'On Track' : healthData.overallKnowledge >= 40 ? 'Needs Work' : 'Behind'}
+                </span>
+              </div>
+            )}
+            {(healthData.weakCount > 0 || healthData.untouchedCount > 0) && (
+              <div className={styles.healthStat}>
+                <span className={styles.healthValue}>{healthData.weakCount + healthData.untouchedCount}</span>
+                <span className={styles.healthLabel}>Need Attention</span>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Tab navigation */}

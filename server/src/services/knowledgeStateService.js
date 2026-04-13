@@ -38,6 +38,12 @@ const ACTIVITY_WEIGHTS = {
     flashcard_review: {
         perCard: 0.2,
         masteredBonus: 0.5
+    },
+    note_completed: {
+        base: 1.5  // Strong signal: user read the full note (time + scroll)
+    },
+    summary_completed: {
+        base: 1.0  // Strong signal: user read the full summary (time + scroll)
     }
 };
 
@@ -152,6 +158,16 @@ function processActivity(log) {
             const mastered = log.data?.cardsMastered || 0;
             rawScore = reviewed * ACTIVITY_WEIGHTS.flashcard_review.perCard
                 + mastered * ACTIVITY_WEIGHTS.flashcard_review.masteredBonus;
+            break;
+        }
+
+        case 'note_completed': {
+            rawScore = ACTIVITY_WEIGHTS.note_completed.base;
+            break;
+        }
+
+        case 'summary_completed': {
+            rawScore = ACTIVITY_WEIGHTS.summary_completed.base;
             break;
         }
     }

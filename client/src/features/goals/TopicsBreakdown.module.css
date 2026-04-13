@@ -428,6 +428,59 @@
   margin: 0;
 }
 
+/* Reading status icons in topic row */
+.readingIcons {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  font-size: 0.75rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.attentionBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Analytics grid in expanded topic */
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+.analyticItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.analyticLabel {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.analyticValue {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
 /* Responsive */
 
 @media (max-width: 960px) {

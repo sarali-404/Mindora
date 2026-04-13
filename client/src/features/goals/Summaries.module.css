@@ -135,6 +135,8 @@
 /* Full summary view */
 .fullSummary {
   padding: 1rem 0;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .fullTitle {
@@ -417,4 +419,31 @@
 .generateButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Read status */
+.summaryRowRead {
+  border-left: 3px solid #10b981;
+}
+
+.readBadge {
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.readBadgeHeader {
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  background: #ecfdf5;
+  border-radius: 999px;
+}
+
+.summaryMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
