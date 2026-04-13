@@ -21,7 +21,7 @@ export default function TopNavbar({ onMenuClick }) {
         // Fetch level info and activity stats
         const levelRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/level-info`, {
           headers: {
-            'Authorization': `Bearer ${authService.getToken()}`
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
         
@@ -36,7 +36,7 @@ export default function TopNavbar({ onMenuClick }) {
         // Fetch activity stats for streak
         const statsRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/activity-stats`, {
           headers: {
-            'Authorization': `Bearer ${authService.getToken()}`
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
 

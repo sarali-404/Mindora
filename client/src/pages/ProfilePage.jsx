@@ -20,6 +20,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import materialService from "../services/materialService";
+import friendService from "../services/friendService";
+import goalService from "../services/goalService";
+import api from "../services/api";
 
 // Import achievement images
 import firstStepsImg from "../assets/achievements/first_steps.png";
@@ -32,6 +35,19 @@ import readingBirdImg from "../assets/achievements/reading_bird.png";
 import streakMasterImg from "../assets/achievements/streak_master.png";
 import teachingBirdImg from "../assets/achievements/teaching_bird.png";
 import welcomeAboardImg from "../assets/achievements/welcome_aborad.png";
+
+const achievementImageMap = {
+  welcome_aboard: welcomeAboardImg,
+  first_steps: firstStepsImg,
+  goal_architect: goalArchitectImg,
+  goal_crusher: goalCrusherImg,
+  memory_master: memoryMasterImg,
+  morning_champion: morningChampionImg,
+  quiz_master: quizMasterImg,
+  reading_bird: readingBirdImg,
+  streak_master: streakMasterImg,
+  teaching_bird: teachingBirdImg,
+};
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -129,170 +145,20 @@ export default function ProfilePage() {
   const [deleteModal, setDeleteModal] = useState({ show: false, material: null });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Achievement data with level system - in a real app, this would come from the backend
-  const achievements = [
-    {
-      id: 1,
-      name: "Welcome Aboard",
-      description: "Create your account and join Mindora",
-      image: welcomeAboardImg,
-      unlocked: true,
-      hasLevels: false
-    },
-    {
-      id: 2,
-      name: "First Steps",
-      description: "Complete your first study session",
-      image: firstStepsImg,
-      unlocked: true,
-      hasLevels: false
-    },
-    {
-      id: 3,
-      name: "Goal Architect",
-      description: "Create learning goals",
-      image: goalArchitectImg,
-      unlocked: true,
-      currentLevel: 2,
-      maxLevel: 5,
-      currentProgress: 8,
-      nextLevelTarget: 20,
-      levels: [
-        { level: 1, target: 1, description: "Create 1 goal" },
-        { level: 2, target: 5, description: "Create 5 goals" },
-        { level: 3, target: 20, description: "Create 20 goals" },
-        { level: 4, target: 50, description: "Create 50 goals" },
-        { level: 5, target: 100, description: "Create 100 goals" }
-      ]
-    },
-    {
-      id: 4,
-      name: "Goal Crusher",
-      description: "Complete learning goals",
-      image: goalCrusherImg,
-      unlocked: false,
-      currentLevel: 0,
-      maxLevel: 5,
-      currentProgress: 3,
-      nextLevelTarget: 5,
-      levels: [
-        { level: 1, target: 5, description: "Complete 5 goals" },
-        { level: 2, target: 10, description: "Complete 10 goals" },
-        { level: 3, target: 25, description: "Complete 25 goals" },
-        { level: 4, target: 50, description: "Complete 50 goals" },
-        { level: 5, target: 100, description: "Complete 100 goals" }
-      ]
-    },
-    {
-      id: 5,
-      name: "Quiz Master",
-      description: "Score 100% on quizzes",
-      image: quizMasterImg,
-      unlocked: true,
-      currentLevel: 3,
-      maxLevel: 5,
-      currentProgress: 15,
-      nextLevelTarget: 25,
-      levels: [
-        { level: 1, target: 1, description: "Perfect score on 1 quiz" },
-        { level: 2, target: 5, description: "Perfect score on 5 quizzes" },
-        { level: 3, target: 10, description: "Perfect score on 10 quizzes" },
-        { level: 4, target: 25, description: "Perfect score on 25 quizzes" },
-        { level: 5, target: 50, description: "Perfect score on 50 quizzes" }
-      ]
-    },
-    {
-      id: 6,
-      name: "Memory Master",
-      description: "Review flashcards",
-      image: memoryMasterImg,
-      unlocked: false,
-      currentLevel: 0,
-      maxLevel: 5,
-      currentProgress: 45,
-      nextLevelTarget: 100,
-      levels: [
-        { level: 1, target: 100, description: "Review 100 flashcards" },
-        { level: 2, target: 250, description: "Review 250 flashcards" },
-        { level: 3, target: 500, description: "Review 500 flashcards" },
-        { level: 4, target: 1000, description: "Review 1000 flashcards" },
-        { level: 5, target: 2500, description: "Review 2500 flashcards" }
-      ]
-    },
-    {
-      id: 7,
-      name: "Morning Champion",
-      description: "Study before 8 AM consistently",
-      image: morningChampionImg,
-      unlocked: false,
-      currentLevel: 0,
-      maxLevel: 4,
-      currentProgress: 3,
-      nextLevelTarget: 7,
-      levels: [
-        { level: 1, target: 7, description: "7-day morning streak" },
-        { level: 2, target: 15, description: "15-day morning streak" },
-        { level: 3, target: 30, description: "30-day morning streak" },
-        { level: 4, target: 60, description: "60-day morning streak" }
-      ]
-    },
-    {
-      id: 8,
-      name: "Streak Master",
-      description: "Maintain daily study streak",
-      image: streakMasterImg,
-      unlocked: false,
-      currentLevel: 0,
-      maxLevel: 5,
-      currentProgress: 12,
-      nextLevelTarget: 30,
-      levels: [
-        { level: 1, target: 30, description: "30-day streak" },
-        { level: 2, target: 60, description: "60-day streak" },
-        { level: 3, target: 100, description: "100-day streak" },
-        { level: 4, target: 180, description: "180-day streak" },
-        { level: 5, target: 365, description: "365-day streak" }
-      ]
-    },
-    {
-      id: 9,
-      name: "Reading Bird",
-      description: "Upload and study materials",
-      image: readingBirdImg,
-      unlocked: true,
-      currentLevel: 2,
-      maxLevel: 5,
-      currentProgress: 24,
-      nextLevelTarget: 50,
-      levels: [
-        { level: 1, target: 5, description: "Upload 5 materials" },
-        { level: 2, target: 20, description: "Upload 20 materials" },
-        { level: 3, target: 50, description: "Upload 50 materials" },
-        { level: 4, target: 100, description: "Upload 100 materials" },
-        { level: 5, target: 250, description: "Upload 250 materials" }
-      ]
-    },
-    {
-      id: 10,
-      name: "Teaching Bird",
-      description: "Share materials with the community",
-      image: teachingBirdImg,
-      unlocked: false,
-      currentLevel: 0,
-      maxLevel: 5,
-      currentProgress: 4,
-      nextLevelTarget: 10,
-      levels: [
-        { level: 1, target: 10, description: "Share 10 materials" },
-        { level: 2, target: 25, description: "Share 25 materials" },
-        { level: 3, target: 50, description: "Share 50 materials" },
-        { level: 4, target: 100, description: "Share 100 materials" },
-        { level: 5, target: 250, description: "Share 250 materials" }
-      ]
-    },
-  ];
+  // Dynamic stats state
+  const [stats, setStats] = useState({ goalsAchieved: 0, hoursStudied: 0, materialsUploaded: 0, activeGoals: 0 });
 
-  // Fetch user's materials
+  // Friends state
+  const [friends, setFriends] = useState([]);
+
+  // AI-generated public notes state
+  const [aiNotes, setAiNotes] = useState([]);
+  const [aiNotesLoading, setAiNotesLoading] = useState(true);
+
+  // Achievements from gamification profile
+  const [achievements, setAchievements] = useState([]);
+
+  // Fetch all profile data
   useEffect(() => {
     const fetchMyMaterials = async () => {
       try {
@@ -306,7 +172,64 @@ export default function ProfilePage() {
       }
     };
 
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/users/stats');
+        if (response.success) {
+          setStats(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    const fetchFriends = async () => {
+      try {
+        const response = await friendService.getFriends();
+        setFriends((response.data || []).slice(0, 8));
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+      }
+    };
+
+    const fetchAiNotes = async () => {
+      try {
+        setAiNotesLoading(true);
+        const response = await goalService.getPublicNotes({ limit: 10 });
+        setAiNotes(response.data || []);
+      } catch (error) {
+        console.error('Error fetching AI notes:', error);
+      } finally {
+        setAiNotesLoading(false);
+      }
+    };
+
+    const fetchAchievements = async () => {
+      try {
+        const response = await api.get('/gamification/achievements');
+        if (response.success && response.data) {
+          const mapped = response.data.map((ach) => ({
+            id: ach._id,
+            name: ach.name,
+            description: ach.description,
+            image: achievementImageMap[ach.key] || welcomeAboardImg,
+            unlocked: ach.earned,
+            tier: ach.tier,
+            hasLevels: ach.isTiered,
+            unlockedAt: ach.unlockedAt,
+          }));
+          setAchievements(mapped);
+        }
+      } catch (error) {
+        console.error('Error fetching achievements:', error);
+      }
+    };
+
     fetchMyMaterials();
+    fetchStats();
+    fetchFriends();
+    fetchAiNotes();
+    fetchAchievements();
   }, []);
 
   // Handle edit material - navigate to NotePage with edit mode
@@ -402,10 +325,10 @@ export default function ProfilePage() {
 
       {/* Stats row */}
       <section className={styles.statsRow}>
-        <StatCard label="Goals Achieved" value="12" icon={MdFlag} />
-        <StatCard label="Hours Studied" value="156" icon={MdAccessTime} />
-        <StatCard label="Materials Uploaded" value="24" icon={MdUpload} />
-        <StatCard label="Active Goals" value="3" icon={MdPlayCircleOutline} />
+        <StatCard label="Goals Achieved" value={stats.goalsAchieved} icon={MdFlag} />
+        <StatCard label="Hours Studied" value={Math.round(stats.hoursStudied)} icon={MdAccessTime} />
+        <StatCard label="Materials Uploaded" value={stats.materialsUploaded} icon={MdUpload} />
+        <StatCard label="Active Goals" value={stats.activeGoals} icon={MdPlayCircleOutline} />
       </section>
 
       {/* Achievements section */}
@@ -417,14 +340,18 @@ export default function ProfilePage() {
             </span>
             <h2 className={styles.sectionTitle}>Achievements</h2>
             <span className={styles.countBadge}>
-              {achievements.filter(a => a.unlocked || (a.hasLevels !== false && a.currentLevel > 0)).length}/{achievements.length}
+              {achievements.filter(a => a.unlocked).length}/{achievements.length}
             </span>
           </div>
         </div>
         <div className={styles.achievementsGrid}>
-          {achievements.map((achievement) => (
-            <AchievementCard key={achievement.id} achievement={achievement} />
-          ))}
+          {achievements.length === 0 ? (
+            <p className={styles.emptyText}>Complete activities to earn achievements!</p>
+          ) : (
+            achievements.map((achievement) => (
+              <AchievementCard key={achievement.id} achievement={achievement} />
+            ))
+          )}
         </div>
       </section>
 
@@ -435,15 +362,36 @@ export default function ProfilePage() {
             <span className={styles.friendsIcon}><MdPeople size={18} style={{color: '#8b5cf6'}}/></span>
             <h2 className={styles.sectionTitle}>Friends</h2>
           </div>
-          <button className={styles.linkButton}>View All</button>
+          <button className={styles.linkButton} onClick={() => navigate('/app/community')}>View All</button>
         </div>
         <div className={styles.friendsRow}>
-          {["Sarah", "Mike", "Emily", "James", "Anna"].map((name) => (
-            <div key={name} className={styles.friendPill}>
-              <div className={styles.friendAvatar}>{name[0]}</div>
-              <span className={styles.friendName}>{name}</span>
-            </div>
-          ))}
+          {friends.length === 0 ? (
+            <p className={styles.emptyText}>No friends yet. Visit the community page to connect!</p>
+          ) : (
+            friends.map((f) => {
+              const u = f.user;
+              const name = u?.profile?.firstName
+                ? `${u.profile.firstName} ${u.profile.lastName || ''}`.trim()
+                : u?.username || 'User';
+              const initial = name[0]?.toUpperCase() || 'U';
+              const avatarUrl = u?.profile?.avatar
+                ? u.profile.avatar.startsWith('http')
+                  ? u.profile.avatar
+                  : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${u.profile.avatar}`
+                : null;
+              return (
+                <div key={u?._id || name} className={styles.friendPill}>
+                  <div className={styles.friendAvatar}>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={name} className={styles.friendAvatarImg} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                    ) : null}
+                    <span style={{ display: avatarUrl ? 'none' : 'flex' }}>{initial}</span>
+                  </div>
+                  <span className={styles.friendName}>{name.split(' ')[0]}</span>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
 
@@ -453,32 +401,54 @@ export default function ProfilePage() {
           <div className={styles.materialsHeader}>
             <div className={styles.materialsTitleRow}>
               <span className={styles.materialsIcon}><MdAutoAwesome size={18} style={{color: '#f59e0b'}}/></span>
-              <h2 className={styles.sectionTitle}>Private AI-Generated Materials</h2>
-              <span className={styles.countBadge}>3</span>
+              <h2 className={styles.sectionTitle}>Public AI-Generated Notes</h2>
+              <span className={styles.countBadge}>{aiNotes.length}</span>
             </div>
           </div>
           <div className={styles.materialList}>
-            <MaterialRow
-              title="React Hooks Personal Notes"
-              type="PDF"
-              date="Oct 20, 2025"
-              aiTag
-              canDelete
-            />
-            <MaterialRow
-              title="Algorithm Practice Problems"
-              type="Document"
-              date="Oct 18, 2025"
-              aiTag
-              canDelete
-            />
-            <MaterialRow
-              title="ML Flashcards Set"
-              type="Flashcards"
-              date="Oct 15, 2025"
-              aiTag
-              canDelete
-            />
+            {aiNotesLoading ? (
+              <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>Loading AI notes...</p>
+              </div>
+            ) : aiNotes.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No public AI notes yet. Make notes public from your goals.</p>
+              </div>
+            ) : (
+              aiNotes.map((note) => {
+                const textContent = typeof note.textContent === 'string' ? JSON.parse(note.textContent) : note.textContent;
+                return (
+                  <div key={note._id} className={styles.materialRow}>
+                    <div className={styles.materialInfo}>
+                      <p className={styles.materialTitle}>{textContent?.title || note.topic || 'AI Notes'}</p>
+                      <div className={styles.materialMetaRow}>
+                        <span className={styles.materialMeta}>
+                          Notes · {formatDate(note.publishedAt || note.createdAt)}
+                        </span>
+                        <span className={styles.aiTag}>AI Generated</span>
+                      </div>
+                    </div>
+                    <div className={styles.materialActions}>
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={async () => {
+                          try {
+                            await goalService.toggleContentVisibility(note.goal?._id, note._id);
+                            setAiNotes(prev => prev.filter(n => n._id !== note._id));
+                          } catch (err) {
+                            console.error('Failed to make note private:', err);
+                          }
+                        }}
+                        title="Make Private"
+                      >
+                        <MdLock size={18} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -606,89 +576,22 @@ function StatCard({ label, value, icon: Icon }) {
   );
 }
 
-function MaterialRow({ title, type, date, meta, aiTag, actionLabel, canDelete }) {
-  return (
-    <div className={styles.materialRow}>
-      <div>
-        <p className={styles.materialTitle}>{title}</p>
-        <div className={styles.materialMetaRow}>
-          <span className={styles.materialMeta}>
-            {type} · {date}
-          </span>
-          {aiTag && <span className={styles.aiTag}>AI Generated</span>}
-          {meta && <span className={styles.metaPill}>{meta}</span>}
-        </div>
-      </div>
-
-      <div className={styles.materialActions}>
-        {actionLabel && (
-          <button className={styles.linkButton}>{actionLabel}</button>
-        )}
-        {canDelete && (
-          <button className={styles.iconButton} aria-label="Delete material">
-            <MdDelete size={18} style={{ color: '#ef4444' }} />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function AchievementCard({ achievement }) {
   const [showTooltip, setShowTooltip] = useState(false);
   
-  // Handle achievements without levels
-  if (achievement.hasLevels === false) {
-    return (
-      <div 
-        className={`${styles.achievementCard} ${!achievement.unlocked ? styles.locked : ''}`}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <div className={styles.achievementImageWrapper}>
-          <img 
-            src={achievement.image} 
-            alt={achievement.name}
-            className={styles.achievementImage}
-          />
-          {!achievement.unlocked && (
-            <div className={styles.lockOverlay}>
-              <MdLock size={24} />
-            </div>
-          )}
-        </div>
-        <p className={styles.achievementName}>{achievement.name}</p>
-        
-        {showTooltip && (
-          <div className={styles.achievementTooltip}>
-            <p className={styles.tooltipText}>{achievement.description}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  // Calculate progress percentage for current level
-  const progressPercentage = achievement.currentLevel === 0
-    ? (achievement.currentProgress / achievement.nextLevelTarget) * 100
-    : achievement.currentLevel === achievement.maxLevel
-    ? 100
-    : ((achievement.currentProgress - achievement.levels[achievement.currentLevel - 1].target) / 
-       (achievement.nextLevelTarget - achievement.levels[achievement.currentLevel - 1].target)) * 100;
-
-  // Determine if achievement is unlocked (has at least level 1)
-  const isUnlocked = achievement.currentLevel > 0;
-  const isMaxLevel = achievement.currentLevel === achievement.maxLevel;
+  const tierLabel = achievement.tier && achievement.tier !== 'one-time' 
+    ? achievement.tier.charAt(0).toUpperCase() + achievement.tier.slice(1)
+    : null;
 
   return (
     <div 
-      className={`${styles.achievementCard} ${!isUnlocked ? styles.locked : ''}`}
+      className={`${styles.achievementCard} ${!achievement.unlocked ? styles.locked : ''}`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      {isUnlocked && (
+      {tierLabel && (
         <div className={styles.levelBadge}>
-          Lv {achievement.currentLevel}
+          {tierLabel}
         </div>
       )}
       <div className={styles.achievementImageWrapper}>
@@ -697,65 +600,23 @@ function AchievementCard({ achievement }) {
           alt={achievement.name}
           className={styles.achievementImage}
         />
-        {!isUnlocked && (
+        {!achievement.unlocked && (
           <div className={styles.lockOverlay}>
             <MdLock size={24} />
           </div>
         )}
       </div>
-      
       <p className={styles.achievementName}>{achievement.name}</p>
-      
-      {/* Progress bar */}
-      {isUnlocked && !isMaxLevel && (
-        <div className={styles.achievementProgressContainer}>
-          <div className={styles.achievementProgressBar}>
-            <div 
-              className={styles.achievementProgressFill}
-              style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-            />
-          </div>
-          <p className={styles.achievementProgressText}>
-            {achievement.currentProgress} / {achievement.nextLevelTarget}
-          </p>
-        </div>
-      )}
-      
-      {!isUnlocked && (
-        <div className={styles.achievementProgressContainer}>
-          <div className={styles.achievementProgressBar}>
-            <div 
-              className={styles.achievementProgressFill}
-              style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-            />
-          </div>
-          <p className={styles.achievementProgressText}>
-            {achievement.currentProgress} / {achievement.nextLevelTarget}
-          </p>
-        </div>
-      )}
-      
-      {isMaxLevel && (
-        <p className={styles.achievementMaxLevel}>MAX LEVEL</p>
-      )}
       
       {showTooltip && (
         <div className={styles.achievementTooltip}>
           <p className={styles.tooltipTitle}>{achievement.name}</p>
           <p className={styles.tooltipText}>{achievement.description}</p>
-          <div className={styles.tooltipLevels}>
-            {achievement.levels.map((level) => (
-              <div 
-                key={level.level} 
-                className={`${styles.tooltipLevel} ${
-                  level.level <= achievement.currentLevel ? styles.tooltipLevelComplete : ''
-                }`}
-              >
-                <span className={styles.tooltipLevelNumber}>Lv {level.level}</span>
-                <span className={styles.tooltipLevelDesc}>{level.description}</span>
-              </div>
-            ))}
-          </div>
+          {achievement.unlockedAt && (
+            <p className={styles.tooltipText}>
+              Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
       )}
     </div>

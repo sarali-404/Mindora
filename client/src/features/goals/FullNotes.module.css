@@ -98,6 +98,45 @@
   white-space: nowrap;
 }
 
+.visibilityToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.visibilityToggle:hover {
+  border-color: #0073a0;
+  color: #0073a0;
+  background: #e4f3fb;
+}
+
+.visibilityToggle.isPublic {
+  border-color: #10b981;
+  color: #10b981;
+  background: #ecfdf5;
+}
+
+.visibilityToggle.isPublic:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.visibilityToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Clickable note cards */
 .noteCard {
   cursor: pointer;

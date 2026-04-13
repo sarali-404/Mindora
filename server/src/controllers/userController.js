@@ -1,4 +1,7 @@
 const User = require('../models/User');
+const Goal = require('../models/Goal');
+const Material = require('../models/Material');
+const ActivityLog = require('../models/ActivityLog');
 
 // @desc    Get user profile
 // @route   GET /api/users/:id
@@ -246,11 +249,42 @@ const uploadProfilePicture = async (req, res) => {
   }
 };
 
+// @desc    Get user stats (goals achieved, hours studied, etc.)
+// @route   GET /api/users/stats
+// @access  Private
+const getUserStats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const [goalsAchieved, activeGoals, materialsUploaded, durationAgg] = await Promise.all([
+      Goal.countDocuments({ user: userId, status: 'completed' }),
+      Goal.countDocuments({ user: userId, status: 'active' }),
+      Material.countDocuments({ author: userId, status: 'active' }),
+      ActivityLog.aggregate([
+        { $match: { user: userId, 'data.duration': { $exists: true } } },
+        { $group: { _id: null, totalSeconds: { $sum: '$data.duration' } } }
+      ])
+    ]);
+
+    const totalSeconds = durationAgg[0]?.totalSeconds || 0;
+    const hoursStudied = Math.round(totalSeconds / 3600);
+
+    res.json({
+      success: true,
+      data: { goalsAchieved, hoursStudied, materialsUploaded, activeGoals }
+    });
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get stats' });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
   uploadIDPhoto,
   getAllUsers,
   deleteUser,
-  uploadProfilePicture
+  uploadProfilePicture,
+  getUserStats
 };

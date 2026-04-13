@@ -3,6 +3,7 @@ import {
     RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { MdBarChart, MdTrendingUp, MdTrendingDown, MdTrendingFlat, MdRefresh, MdRadar, MdTimeline, MdListAlt, MdTrackChanges, MdStar, MdFitnessCenter, MdMenuBook, MdWarning, MdHelp, MdCheckCircle, MdError, MdEditNote, MdPushPin, MdAccessTime, MdErrorOutline } from 'react-icons/md';
 import styles from './KnowledgeDashboard.module.css';
 import goalService from '../../services/goalService';
 
@@ -72,7 +73,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                     </div>
                 </header>
                 <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>📊</div>
+                    <div className={styles.emptyIcon}><MdBarChart size={32} /></div>
                     <h3>No Data Yet</h3>
                     <p>{error || 'Complete some quizzes or read notes to unlock your knowledge insights.'}</p>
                 </div>
@@ -100,7 +101,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             activities: data.details.totalActivities
         }));
 
-    const trendIcon = overallTrend === 'improving' ? '📈' : overallTrend === 'declining' ? '📉' : '➡️';
+    const TrendIcon = overallTrend === 'improving' ? MdTrendingUp : overallTrend === 'declining' ? MdTrendingDown : MdTrendingFlat;
     const trendColor = overallTrend === 'improving' ? '#10b981' : overallTrend === 'declining' ? '#ef4444' : '#6b7280';
     const scoreColor = overallScore >= 75 ? '#10b981' : overallScore >= 40 ? '#f59e0b' : '#ef4444';
 
@@ -111,7 +112,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                     <h2 className={styles.title}>Knowledge Insights</h2>
                 </div>
                 <button className={styles.refreshBtn} onClick={fetchKnowledgeState} title="Refresh">
-                    🔄
+                    <MdRefresh size={18} />
                 </button>
             </header>
 
@@ -125,7 +126,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                     <div className={styles.scoreInfo}>
                         <h3>Overall Knowledge</h3>
                         <span className={styles.trendBadge} style={{ color: trendColor }}>
-                            {trendIcon} {overallTrend}
+                            <TrendIcon size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {overallTrend}
                         </span>
                     </div>
                 </div>
@@ -153,16 +154,17 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             {/* Tab Navigation */}
             <nav className={styles.tabs}>
                 {[
-                    { key: 'overview', label: '📊 Radar' },
-                    { key: 'velocity', label: '📈 Velocity' },
-                    { key: 'topics', label: '📋 Topics' },
-                    { key: 'predictions', label: '🎯 Predictions' }
+                    { key: 'overview', label: 'Radar', icon: MdRadar },
+                    { key: 'velocity', label: 'Velocity', icon: MdTimeline },
+                    { key: 'topics', label: 'Topics', icon: MdListAlt },
+                    { key: 'predictions', label: 'Predictions', icon: MdTrackChanges }
                 ].map(tab => (
                     <button
                         key={tab.key}
                         className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
                         onClick={() => setActiveTab(tab.key)}
                     >
+                        {tab.icon && <tab.icon size={15} style={{ verticalAlign: 'middle', marginRight: 4 }} />}
                         {tab.label}
                     </button>
                 ))}
@@ -224,7 +226,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                                 <div key={name} className={styles.topicRow}>
                                     <div className={styles.topicInfo}>
                                         <span className={styles.topicLevel} data-level={data.level}>
-                                            {data.level === 'mastered' ? '⭐' : data.level === 'strong' ? '💪' : data.level === 'developing' ? '📚' : data.level === 'weak' ? '⚠️' : '❓'}
+                                            {data.level === 'mastered' ? <MdStar size={16} color="#f59e0b" /> : data.level === 'strong' ? <MdFitnessCenter size={16} color="#10b981" /> : data.level === 'developing' ? <MdMenuBook size={16} color="#3b82f6" /> : data.level === 'weak' ? <MdWarning size={16} color="#ef4444" /> : <MdHelp size={16} color="#6b7280" />}
                                         </span>
                                         <div>
                                             <span className={styles.topicName}>{name}</span>
@@ -282,7 +284,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                                         <div key={item.topic} className={styles.readinessRow}>
                                             <div className={styles.readinessInfo}>
                                                 <span className={styles.readinessStatus}>
-                                                    {item.ready ? '✅' : item.combinedScore >= 40 ? '⚠️' : '🔴'}
+                                                    {item.ready ? <MdCheckCircle size={16} color="#10b981" /> : item.combinedScore >= 40 ? <MdWarning size={16} color="#f59e0b" /> : <MdError size={16} color="#ef4444" />}
                                                 </span>
                                                 <div>
                                                     <span className={styles.readinessTopicName}>{item.topic}</span>
@@ -310,7 +312,7 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
                             </>
                         ) : (
                             <div className={styles.predictionsEmpty}>
-                                <div className={styles.emptyIcon}>🎯</div>
+                                <div className={styles.emptyIcon}><MdTrackChanges size={32} /></div>
                                 <h3>Not Enough Data Yet</h3>
                                 <p>Complete at least 3 quizzes to unlock exam readiness predictions.</p>
                             </div>
@@ -322,13 +324,13 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             {/* Study Recommendation */}
             {recommendation?.recommendation && (
                 <div className={styles.studyRecommendation}>
-                    <h4 className={styles.recTitle}>📝 What to Study Next</h4>
+                    <h4 className={styles.recTitle}><MdEditNote size={18} style={{ verticalAlign: 'middle', marginRight: 4 }} /> What to Study Next</h4>
                     <p className={styles.recText}>{recommendation.recommendation}</p>
                     {recommendation.reason && (
                         <p className={styles.recReason}>{recommendation.reason}</p>
                     )}
                     {recommendation.estimatedTime && (
-                        <span className={styles.recTime}>⏱️ {recommendation.estimatedTime}</span>
+                        <span className={styles.recTime}><MdAccessTime size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {recommendation.estimatedTime}</span>
                     )}
                 </div>
             )}
@@ -336,16 +338,16 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             {/* Study Recommendations */}
             {(weakTopics?.length > 0 || untouchedTopics?.length > 0) && (
                 <div className={styles.recommendations}>
-                    <h4 className={styles.recTitle}>📌 Focus Areas</h4>
+                    <h4 className={styles.recTitle}><MdPushPin size={18} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Focus Areas</h4>
                     <div className={styles.recList}>
                         {weakTopics?.map(topic => (
                             <span key={topic} className={`${styles.recTag} ${styles.weakTag}`}>
-                                ⚠️ {topic}
+                                <MdErrorOutline size={14} style={{ verticalAlign: 'middle', marginRight: 2 }} /> {topic}
                             </span>
                         ))}
                         {untouchedTopics?.slice(0, 3).map(topic => (
                             <span key={topic} className={`${styles.recTag} ${styles.untouchedTag}`}>
-                                ❓ {topic}
+                                <MdHelp size={14} style={{ verticalAlign: 'middle', marginRight: 2 }} /> {topic}
                             </span>
                         ))}
                     </div>

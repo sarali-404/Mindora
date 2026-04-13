@@ -678,6 +678,12 @@
   }
 }
 
+.emptyText {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  padding: 1rem 0;
+}
+
 /* Mobile Responsive */
 
 @media (max-width: 1280px) {

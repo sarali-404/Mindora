@@ -1,5 +1,6 @@
 const Goal = require('../models/Goal');
 const GeneratedContent = require('../models/GeneratedContent');
+const Comment = require('../models/Comment');
 const ActivityLog = require('../models/ActivityLog');
 const { extractText, isSupportedFileType } = require('../utils/textExtractor');
 const aiService = require('../services/aiService');
@@ -2182,5 +2183,263 @@ exports.getTopicAnalytics = async (req, res) => {
       message: 'Failed to get topic analytics',
       error: error.message
     });
+  }
+};
+
+// ==================== PUBLIC NOTES ====================
+
+/**
+ * Toggle content visibility (public/private)
+ * @route PATCH /api/goals/:goalId/content/:contentId/visibility
+ */
+exports.toggleContentVisibility = async (req, res) => {
+  try {
+    const { goalId, contentId } = req.params;
+    const userId = req.user._id;
+
+    const goal = await Goal.findById(goalId);
+    if (!goal || goal.user.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const content = await GeneratedContent.findOne({ _id: contentId, goal: goalId });
+    if (!content) {
+      return res.status(404).json({ success: false, message: 'Content not found' });
+    }
+
+    if (content.contentType !== 'notes') {
+      return res.status(400).json({ success: false, message: 'Only notes can be made public' });
+    }
+
+    content.isPublic = !content.isPublic;
+    content.publishedAt = content.isPublic ? new Date() : null;
+    await content.save();
+
+    res.json({
+      success: true,
+      data: { isPublic: content.isPublic, publishedAt: content.publishedAt }
+    });
+  } catch (error) {
+    console.error('Toggle content visibility error:', error);
+    res.status(500).json({ success: false, message: 'Failed to toggle visibility' });
+  }
+};
+
+/**
+ * Get all public AI-generated notes (for Library page)
+ * @route GET /api/goals/public-notes
+ */
+exports.getPublicNotes = async (req, res) => {
+  try {
+    const { page = 1, limit = 12, search = '', sortBy = 'publishedAt', sortOrder = 'desc' } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = {
+      isPublic: true,
+      contentType: 'notes',
+      status: 'active'
+    };
+
+    if (search) {
+      query.$or = [
+        { 'textContent.title': { $regex: search, $options: 'i' } },
+        { topic: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const sortObj = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    const [notes, total] = await Promise.all([
+      GeneratedContent.find(query)
+        .populate({
+          path: 'goal',
+          select: 'title subject user',
+          populate: {
+            path: 'user',
+            select: 'username profile.firstName profile.lastName profile.avatar profile.university'
+          }
+        })
+        .sort(sortObj)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .select('textContent topic publishedAt createdAt stats goal'),
+      GeneratedContent.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: notes,
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / parseInt(limit)),
+        total,
+        limit: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get public notes error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get public notes' });
+  }
+};
+
+/**
+ * Get a single public AI note by ID
+ * @route GET /api/goals/public-notes/:noteId
+ */
+exports.getPublicNote = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+
+    const note = await GeneratedContent.findOne({
+      _id: noteId,
+      isPublic: true,
+      contentType: 'notes',
+      status: 'active'
+    }).populate({
+      path: 'goal',
+      select: 'title subject user',
+      populate: {
+        path: 'user',
+        select: 'username profile.firstName profile.lastName profile.avatar profile.university'
+      }
+    });
+
+    if (!note) {
+      return res.status(404).json({ success: false, message: 'Note not found or not public' });
+    }
+
+    // Increment view count
+    note.stats = note.stats || {};
+    note.stats.views = (note.stats.views || 0) + 1;
+    await note.save();
+
+    const noteObj = note.toObject();
+    noteObj.isLiked = (note.stats.likedBy || []).some(id => id.toString() === req.user._id.toString());
+
+    res.json({ success: true, data: noteObj });
+  } catch (error) {
+    console.error('Get public note error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get note' });
+  }
+};
+
+/**
+ * Get comments for a public AI note
+ * @route GET /api/goals/public-notes/:noteId/comments
+ */
+exports.getAiNoteComments = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const comments = await Comment.find({
+      aiNote: noteId,
+      status: 'active',
+      parentComment: null
+    })
+      .populate('author', 'username profile.firstName profile.lastName profile.avatar')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Get replies for each comment
+    for (const comment of comments) {
+      comment.replies = await Comment.find({
+        parentComment: comment._id,
+        status: 'active'
+      })
+        .populate('author', 'username profile.firstName profile.lastName profile.avatar')
+        .sort({ createdAt: 1 })
+        .lean();
+    }
+
+    res.json({ success: true, data: comments });
+  } catch (error) {
+    console.error('Get AI note comments error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch comments' });
+  }
+};
+
+/**
+ * Add comment to a public AI note
+ * @route POST /api/goals/public-notes/:noteId/comments
+ */
+exports.addAiNoteComment = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const { content, parentComment } = req.body;
+
+    const note = await GeneratedContent.findOne({ _id: noteId, isPublic: true, contentType: 'notes' });
+    if (!note) {
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+
+    const comment = new Comment({
+      aiNote: noteId,
+      author: req.user._id,
+      content,
+      parentComment: parentComment || null
+    });
+    await comment.save();
+    await comment.populate('author', 'username profile.firstName profile.lastName profile.avatar');
+
+    res.status(201).json({ success: true, data: comment });
+  } catch (error) {
+    console.error('Add AI note comment error:', error);
+    res.status(500).json({ success: false, message: 'Failed to add comment' });
+  }
+};
+
+/**
+ * Delete comment on a public AI note
+ * @route DELETE /api/goals/public-notes/:noteId/comments/:commentId
+ */
+exports.deleteAiNoteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const comment = await Comment.findById(commentId);
+    if (!comment || comment.status === 'deleted') {
+      return res.status(404).json({ success: false, message: 'Comment not found' });
+    }
+    if (comment.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    comment.status = 'deleted';
+    await comment.save();
+    res.json({ success: true, message: 'Comment deleted' });
+  } catch (error) {
+    console.error('Delete AI note comment error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete comment' });
+  }
+};
+
+/**
+ * Toggle like on a public AI note
+ * @route POST /api/goals/public-notes/:noteId/like
+ */
+exports.toggleAiNoteLike = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const userId = req.user._id;
+
+    const note = await GeneratedContent.findOne({ _id: noteId, isPublic: true, contentType: 'notes' });
+    if (!note) {
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+
+    if (!note.stats) note.stats = {};
+    if (!note.stats.likedBy) note.stats.likedBy = [];
+
+    const alreadyLiked = note.stats.likedBy.some(id => id.toString() === userId.toString());
+    if (alreadyLiked) {
+      note.stats.likedBy = note.stats.likedBy.filter(id => id.toString() !== userId.toString());
+      note.stats.likes = Math.max(0, (note.stats.likes || 1) - 1);
+    } else {
+      note.stats.likedBy.push(userId);
+      note.stats.likes = (note.stats.likes || 0) + 1;
+    }
+
+    await note.save();
+    res.json({ success: true, isLiked: !alreadyLiked, likes: note.stats.likes });
+  } catch (error) {
+    console.error('Toggle AI note like error:', error);
+    res.status(500).json({ success: false, message: 'Failed to toggle like' });
   }
 };

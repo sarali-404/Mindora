@@ -7,6 +7,7 @@ import Summaries from "../features/goals/Summaries";
 import Quizzes from "../features/goals/Quizzes";
 import EssayQuestions from "../features/goals/EssayQuestions";
 import KnowledgeDashboard from "../features/goals/KnowledgeDashboard";
+import { MdRocketLaunch, MdMenuBook, MdDelete, MdCheckCircle, MdWarning, MdError, MdPsychology, MdHourglassTop } from "react-icons/md";
 import goalService from "../services/goalService";
 
 export default function GoalPage() {
@@ -247,7 +248,7 @@ export default function GoalPage() {
       {/* Processing status banner */}
       {goal.aiProcessingStatus && goal.aiProcessingStatus !== 'completed' && (
         <div className={styles.processingBanner}>
-          <span className={styles.processingIcon}>⏳</span>
+          <span className={styles.processingIcon}><MdHourglassTop size={18} /></span>
           <span>
             {goal.aiProcessingStatus === 'extracting' && 'Extracting text from your materials...'}
             {goal.aiProcessingStatus === 'analyzing' && 'AI is analyzing your materials...'}
@@ -267,7 +268,7 @@ export default function GoalPage() {
             <div key={i} className={styles.suggestionBanner}>
               <div className={styles.suggestionContent}>
                 <span className={styles.suggestionIcon}>
-                  {suggestion.direction === 'harder' ? '🚀' : '📘'}
+                  {suggestion.direction === 'harder' ? <MdRocketLaunch size={20} /> : <MdMenuBook size={20} />}
                 </span>
                 <div>
                   <strong>{suggestion.topicName}</strong>
@@ -320,7 +321,7 @@ export default function GoalPage() {
               className={styles.deleteGoalButton}
               onClick={() => setShowDeleteConfirm(true)}
             >
-              🗑️ Delete
+              <MdDelete size={18} /> Delete
             </button>
           </div>
         </div>
@@ -363,7 +364,7 @@ export default function GoalPage() {
               <div className={styles.healthStat}>
                 <span className={styles.healthValue}>
                   {healthData.overallKnowledge !== null && daysRemaining > 0
-                    ? (healthData.overallKnowledge >= 70 ? '✅' : healthData.overallKnowledge >= 40 ? '⚠️' : '🔴')
+                    ? (healthData.overallKnowledge >= 70 ? <MdCheckCircle size={18} color="#10b981" /> : healthData.overallKnowledge >= 40 ? <MdWarning size={18} color="#f59e0b" /> : <MdError size={18} color="#ef4444" />)
                     : '—'}
                 </span>
                 <span className={styles.healthLabel}>
@@ -385,7 +386,7 @@ export default function GoalPage() {
       <nav className={styles.tabsBar}>
         <Tab
           id="knowledge"
-          label="🧠 Knowledge"
+          label="Knowledge"
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />

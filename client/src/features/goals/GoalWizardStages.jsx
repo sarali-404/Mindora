@@ -9,6 +9,7 @@ import {
   MdDescription,
   MdClose,
   MdLightbulb,
+  MdAutoAwesome,
 } from "react-icons/md";
 
 export default function GoalWizardStages({
@@ -53,7 +54,7 @@ export default function GoalWizardStages({
                   autoFocus
                 />
                 {loadingSuggestions && (
-                  <span className={styles.loadingIndicator}>✨</span>
+                  <span className={styles.loadingIndicator}><MdAutoAwesome size={16} /></span>
                 )}
                 {showSuggestions && suggestions.length > 0 && (
                   <div className={styles.suggestionsDropdown}>

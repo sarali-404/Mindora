@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MdEdit, MdDescription } from "react-icons/md";
 import styles from "./EssayQuestions.module.css";
 import goalService from "../../services/goalService";
 
@@ -62,7 +63,7 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
     <section className={styles.card}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.iconCircle}>✏️</div>
+          <div className={styles.iconCircle}><MdEdit size={20} style={{ color: '#8b5cf6' }} /></div>
           <h2 className={styles.title}>Essay Questions</h2>
         </div>
       </header>
@@ -73,7 +74,7 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
 
       {essays.length === 0 && topicsWithoutEssays.length === 0 ? (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📝</div>
+          <div className={styles.emptyIcon}><MdDescription size={32} /></div>
           <h3>No Essay Questions Yet</h3>
           <p>Essay questions will be generated from your study materials.</p>
         </div>
@@ -190,7 +191,7 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
                             disabled={!answers[answerId]?.trim() || submitting === answerId}
                             onClick={() => handleSubmitAnswer(essay._id, question._id)}
                           >
-                            {submitting === answerId ? '⏳ Grading...' : 'Submit Answer'}
+                            {submitting === answerId ? 'Grading...' : 'Submit Answer'}
                           </button>
                         </div>
                       </>
@@ -215,7 +216,7 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
                     onClick={() => handleGenerateEssays(topic.name)}
                     disabled={generating === topic.name}
                   >
-                    {generating === topic.name ? '⏳ Generating...' : `📝 ${topic.name}`}
+                    {generating === topic.name ? 'Generating...' : topic.name}
                   </button>
                 ))}
               </div>

@@ -13,6 +13,7 @@ router.get('/profile', protect, gamificationController.getGameProfile);
 router.get('/level-info', protect, gamificationController.getLevelInfo);
 
 // Achievement routes
+router.get('/achievements', protect, gamificationController.getAllAchievements);
 router.post('/achievements/evaluate', protect, gamificationController.evaluateAchievements);
 
 // Leaderboard routes

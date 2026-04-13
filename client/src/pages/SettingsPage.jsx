@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiBell,
   FiMonitor,
@@ -8,13 +8,85 @@ import {
   FiToggleRight,
 } from "react-icons/fi";
 import styles from "./SettingsPage.module.css";
+import notificationService from "../services/notificationService";
 
 export default function SettingsPage() {
   const [emailNoti, setEmailNoti] = useState(true);
-  const [pushNoti, setPushNoti] = useState(false);
+  const [pushNoti, setPushNoti] = useState(true);
   const [reminders, setReminders] = useState(true);
   const [goalUpdates, setGoalUpdates] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const prefs = await notificationService.getPreferences();
+        if (prefs) {
+          const noti = prefs.notifications || {};
+          setEmailNoti(noti.email?.achievements !== false);
+          setPushNoti(noti.inApp?.achievements !== false);
+          setReminders(noti.inApp?.recommendations !== false);
+          setGoalUpdates(noti.inApp?.goalProgress !== false);
+          setDarkMode(prefs.display?.theme === 'dark');
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    };
+    loadPreferences();
+  }, []);
+
+  const savePreferences = async (updates) => {
+    try {
+      setSaving(true);
+      await notificationService.updatePreferences(updates);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEmail = () => {
+    const newVal = !emailNoti;
+    setEmailNoti(newVal);
+    savePreferences({
+      notifications: { email: { achievements: newVal, goalProgress: newVal, social: newVal, recommendations: newVal, sessions: newVal } }
+    });
+  };
+
+  const togglePush = () => {
+    const newVal = !pushNoti;
+    setPushNoti(newVal);
+    savePreferences({
+      notifications: { inApp: { achievements: newVal, social: newVal, sessions: newVal, recommendations: reminders, goalProgress: goalUpdates } }
+    });
+  };
+
+  const toggleReminders = () => {
+    const newVal = !reminders;
+    setReminders(newVal);
+    savePreferences({
+      notifications: { inApp: { recommendations: newVal } }
+    });
+  };
+
+  const toggleGoalUpdates = () => {
+    const newVal = !goalUpdates;
+    setGoalUpdates(newVal);
+    savePreferences({
+      notifications: { inApp: { goalProgress: newVal } }
+    });
+  };
+
+  const toggleDarkMode = () => {
+    const newVal = !darkMode;
+    setDarkMode(newVal);
+    savePreferences({
+      display: { theme: newVal ? 'dark' : 'light' }
+    });
+  };
 
   return (
     <div className={styles.page}>
@@ -33,25 +105,25 @@ export default function SettingsPage() {
           label="Email Notifications"
           description="Receive updates and alerts via email."
           enabled={emailNoti}
-          onToggle={() => setEmailNoti((v) => !v)}
+          onToggle={toggleEmail}
         />
         <ToggleRow
           label="Push Notifications"
           description="Get real-time notifications in your browser."
           enabled={pushNoti}
-          onToggle={() => setPushNoti((v) => !v)}
+          onToggle={togglePush}
         />
         <ToggleRow
           label="Study Reminders"
           description="Daily reminders to stay on track with your goals."
           enabled={reminders}
-          onToggle={() => setReminders((v) => !v)}
+          onToggle={toggleReminders}
         />
         <ToggleRow
           label="Goal Progress Updates"
           description="Notifications when you make progress on goals."
           enabled={goalUpdates}
-          onToggle={() => setGoalUpdates((v) => !v)}
+          onToggle={toggleGoalUpdates}
           last
         />
       </section>
@@ -69,7 +141,7 @@ export default function SettingsPage() {
           label="Dark Mode"
           description="Switch to dark theme for better night-time viewing."
           enabled={darkMode}
-          onToggle={() => setDarkMode((v) => !v)}
+          onToggle={toggleDarkMode}
           last
         />
       </section>

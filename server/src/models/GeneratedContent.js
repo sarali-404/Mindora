@@ -176,7 +176,9 @@ const generatedContentSchema = new mongoose.Schema({
     completions: { type: Number, default: 0 },
     averageScore: { type: Number, default: 0 },
     totalAttempts: { type: Number, default: 0 },
-    lastAccessedAt: Date
+    lastAccessedAt: Date,
+    likes: { type: Number, default: 0 },
+    likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
   },
   
   // Status
@@ -203,7 +205,14 @@ const generatedContentSchema = new mongoose.Schema({
     completedAt: { type: Date, default: Date.now },
     duration: Number,     // seconds spent reading
     scrollPercent: Number // how far user scrolled (0-100)
-  }]
+  }],
+
+  // Public sharing
+  isPublic: {
+    type: Boolean,
+    default: false
+  },
+  publishedAt: Date
 }, {
   timestamps: true
 });
@@ -212,6 +221,7 @@ const generatedContentSchema = new mongoose.Schema({
 generatedContentSchema.index({ goal: 1, contentType: 1 });
 generatedContentSchema.index({ goal: 1, topic: 1 });
 generatedContentSchema.index({ goal: 1, status: 1 });
+generatedContentSchema.index({ isPublic: 1, contentType: 1, publishedAt: -1 });
 
 // Method to record a quiz attempt
 generatedContentSchema.methods.recordQuizAttempt = async function(attemptData) {

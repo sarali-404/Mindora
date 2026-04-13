@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import styles from "./Summaries.module.css";
-import { MdDescription, MdEmojiEvents } from "react-icons/md";
+import { MdDescription, MdEmojiEvents, MdPushPin, MdCheckCircle, MdAssignment } from "react-icons/md";
 import { extractTextContent } from "../../utils/parseContent";
 import goalService from "../../services/goalService";
 
@@ -141,7 +141,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
 
           {content.keyPoints?.length > 0 && (
             <div className={styles.keyPoints}>
-              <h3>📌 Key Points</h3>
+              <h3><MdPushPin size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Key Points</h3>
               <ul>
                 {content.keyPoints.map((point, i) => (
                   <li key={i}>{point}</li>
@@ -169,7 +169,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
 
       {summaries.length === 0 && topicsWithoutSummaries.length === 0 ? (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📋</div>
+          <div className={styles.emptyIcon}><MdAssignment size={32} /></div>
           <h3>No Summaries Yet</h3>
           <p>AI summaries will be generated from your study materials.</p>
         </div>
@@ -188,7 +188,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
                     className={`${styles.summaryRow} ${isRead ? styles.summaryRowRead : ''}`}
                     onClick={() => setSelectedSummary(item)}
                   >
-                    <div className={styles.iconBadge}>{isRead ? <span style={{ fontSize: '1rem' }}>✅</span> : <MdEmojiEvents size={18} style={{ color: '#f59e0b' }} />}</div>
+                    <div className={styles.iconBadge}>{isRead ? <MdCheckCircle size={18} color="#10b981" /> : <MdEmojiEvents size={18} style={{ color: '#f59e0b' }} />}</div>
                     <div className={styles.summaryContent}>
                       <div className={styles.summaryTop}>
                         <h3 className={styles.summaryTitle}>
@@ -225,7 +225,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
                     onClick={() => handleGenerateSummary(topic.name)}
                     disabled={generating === topic.name}
                   >
-                    {generating === topic.name ? '⏳ Generating...' : `📋 ${topic.name}`}
+                    {generating === topic.name ? 'Generating...' : topic.name}
                   </button>
                 ))}
               </div>

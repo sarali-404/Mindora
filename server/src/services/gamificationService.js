@@ -67,6 +67,9 @@ async function addXP(userId, source, amount) {
     profile.lastUpdatedAt = Date.now();
     await profile.save();
 
+    // Update daily streak
+    await updateStreak(userId);
+
     // Log for debugging
     console.log(`✅ XP Added: User=${userId}, Source=${source}, Amount=${amount}, Total=${profile.totalXP}, Level=${newLevel}`);
 
@@ -332,6 +335,63 @@ async function getLeaderboard(limit = 100, page = 1) {
 }
 
 /**
+ * Update user's daily study streak.
+ * Call after any XP-earning activity.
+ */
+async function updateStreak(userId) {
+  try {
+    let profile = await UserGameProfile.findOne({ user: userId });
+    if (!profile) {
+      profile = await initializeGameProfile(userId);
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastStudy = profile.currentStreak.lastStudyDate
+      ? new Date(profile.currentStreak.lastStudyDate)
+      : null;
+
+    if (lastStudy) {
+      const lastStudyDay = new Date(lastStudy.getFullYear(), lastStudy.getMonth(), lastStudy.getDate());
+      const diffDays = Math.round((today - lastStudyDay) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        // Already studied today — no change
+        return profile.currentStreak.count;
+      } else if (diffDays === 1) {
+        // Consecutive day — increment
+        profile.currentStreak.count += 1;
+      } else {
+        // Missed day(s) — reset
+        profile.currentStreak.count = 1;
+        profile.currentStreak.startDate = today;
+      }
+    } else {
+      // First ever study activity
+      profile.currentStreak.count = 1;
+      profile.currentStreak.startDate = today;
+    }
+
+    profile.currentStreak.lastStudyDate = today;
+
+    // Update longest streak if beaten
+    if (profile.currentStreak.count > (profile.longestStreak?.count || 0)) {
+      profile.longestStreak = {
+        count: profile.currentStreak.count,
+        startDate: profile.currentStreak.startDate,
+        endDate: today
+      };
+    }
+
+    await profile.save();
+    return profile.currentStreak.count;
+  } catch (error) {
+    console.error('Update streak error:', error);
+    return 0;
+  }
+}
+
+/**
  * Get user's rank on leaderboard
  */
 async function getUserRank(userId) {
@@ -358,6 +418,7 @@ module.exports = {
   calculateLevel,
   initializeGameProfile,
   addXP,
+  updateStreak,
   updateActivityStats,
   evaluateAchievements,
   createAchievementNotification,

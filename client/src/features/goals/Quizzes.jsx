@@ -223,7 +223,7 @@ export default function Quizzes({ quizzes = [], topics = [], goalId }) {
 
       {quizzes.length === 0 && topicsWithoutQuizzes.length === 0 ? (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>❓</div>
+          <div className={styles.emptyIcon}><MdQuiz size={32} /></div>
           <h3>No Quizzes Yet</h3>
           <p>Quizzes will be generated from your study materials.</p>
         </div>
@@ -255,7 +255,7 @@ export default function Quizzes({ quizzes = [], topics = [], goalId }) {
                     onClick={() => handleGenerateQuiz(topic.name)}
                     disabled={generating === topic.name}
                   >
-                    {generating === topic.name ? '⏳ Generating...' : `📝 ${topic.name}`}
+                    {generating === topic.name ? 'Generating...' : topic.name}
                   </button>
                 ))}
               </div>

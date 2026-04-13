@@ -5,6 +5,8 @@
 
 const gamificationService = require('../services/gamificationService');
 const User = require('../models/User');
+const Achievement = require('../models/Achievement');
+const UserGameProfile = require('../models/UserGameProfile');
 
 /**
  * Add XP to user
@@ -58,14 +60,14 @@ const getLeaderboard = async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 100, 500);
     const page = Math.max(parseInt(req.query.page) || 1, 1);
 
-    const leaderboard = await gamificationService.getLeaderboard(limit, page);
+    const result = await gamificationService.getLeaderboard(limit, page);
 
     res.json({
-      leaderboard,
+      leaderboard: result.leaderboard,
       pagination: {
         limit,
         page,
-        totalEntries: leaderboard.length
+        totalEntries: result.total
       }
     });
   } catch (error) {
@@ -159,7 +161,11 @@ const getActivityStats = async (req, res) => {
 
     res.json({
       activityStats: profile.activityStats,
-      streaks: profile.streaks
+      streaks: {
+        current: profile.currentStreak?.count || 0,
+        longest: profile.longestStreak?.count || 0,
+        lastStudyDate: profile.currentStreak?.lastStudyDate || null
+      }
     });
   } catch (error) {
     console.error('Get activity stats error:', error);
@@ -215,5 +221,48 @@ module.exports = {
   evaluateAchievements,
   getLevelInfo,
   getActivityStats,
-  compareStats
+  compareStats,
+  getAllAchievements
 };
+
+/**
+ * Get all achievements, with earned status for current user
+ * @route GET /api/gamification/achievements
+ */
+async function getAllAchievements(req, res) {
+  try {
+    const userId = req.user._id;
+
+    const [allAchievements, userProfile] = await Promise.all([
+      Achievement.find({ enabled: true }).lean(),
+      UserGameProfile.findOne({ user: userId }).lean()
+    ]);
+
+    const earned = (userProfile?.achievementsEarned || []);
+    const earnedMap = {};
+    earned.forEach(e => {
+      if (e.achievement) earnedMap[e.achievement.toString()] = e;
+    });
+
+    const mapped = allAchievements.map(ach => {
+      const earnedEntry = earnedMap[ach._id.toString()];
+      return {
+        _id: ach._id,
+        key: ach.key,
+        name: ach.name,
+        description: ach.description,
+        category: ach.category,
+        isTiered: ach.isTiered,
+        tiers: ach.tiers,
+        earned: !!earnedEntry,
+        tier: earnedEntry?.tier || null,
+        unlockedAt: earnedEntry?.unlockedAt || null
+      };
+    });
+
+    res.json({ success: true, data: mapped });
+  } catch (error) {
+    console.error('Get all achievements error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get achievements' });
+  }
+}

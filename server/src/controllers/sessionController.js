@@ -588,6 +588,23 @@ exports.endSession = async (req, res) => {
     session.endedAt = new Date();
     await session.save();
 
+    // Award XP to participants
+    try {
+      const gamificationService = require('../services/gamificationService');
+      // Host gets 20 XP
+      await gamificationService.addXP(req.user._id, 'session_host', 20);
+      // Participants get 15 XP each
+      const participants = session.participants || [];
+      for (const p of participants) {
+        const pId = p.user?.toString() || p.toString();
+        if (pId !== req.user._id.toString()) {
+          await gamificationService.addXP(pId, 'session_participation', 15);
+        }
+      }
+    } catch (xpErr) {
+      console.error('Session XP error (non-fatal):', xpErr);
+    }
+
     res.json({
       success: true,
       message: 'Session ended successfully'

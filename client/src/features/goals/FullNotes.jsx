@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { MdPushPin, MdDescription, MdCheckCircle, MdMenuBook, MdSegment, MdPublic, MdLock } from "react-icons/md";
 import ReactMarkdown from "react-markdown";
 import styles from "./FullNotes.module.css";
 import goalService from "../../services/goalService";
@@ -9,6 +10,8 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
   const [generating, setGenerating] = useState(null);
   const [error, setError] = useState(null);
   const [readNotes, setReadNotes] = useState(new Set());
+  const [publicNotes, setPublicNotes] = useState(new Set());
+  const [togglingVisibility, setTogglingVisibility] = useState(null);
   const viewStartTime = useRef(null);
   const currentTopic = useRef(null);
   const scrollRef = useRef(null);
@@ -17,13 +20,14 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
 
   // Build initial set of read note IDs from readBy data
   useEffect(() => {
-    const ids = new Set();
+    const readIds = new Set();
+    const pubIds = new Set();
     for (const note of notes) {
-      if (note.readBy?.some(r => r.userId)) {
-        ids.add(note._id);
-      }
+      if (note.readBy?.some(r => r.userId)) readIds.add(note._id);
+      if (note.isPublic) pubIds.add(note._id);
     }
-    setReadNotes(ids);
+    setReadNotes(readIds);
+    setPublicNotes(pubIds);
   }, [notes]);
 
   // --- Scroll tracking ---
@@ -80,6 +84,27 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
       };
     }
   }, [selectedNote, goalId]);
+
+  // Toggle public/private visibility
+  const handleToggleVisibility = async (e, noteId) => {
+    e.stopPropagation();
+    try {
+      setTogglingVisibility(noteId);
+      const res = await goalService.toggleContentVisibility(goalId, noteId);
+      if (res.success) {
+        setPublicNotes(prev => {
+          const next = new Set(prev);
+          if (res.data.isPublic) next.add(noteId);
+          else next.delete(noteId);
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Toggle visibility error:', err);
+    } finally {
+      setTogglingVisibility(null);
+    }
+  };
 
   // Generate notes for a topic
   const handleGenerateNotes = async (topicName) => {
@@ -144,7 +169,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
 
           {content.keyPoints?.length > 0 && (
             <div className={styles.keyPoints}>
-              <h3>📌 Key Points</h3>
+              <h3><MdPushPin size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Key Points</h3>
               <ul>
                 {content.keyPoints.map((point, i) => (
                   <li key={i}>{point}</li>
@@ -161,7 +186,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
           {/* Sections */}
           {content.sections?.length > 0 && (
             <div className={styles.sectionsContainer}>
-              <h3>📑 Sections</h3>
+              <h3><MdSegment size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Sections</h3>
               {content.sections.map((section, i) => (
                 <div key={i} className={styles.sectionBlock}>
                   <h4>{section.heading}</h4>
@@ -180,7 +205,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
     <section className={styles.card}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.iconCircle}>📘</div>
+          <div className={styles.iconCircle}><MdDescription size={20} style={{ color: '#3b82f6' }} /></div>
           <h2 className={styles.title}>Full Notes</h2>
         </div>
       </header>
@@ -189,7 +214,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
 
       {notes.length === 0 && topicsWithoutNotes.length === 0 ? (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📝</div>
+          <div className={styles.emptyIcon}><MdDescription size={32} /></div>
           <h3>No Notes Yet</h3>
           <p>Notes will be generated from your study materials.</p>
         </div>
@@ -206,7 +231,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
                     className={`${styles.noteCard} ${isRead ? styles.noteCardRead : ''}`}
                     onClick={() => setSelectedNote(note)}
                   >
-                    <div className={styles.noteIcon}>{isRead ? '✅' : '📖'}</div>
+                    <div className={styles.noteIcon}>{isRead ? <MdCheckCircle size={20} color="#10b981" /> : <MdMenuBook size={20} color="#3b82f6" />}</div>
                     <h3 className={styles.noteTitle}>
                       {content.title || note.topic || 'Notes'}
                     </h3>
@@ -219,6 +244,15 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
                         {content.sections?.length || 0} sections
                       </span>
                       {isRead && <span className={styles.readBadge}>✓ Read</span>}
+                      <button
+                        className={`${styles.visibilityToggle} ${publicNotes.has(note._id) ? styles.isPublic : ''}`}
+                        onClick={(e) => handleToggleVisibility(e, note._id)}
+                        disabled={togglingVisibility === note._id}
+                        title={publicNotes.has(note._id) ? 'Public — click to make private' : 'Private — click to make public'}
+                      >
+                        {publicNotes.has(note._id) ? <MdPublic size={14} /> : <MdLock size={14} />}
+                        {togglingVisibility === note._id ? '...' : publicNotes.has(note._id) ? 'Public' : 'Private'}
+                      </button>
                     </div>
                   </article>
                 );
@@ -240,7 +274,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
                     onClick={() => handleGenerateNotes(topic.name)}
                     disabled={generating === topic.name}
                   >
-                    {generating === topic.name ? '⏳ Generating...' : `📝 ${topic.name}`}
+                    {generating === topic.name ? 'Generating...' : topic.name}
                   </button>
                 ))}
               </div>

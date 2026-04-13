@@ -4,7 +4,12 @@ const commentSchema = new mongoose.Schema({
   material: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Material',
-    required: true
+    default: null
+  },
+  aiNote: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GeneratedContent',
+    default: null
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,
@@ -50,6 +55,7 @@ const commentSchema = new mongoose.Schema({
 
 // Indexes
 commentSchema.index({ material: 1, createdAt: -1 });
+commentSchema.index({ aiNote: 1, createdAt: -1 });
 commentSchema.index({ author: 1 });
 commentSchema.index({ parentComment: 1 });
 

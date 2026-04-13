@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   FaFire, 
   FaClock, 
@@ -8,95 +9,55 @@ import {
   FaBullseye, 
   FaBolt, 
   FaChartLine,
-  FaMoon,
   FaUser,
   FaMedal
 } from "react-icons/fa";
 import styles from "./DashboardPage.module.css";
+import authService from "../services/authService";
+import goalService from "../services/goalService";
+import sessionService from "../services/sessionService";
+import api from "../services/api";
 
 // Import achievement images
 import goalArchitectImg from "../assets/achievements/goal_architect.png";
+import goalCrusherImg from "../assets/achievements/goal_crusher.png";
 import quizMasterImg from "../assets/achievements/quiz_master.png";
 import readingBirdImg from "../assets/achievements/reading_bird.png";
 import streakMasterImg from "../assets/achievements/streak_master.png";
+import firstStepsImg from "../assets/achievements/first_steps.png";
+import memoryMasterImg from "../assets/achievements/memory_master.png";
+import morningChampionImg from "../assets/achievements/morning_champion.png";
+import teachingBirdImg from "../assets/achievements/teaching_bird.png";
+import welcomeAboardImg from "../assets/achievements/welcome_aborad.png";
+
+const achievementImageMap = {
+  welcome_aboard: welcomeAboardImg,
+  first_steps: firstStepsImg,
+  goal_architect: goalArchitectImg,
+  goal_crusher: goalCrusherImg,
+  memory_master: memoryMasterImg,
+  morning_champion: morningChampionImg,
+  quiz_master: quizMasterImg,
+  reading_bird: readingBirdImg,
+  streak_master: streakMasterImg,
+  teaching_bird: teachingBirdImg,
+};
 
 export default function DashboardPage() {
-  // Hardcoded data - will be replaced with real data later
-  const userData = {
-    name: "Alex",
-    level: 12,
-    currentXP: 2840,
-    xpToNextLevel: 3500,
-    totalXP: 15840,
-    streak: 7,
-    longestStreak: 21,
-    studyTimeToday: 3.5,
-    studyTimeWeek: 18.5,
-    tasksCompleted: 24,
-    goalsCompleted: 3,
-    rank: 3,
-  };
+  const navigate = useNavigate();
+  const currentUser = authService.getUser();
+  const firstName = currentUser?.profile?.firstName || currentUser?.username || "Learner";
 
-  const weeklyActivity = [
-    { day: "Mon", hours: 2.5 },
-    { day: "Tue", hours: 3.2 },
-    { day: "Wed", hours: 1.8 },
-    { day: "Thu", hours: 4.1 },
-    { day: "Fri", hours: 2.9 },
-    { day: "Sat", hours: 3.5 },
-    { day: "Sun", hours: 0.5 },
-  ];
-
-  const recentAchievements = [
-    {
-      id: 1,
-      name: "Goal Architect",
-      description: "Create learning goals",
-      image: goalArchitectImg,
-      currentLevel: 2,
-      maxLevel: 5,
-      currentProgress: 8,
-      nextLevelTarget: 20,
-    },
-    {
-      id: 2,
-      name: "Quiz Master",
-      description: "Score 100% on quizzes",
-      image: quizMasterImg,
-      currentLevel: 3,
-      maxLevel: 5,
-      currentProgress: 15,
-      nextLevelTarget: 25,
-    },
-    {
-      id: 3,
-      name: "Reading Bird",
-      description: "Upload and study materials",
-      image: readingBirdImg,
-      currentLevel: 2,
-      maxLevel: 5,
-      currentProgress: 24,
-      nextLevelTarget: 50,
-    },
-    {
-      id: 4,
-      name: "Streak Master",
-      description: "Maintain daily study streak",
-      image: streakMasterImg,
-      currentLevel: 0,
-      maxLevel: 5,
-      currentProgress: 12,
-      nextLevelTarget: 30,
-    },
-  ];
-
-  const leaderboard = [
-    { rank: 1, name: "Sarah Chen", xp: 18240, avatarColor: "#ec4899" },
-    { rank: 2, name: "Mike Johnson", xp: 17150, avatarColor: "#3b82f6" },
-    { rank: 3, name: "You", xp: 15840, avatarColor: "#10b981", isYou: true },
-    { rank: 4, name: "Emma Davis", xp: 14920, avatarColor: "#8b5cf6" },
-    { rank: 5, name: "Tom Wilson", xp: 14100, avatarColor: "#f59e0b" },
-  ];
+  // State
+  const [loading, setLoading] = useState(true);
+  const [levelInfo, setLevelInfo] = useState({ totalXP: 0, currentLevel: 'Bronze', xpToNextLevel: 5000, nextLevel: 'Silver' });
+  const [streakData, setStreakData] = useState({ current: 0, longest: 0 });
+  const [userStats, setUserStats] = useState({ goalsAchieved: 0, hoursStudied: 0, materialsUploaded: 0, activeGoals: 0 });
+  const [rank, setRank] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [activeGoals, setActiveGoals] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [recentAchievements, setRecentAchievements] = useState([]);
 
   const quotes = [
     "The expert in anything was once a beginner.",
@@ -110,10 +71,72 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setCurrentQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [levelRes, statsRes, activityRes, rankRes, leaderboardRes, goalsRes, sessionsRes, profileRes] = await Promise.allSettled([
+          api.get('/gamification/level-info'),
+          api.get('/users/stats'),
+          api.get('/gamification/activity-stats'),
+          api.get('/gamification/rank'),
+          api.get('/gamification/leaderboard?limit=5'),
+          goalService.getMyGoals({ status: 'active', limit: 5 }),
+          sessionService.getUpcomingSessions(3),
+          api.get('/gamification/profile'),
+        ]);
+
+        if (levelRes.status === 'fulfilled') setLevelInfo(levelRes.value);
+        if (statsRes.status === 'fulfilled' && statsRes.value.success) setUserStats(statsRes.value.data);
+        if (activityRes.status === 'fulfilled') setStreakData(activityRes.value.streaks || { current: 0, longest: 0 });
+        if (rankRes.status === 'fulfilled') setRank(rankRes.value.rank);
+        if (leaderboardRes.status === 'fulfilled') {
+          const lb = leaderboardRes.value.leaderboard || [];
+          setLeaderboard(lb.map((entry, idx) => ({
+            rank: idx + 1,
+            name: entry.user?.profile?.firstName
+              ? `${entry.user.profile.firstName} ${entry.user.profile.lastName || ''}`.trim()
+              : entry.user?.username || 'User',
+            xp: entry.totalXP || 0,
+            isYou: entry.user?._id === currentUser?._id,
+            avatarColor: ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'][idx % 5],
+          })));
+        }
+        if (goalsRes.status === 'fulfilled') setActiveGoals((goalsRes.value.data || []).slice(0, 3));
+        if (sessionsRes.status === 'fulfilled') setUpcomingSessions((sessionsRes.value.data || []).slice(0, 3));
+        if (profileRes.status === 'fulfilled' && profileRes.value?.achievementsEarned) {
+          const mapped = profileRes.value.achievementsEarned
+            .slice(-4)
+            .map((earned) => {
+              const ach = earned.achievement;
+              if (!ach) return null;
+              return {
+                id: ach._id,
+                name: ach.name,
+                description: ach.description,
+                image: achievementImageMap[ach.key] || welcomeAboardImg,
+                tier: earned.tier,
+              };
+            }).filter(Boolean);
+          setRecentAchievements(mapped);
+        }
+      } catch (error) {
+        console.error('Dashboard fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const xpPercentage = (userData.currentXP / userData.xpToNextLevel) * 100;
-  const maxHours = Math.max(...weeklyActivity.map((d) => d.hours));
+  // XP progress calculation
+  const xpThresholds = { Bronze: 0, Silver: 5000, Gold: 15000 };
+  const currentLevelMin = xpThresholds[levelInfo.currentLevel] || 0;
+  const nextLevelMin = levelInfo.nextLevel ? (xpThresholds[levelInfo.nextLevel] || 0) : currentLevelMin + 5000;
+  const xpInLevel = levelInfo.totalXP - currentLevelMin;
+  const xpLevelRange = nextLevelMin - currentLevelMin;
+  const xpPercentage = xpLevelRange > 0 ? Math.min((xpInLevel / xpLevelRange) * 100, 100) : 100;
 
   return (
     <div className={styles.page}>
@@ -122,7 +145,7 @@ export default function DashboardPage() {
         <div className={styles.heroCard}>
           <div className={styles.heroLeft}>
             <h1 className={styles.heroTitle}>
-              Welcome back, {userData.name}!
+              Welcome back, {firstName}!
             </h1>
             <p className={styles.heroSubtitle}>{currentQuote}</p>
             <div className={styles.quickStats}>
@@ -131,7 +154,7 @@ export default function DashboardPage() {
                   <FaFire style={{ color: "#f59e0b" }} />
                 </span>
                 <div>
-                  <p className={styles.statValue}>{userData.streak} days</p>
+                  <p className={styles.statValue}>{streakData.current} days</p>
                   <p className={styles.statLabel}>Current Streak</p>
                 </div>
               </div>
@@ -140,8 +163,8 @@ export default function DashboardPage() {
                   <FaClock style={{ color: "#3b82f6" }} />
                 </span>
                 <div>
-                  <p className={styles.statValue}>{userData.studyTimeToday}h</p>
-                  <p className={styles.statLabel}>Today</p>
+                  <p className={styles.statValue}>{Math.round(userStats.hoursStudied)}h</p>
+                  <p className={styles.statLabel}>Total Study</p>
                 </div>
               </div>
               <div className={styles.quickStat}>
@@ -149,8 +172,8 @@ export default function DashboardPage() {
                   <FaCheckCircle style={{ color: "#10b981" }} />
                 </span>
                 <div>
-                  <p className={styles.statValue}>{userData.tasksCompleted}</p>
-                  <p className={styles.statLabel}>Tasks Done</p>
+                  <p className={styles.statValue}>{userStats.goalsAchieved}</p>
+                  <p className={styles.statLabel}>Goals Done</p>
                 </div>
               </div>
             </div>
@@ -175,10 +198,10 @@ export default function DashboardPage() {
                 />
               </svg>
               <div className={styles.levelContent}>
-                <p className={styles.levelNumber}>{userData.level}</p>
+                <p className={styles.levelNumber}>{levelInfo.currentLevel}</p>
                 <p className={styles.levelLabel}>Level</p>
                 <p className={styles.xpProgress}>
-                  {userData.currentXP} / {userData.xpToNextLevel} XP
+                  {levelInfo.totalXP?.toLocaleString()} XP
                 </p>
               </div>
             </div>
@@ -193,10 +216,10 @@ export default function DashboardPage() {
             <span className={styles.statCardIcon}>
               <FaChartBar style={{ color: "#0073a0" }} />
             </span>
-            <h3 className={styles.statCardTitle}>Weekly Hours</h3>
+            <h3 className={styles.statCardTitle}>Total XP</h3>
           </div>
-          <p className={styles.statCardValue}>{userData.studyTimeWeek}h</p>
-          <p className={styles.statCardChange}>+12% from last week</p>
+          <p className={styles.statCardValue}>{levelInfo.totalXP?.toLocaleString()}</p>
+          <p className={styles.statCardChange}>{levelInfo.currentLevel} tier</p>
         </div>
 
         <div className={styles.statCard}>
@@ -206,8 +229,8 @@ export default function DashboardPage() {
             </span>
             <h3 className={styles.statCardTitle}>Rank</h3>
           </div>
-          <p className={styles.statCardValue}>#{userData.rank}</p>
-          <p className={styles.statCardChange}>Top 5% this month</p>
+          <p className={styles.statCardValue}>{rank ? `#${rank}` : '—'}</p>
+          <p className={styles.statCardChange}>Global ranking</p>
         </div>
 
         <div className={styles.statCard}>
@@ -217,8 +240,8 @@ export default function DashboardPage() {
             </span>
             <h3 className={styles.statCardTitle}>Goals</h3>
           </div>
-          <p className={styles.statCardValue}>{userData.goalsCompleted}</p>
-          <p className={styles.statCardChange}>Completed this month</p>
+          <p className={styles.statCardValue}>{userStats.goalsAchieved}</p>
+          <p className={styles.statCardChange}>Completed</p>
         </div>
 
         <div className={styles.statCard}>
@@ -228,63 +251,30 @@ export default function DashboardPage() {
             </span>
             <h3 className={styles.statCardTitle}>Best Streak</h3>
           </div>
-          <p className={styles.statCardValue}>{userData.longestStreak} days</p>
+          <p className={styles.statCardValue}>{streakData.longest} days</p>
           <p className={styles.statCardChange}>Personal record</p>
         </div>
       </section>
 
-      {/* Weekly Activity Chart */}
+      {/* Achievements + Leaderboard row */}
       <section className={styles.chartSection}>
-        <div className={styles.chartCard}>
-          <div className={styles.sectionHeaderRow}>
-            <h2 className={styles.sectionTitle}>Weekly Activity</h2>
-            <span className={styles.chartLegend}>
-              <FaChartLine style={{ color: "#10b981", marginRight: "0.5rem" }} />
-              Total: {userData.studyTimeWeek}h
-            </span>
-          </div>
-          <div className={styles.barChart}>
-            {weeklyActivity.map((day) => (
-              <div key={day.day} className={styles.barWrapper}>
-                <div className={styles.barContainer}>
-                  <div
-                    className={styles.bar}
-                    style={{
-                      height: `${(day.hours / maxHours) * 100}%`,
-                    }}
-                  >
-                    <span className={styles.barValue}>{day.hours}h</span>
-                  </div>
-                </div>
-                <span className={styles.barLabel}>{day.day}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className={styles.achievementsCard}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>Recent Achievements</h2>
-            <button className={styles.sectionLink}>View All</button>
+            <button className={styles.sectionLink} onClick={() => navigate('/app/profile')}>View All</button>
           </div>
           <div className={styles.achievementsGrid}>
-            {recentAchievements.map((achievement) => {
-              const isUnlocked = achievement.currentLevel > 0;
-              const isMaxLevel = achievement.currentLevel === achievement.maxLevel;
-              const progressPercentage = achievement.currentLevel === 0
-                ? (achievement.currentProgress / achievement.nextLevelTarget) * 100
-                : isMaxLevel
-                ? 100
-                : ((achievement.currentProgress / achievement.nextLevelTarget) * 100);
-              
-              return (
+            {recentAchievements.length === 0 ? (
+              <p className={styles.emptyText}>Complete activities to earn achievements!</p>
+            ) : (
+              recentAchievements.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className={`${styles.achievementBadge} ${!isUnlocked ? styles.lockedBadge : ''}`}
+                  className={styles.achievementBadge}
                 >
-                  {isUnlocked && (
+                  {achievement.tier && achievement.tier !== 'one-time' && (
                     <div className={styles.achievementLevelBadge}>
-                      Lv {achievement.currentLevel}
+                      {achievement.tier.charAt(0).toUpperCase() + achievement.tier.slice(1)}
                     </div>
                   )}
                   <div className={styles.achievementImageWrapper}>
@@ -295,70 +285,55 @@ export default function DashboardPage() {
                     />
                   </div>
                   <p className={styles.achievementName}>{achievement.name}</p>
-                  
-                  {!isMaxLevel && (
-                    <div className={styles.achievementProgressContainer}>
-                      <div className={styles.achievementProgressBar}>
-                        <div 
-                          className={styles.achievementProgressFill}
-                          style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                        />
-                      </div>
-                      <p className={styles.achievementProgressText}>
-                        {achievement.currentProgress} / {achievement.nextLevelTarget}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {isMaxLevel && (
-                    <p className={styles.achievementMaxLevel}>MAX LEVEL</p>
-                  )}
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
-      </section>
 
-      {/* Leaderboard */}
-      <section className={styles.leaderboardSection}>
-        <div className={styles.leaderboardCard}>
+        {/* Leaderboard */}
+        <div className={styles.chartCard}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>
               <FaTrophy style={{ color: "#fbbf24", marginRight: "0.5rem" }} />
               Top Learners
             </h2>
-            <button className={styles.sectionLink}>View Full Board</button>
           </div>
           <div className={styles.leaderboardList}>
-            {leaderboard.map((user) => (
-              <div
-                key={user.rank}
-                className={`${styles.leaderboardItem} ${
-                  user.isYou ? styles.leaderboardItemYou : ""
-                }`}
-              >
-                <div className={styles.leaderboardRank}>
-                  {user.rank === 1 && (
-                    <FaMedal style={{ color: "#fbbf24", fontSize: "1.5rem" }} />
-                  )}
-                  {user.rank === 2 && (
-                    <FaMedal style={{ color: "#94a3b8", fontSize: "1.5rem" }} />
-                  )}
-                  {user.rank === 3 && (
-                    <FaMedal style={{ color: "#cd7f32", fontSize: "1.5rem" }} />
-                  )}
-                  {user.rank > 3 && `#${user.rank}`}
+            {leaderboard.length === 0 ? (
+              <p className={styles.emptyText}>No leaderboard data yet.</p>
+            ) : (
+              leaderboard.map((user) => (
+                <div
+                  key={user.rank}
+                  className={`${styles.leaderboardItem} ${
+                    user.isYou ? styles.leaderboardItemYou : ""
+                  }`}
+                >
+                  <div className={styles.leaderboardRank}>
+                    {user.rank === 1 && (
+                      <FaMedal style={{ color: "#fbbf24", fontSize: "1.5rem" }} />
+                    )}
+                    {user.rank === 2 && (
+                      <FaMedal style={{ color: "#94a3b8", fontSize: "1.5rem" }} />
+                    )}
+                    {user.rank === 3 && (
+                      <FaMedal style={{ color: "#cd7f32", fontSize: "1.5rem" }} />
+                    )}
+                    {user.rank > 3 && `#${user.rank}`}
+                  </div>
+                  <span className={styles.leaderboardAvatar}>
+                    <FaUser style={{ color: user.avatarColor }} />
+                  </span>
+                  <span className={styles.leaderboardName}>
+                    {user.isYou ? 'You' : user.name}
+                  </span>
+                  <span className={styles.leaderboardXP}>
+                    {user.xp.toLocaleString()} XP
+                  </span>
                 </div>
-                <span className={styles.leaderboardAvatar}>
-                  <FaUser style={{ color: user.avatarColor }} />
-                </span>
-                <span className={styles.leaderboardName}>{user.name}</span>
-                <span className={styles.leaderboardXP}>
-                  {user.xp.toLocaleString()} XP
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -368,84 +343,52 @@ export default function DashboardPage() {
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>Active Goals</h2>
-            <button className={styles.sectionLink}>View All</button>
+            <button className={styles.sectionLink} onClick={() => navigate('/app/goals')}>View All</button>
           </div>
-
-          <div className={styles.goalCard}>
-            <p className={styles.goalName}>Master React Fundamentals</p>
-            <p className={styles.goalMeta}>750 / 1000 XP</p>
-            <div className={styles.progressBarOuter}>
-              <div
-                className={styles.progressBarInner}
-                style={{ width: "75%" }}
-              />
-            </div>
-          </div>
-
-          <div className={styles.goalCard}>
-            <p className={styles.goalName}>Data Structures &amp; Algorithms</p>
-            <p className={styles.goalMeta}>450 / 1000 XP</p>
-            <div className={styles.progressBarOuter}>
-              <div
-                className={styles.progressBarInner}
-                style={{ width: "45%" }}
-              />
-            </div>
-          </div>
-
-          <div className={styles.goalCard}>
-            <p className={styles.goalName}>Machine Learning Basics</p>
-            <p className={styles.goalMeta}>600 / 1000 XP</p>
-            <div className={styles.progressBarOuter}>
-              <div
-                className={styles.progressBarInner}
-                style={{ width: "60%" }}
-              />
-            </div>
-          </div>
+          {activeGoals.length === 0 ? (
+            <p className={styles.emptyText}>No active goals. Create one to get started!</p>
+          ) : (
+            activeGoals.map((goal) => {
+              const progress = goal.progress || 0;
+              return (
+                <div key={goal._id} className={styles.goalCard} onClick={() => navigate(`/app/goals/${goal._id}`)} style={{cursor:'pointer'}}>
+                  <p className={styles.goalName}>{goal.title}</p>
+                  <p className={styles.goalMeta}>{goal.subject || 'No subject'}</p>
+                  <div className={styles.progressBarOuter}>
+                    <div
+                      className={styles.progressBarInner}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>Upcoming Sessions</h2>
-            <button className={styles.sectionLink}>View All</button>
+            <button className={styles.sectionLink} onClick={() => navigate('/app/sessions')}>View All</button>
           </div>
-
-          <div className={styles.sessionCard}>
-            <p className={styles.sessionTitle}>React Hooks Deep Dive</p>
-            <p className={styles.sessionMeta}>Host: Sarah Chen</p>
-            <p className={styles.sessionTime}>Today, 3:00 PM</p>
-            <button className={styles.primaryButton}>Join Session</button>
-          </div>
-
-          <div className={styles.sessionCard}>
-            <p className={styles.sessionTitle}>Binary Trees Workshop</p>
-            <p className={styles.sessionMeta}>Host: Mike Johnson</p>
-            <p className={styles.sessionTime}>Tomorrow, 10:00 AM</p>
-            <button className={styles.primaryButton}>Join Session</button>
-          </div>
-        </div>
-      </section>
-
-      {/* Incomplete tasks */}
-      <section className={styles.tasksSection}>
-        <h2 className={styles.sectionTitle}>Incomplete Tasks</h2>
-        <div className={styles.tasksRow}>
-          <div className={styles.taskCard}>
-            <p className={styles.taskTitle}>React State Management Quiz</p>
-            <p className={styles.taskMeta}>Earn +50 XP</p>
-            <button className={styles.taskButton}>Start</button>
-          </div>
-          <div className={styles.taskCard}>
-            <p className={styles.taskTitle}>Binary Search Flashcards</p>
-            <p className={styles.taskMeta}>Earn +30 XP</p>
-            <button className={styles.taskButton}>Start</button>
-          </div>
-          <div className={styles.taskCard}>
-            <p className={styles.taskTitle}>Review ML Algorithms</p>
-            <p className={styles.taskMeta}>Earn +40 XP</p>
-            <button className={styles.taskButton}>Start</button>
-          </div>
+          {upcomingSessions.length === 0 ? (
+            <p className={styles.emptyText}>No upcoming sessions.</p>
+          ) : (
+            upcomingSessions.map((session) => (
+              <div key={session._id} className={styles.sessionCard}>
+                <p className={styles.sessionTitle}>{session.title}</p>
+                <p className={styles.sessionMeta}>Host: {session.host?.username || 'Unknown'}</p>
+                <p className={styles.sessionTime}>
+                  {new Date(session.scheduledFor || session.startTime).toLocaleString(undefined, {
+                    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                  })}
+                </p>
+                <button className={styles.primaryButton} onClick={() => navigate(`/app/sessions`)}>
+                  View
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>

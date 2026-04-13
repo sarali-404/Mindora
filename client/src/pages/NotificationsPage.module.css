@@ -159,6 +159,41 @@
   font-size: 1rem;
 }
 
+.emptyText {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pageButton {
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
 /* Responsive */
 
 @media (max-width: 768px) {

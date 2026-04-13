@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./TopicsBreakdown.module.css";
-import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome } from "react-icons/md";
+import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome, MdMenuBook, MdTrendingUp, MdTrendingDown, MdAssignment, MdCheckCircle } from "react-icons/md";
 import goalService from "../../services/goalService";
 
 export default function TopicsBreakdown({ 
@@ -29,7 +29,7 @@ export default function TopicsBreakdown({
   if (topics.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <div className={styles.emptyIcon}>📚</div>
+        <div className={styles.emptyIcon}><MdMenuBook size={32} /></div>
         <h3>No Topics Yet</h3>
         <p>AI is analyzing your materials to extract topics. This may take a few minutes.</p>
       </div>
@@ -96,9 +96,9 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, anal
   };
 
   const getTrendIcon = (trend) => {
-    if (trend === 'improving') return '📈';
-    if (trend === 'declining') return '📉';
-    return '';
+    if (trend === 'improving') return <MdTrendingUp size={14} color="#10b981" />;
+    if (trend === 'declining') return <MdTrendingDown size={14} color="#ef4444" />;
+    return null;
   };
 
   const formatTime = (seconds) => {
@@ -168,10 +168,10 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, anal
         {analytics && (
           <span className={styles.readingIcons}>
             <span title={`Notes: ${analytics.notes.read}/${analytics.notes.total} read`}>
-              {analytics.notes.total > 0 ? (analytics.notes.read >= analytics.notes.total ? '📖✓' : '📖') : ''}
+              {analytics.notes.total > 0 ? (<><MdMenuBook size={14} color={analytics.notes.read >= analytics.notes.total ? '#10b981' : '#6b7280'} />{analytics.notes.read >= analytics.notes.total && <MdCheckCircle size={10} color="#10b981" />}</>) : ''}
             </span>
             <span title={`Summaries: ${analytics.summaries.read}/${analytics.summaries.total} read`}>
-              {analytics.summaries.total > 0 ? (analytics.summaries.read >= analytics.summaries.total ? '📋✓' : '📋') : ''}
+              {analytics.summaries.total > 0 ? (<><MdAssignment size={14} color={analytics.summaries.read >= analytics.summaries.total ? '#10b981' : '#6b7280'} />{analytics.summaries.read >= analytics.summaries.total && <MdCheckCircle size={10} color="#10b981" />}</>) : ''}
             </span>
             {analytics.quizzes.trend && analytics.quizzes.trend !== 'stable' && (
               <span title={`Quiz trend: ${analytics.quizzes.trend}`}>{getTrendIcon(analytics.quizzes.trend)}</span>

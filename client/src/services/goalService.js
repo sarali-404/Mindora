@@ -237,6 +237,38 @@ class GoalService {
   async getTopicAnalytics(goalId) {
     return this.request(`/${goalId}/topic-analytics`);
   }
+
+  async toggleContentVisibility(goalId, contentId) {
+    return this.request(`/${goalId}/content/${contentId}/visibility`, { method: 'PATCH' });
+  }
+
+  async getPublicNotes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/public-notes?${query}`);
+  }
+
+  async getPublicNote(noteId) {
+    return this.request(`/public-notes/${noteId}`);
+  }
+
+  async getAiNoteComments(noteId) {
+    return this.request(`/public-notes/${noteId}/comments`);
+  }
+
+  async addAiNoteComment(noteId, content, parentComment = null) {
+    return this.request(`/public-notes/${noteId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content, parentComment })
+    });
+  }
+
+  async deleteAiNoteComment(noteId, commentId) {
+    return this.request(`/public-notes/${noteId}/comments/${commentId}`, { method: 'DELETE' });
+  }
+
+  async toggleAiNoteLike(noteId) {
+    return this.request(`/public-notes/${noteId}/like`, { method: 'POST' });
+  }
 }
 
 // Create and export singleton instance

@@ -8,7 +8,8 @@ const {
   uploadIDPhoto,
   getAllUsers,
   deleteUser,
-  uploadProfilePicture
+  uploadProfilePicture,
+  getUserStats
 } = require('../controllers/userController');
 
 const { authenticate, authorize, authorizeOwnerOrAdmin } = require('../middleware/auth');
@@ -55,6 +56,7 @@ router.use(authenticate);
 
 // User routes
 router.get('/profile', getUserProfile);
+router.get('/stats', getUserStats);
 router.put('/profile', [
   validateProfileUpdate,
   handleValidationErrors

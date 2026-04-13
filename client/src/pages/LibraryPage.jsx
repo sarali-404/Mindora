@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./LibraryPage.module.css";
 import materialService from "../services/materialService";
+import goalService from "../services/goalService";
 import { 
   MdDescription, 
   MdVisibility, 
@@ -15,7 +16,8 @@ import {
   MdSlideshow,
   MdImage,
   MdVideoLibrary,
-  MdArticle
+  MdArticle,
+  MdAutoAwesome
 } from "react-icons/md";
 
 export default function LibraryPage() {
@@ -55,15 +57,50 @@ export default function LibraryPage() {
       };
       
       if (searchQuery) params.search = searchQuery;
-      if (materialType) params.materialType = materialType;
-      
-      const response = await materialService.getMaterials(params);
-      
-      setMaterials(response.data || []);
-      setPagination(prev => ({
-        ...prev,
-        ...response.pagination
-      }));
+      if (materialType && materialType !== 'AI Generated') params.materialType = materialType;
+
+      let response;
+      if (materialType === 'AI Generated') {
+        const aiParams = {
+          page: pagination.current,
+          limit: pagination.limit,
+          sortBy,
+          sortOrder,
+        };
+        if (searchQuery) aiParams.search = searchQuery;
+        response = await goalService.getPublicNotes(aiParams);
+        const mapped = (response.data || []).map(note => mapAiNote(note));
+        setMaterials(mapped);
+        setPagination(prev => ({ ...prev, ...response.pagination }));
+      } else if (!materialType) {
+        // "All" — fetch both regular materials and AI notes in parallel
+        const aiParams = { page: 1, limit: Math.floor(pagination.limit / 2), sortBy, sortOrder };
+        if (searchQuery) aiParams.search = searchQuery;
+
+        const [matRes, aiRes] = await Promise.allSettled([
+          materialService.getMaterials({ ...params, limit: pagination.limit }),
+          goalService.getPublicNotes(aiParams)
+        ]);
+
+        const regularMaterials = matRes.status === 'fulfilled' ? (matRes.value.data || []) : [];
+        const aiMaterials = aiRes.status === 'fulfilled' ? (aiRes.value.data || []).map(n => mapAiNote(n)) : [];
+
+        // Merge and sort by date
+        const merged = [...regularMaterials, ...aiMaterials].sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        });
+
+        setMaterials(merged);
+        if (matRes.status === 'fulfilled') {
+          setPagination(prev => ({ ...prev, ...matRes.value.pagination }));
+        }
+      } else {
+        response = await materialService.getMaterials(params);
+        setMaterials(response.data || []);
+        setPagination(prev => ({ ...prev, ...response.pagination }));
+      }
     } catch (err) {
       setError("Failed to load materials. Please try again.");
       console.error("Fetch materials error:", err);
@@ -117,6 +154,22 @@ export default function LibraryPage() {
     });
   };
 
+  // Map AI note to material-like shape
+  const mapAiNote = (note) => ({
+    _id: note._id,
+    title: note.textContent?.title || note.topic || 'AI Notes',
+    subject: note.topic || note.goal?.subject || '',
+    description: note.textContent?.keyPoints?.[0] || note.textContent?.content?.substring(0, 120) || '',
+    author: note.goal?.user || {},
+    createdAt: note.publishedAt || note.createdAt,
+    materialType: 'AI Generated',
+    views: note.stats?.views || 0,
+    likesCount: note.stats?.likes || 0,
+    savesCount: 0,
+    _isAiNote: true,
+    _goalId: note.goal?._id
+  });
+
   return (
     <div className={styles.page}>
       {/* Header with search */}
@@ -143,7 +196,7 @@ export default function LibraryPage() {
             </button>
           )}
         </form>
-        <Link to="/app/upload-material" className={styles.uploadButton}>
+        <Link to="/app/upload-material" className={styles.uploadButton} style={materialType === 'AI Generated' ? { display: 'none' } : {}}>
           Upload Material
         </Link>
       </header>
@@ -186,6 +239,12 @@ export default function LibraryPage() {
             onClick={() => handleTypeFilter('Image')}
           >
             <MdImage /> Image
+          </button>
+          <button 
+            className={`${styles.filterChip} ${materialType === 'AI Generated' ? styles.filterChipActive : ''}`}
+            onClick={() => handleTypeFilter('AI Generated')}
+          >
+            <MdAutoAwesome /> AI Generated
           </button>
         </div>
 
@@ -261,15 +320,17 @@ export default function LibraryPage() {
                 key={material._id}
                 id={material._id}
                 title={material.title}
-                tag={material.subject}
+                tag={material.subject || material.tag}
                 description={material.description}
-                author={material.author?.username || 'Unknown'}
-                uni={material.author?.university || ''}
+                author={material._isAiNote ? (material.author?.username || material.author?.profile?.firstName || 'Unknown') : (material.author?.username || 'Unknown')}
+                uni={material._isAiNote ? (material.author?.profile?.university || '') : (material.author?.university || '')}
                 date={formatDate(material.createdAt)}
                 type={material.materialType}
                 views={material.views || 0}
                 likes={material.likesCount || 0}
                 saves={material.savesCount || 0}
+                isAiNote={material._isAiNote}
+                goalId={material._goalId}
               />
             ))}
           </section>
@@ -336,6 +397,8 @@ function ResourceCard({
   views,
   likes,
   saves,
+  isAiNote,
+  goalId,
 }) {
   const getTypeIcon = () => {
     switch (type) {
@@ -343,51 +406,64 @@ function ResourceCard({
       case 'Slides': return <MdSlideshow size={20} style={{ color: '#f59e0b' }} />;
       case 'Video': return <MdVideoLibrary size={20} style={{ color: '#8b5cf6' }} />;
       case 'Image': return <MdImage size={20} style={{ color: '#10b981' }} />;
+      case 'AI Generated': return <MdAutoAwesome size={20} style={{ color: '#f59e0b' }} />;
       default: return <MdDescription size={20} style={{ color: '#0073a0' }} />;
     }
   };
 
-  return (
-    <Link to={`/app/note/${id}`} className={styles.cardLink}>
-      <article className={styles.card}>
-        <div className={styles.cardHeaderRow}>
-          <div className={styles.iconCircle}>
-            {getTypeIcon()}
-          </div>
-          <div className={styles.cardTitleBlock}>
-            <h2 className={styles.cardTitle}>{title}</h2>
-            <span className={styles.tagChip}>{tag}</span>
-          </div>
+  const cardContent = (
+    <article className={styles.card}>
+      <div className={styles.cardHeaderRow}>
+        <div className={styles.iconCircle}>
+          {getTypeIcon()}
         </div>
+        <div className={styles.cardTitleBlock}>
+          <h2 className={styles.cardTitle}>{title}</h2>
+          <span className={styles.tagChip}>{tag}</span>
+        </div>
+      </div>
 
-        <p className={styles.cardDescription}>
-          {description || 'No description available'}
-        </p>
+      <p className={styles.cardDescription}>
+        {description || 'No description available'}
+      </p>
 
-        <div className={styles.cardMetaRow}>
-          <span className={styles.cardMetaText}>
-            {author}{uni ? ` · ${uni}` : ''}
+      <div className={styles.cardMetaRow}>
+        <span className={styles.cardMetaText}>
+          {author}{uni ? ` · ${uni}` : ''}
+        </span>
+      </div>
+
+      <div className={styles.cardFooter}>
+        <div className={styles.footerLeft}>
+          <span className={styles.footerMeta}>{date}</span>
+          <span className={styles.typeBadge}>{type}</span>
+        </div>
+        <div className={styles.footerStats}>
+          <span className={styles.statItem}>
+            <MdVisibility size={16} style={{ color: '#b18fffff' }} /> {views}
+          </span>
+          <span className={styles.statItem}>
+            <MdFavorite size={16} style={{ color: '#ff6f6fff' }} /> {likes}
+          </span>
+          <span className={styles.statItem}>
+            <MdBookmark size={16} style={{ color: '#ffc869ff' }} /> {saves}
           </span>
         </div>
+      </div>
+    </article>
+  );
 
-        <div className={styles.cardFooter}>
-          <div className={styles.footerLeft}>
-            <span className={styles.footerMeta}>{date}</span>
-            <span className={styles.typeBadge}>{type}</span>
-          </div>
-          <div className={styles.footerStats}>
-            <span className={styles.statItem}>
-              <MdVisibility size={16} style={{ color: '#b18fffff' }} /> {views}
-            </span>
-            <span className={styles.statItem}>
-              <MdFavorite size={16} style={{ color: '#ff6f6fff' }} /> {likes}
-            </span>
-            <span className={styles.statItem}>
-              <MdBookmark size={16} style={{ color: '#ffc869ff' }} /> {saves}
-            </span>
-          </div>
-        </div>
-      </article>
+  if (isAiNote) {
+    return (
+      <Link to={id ? `/app/ai-note/${id}` : goalId ? `/app/goals/${goalId}` : '#'} className={styles.cardLink}>
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <Link to={`/app/note/${id}`} className={styles.cardLink}>
+      {cardContent}
     </Link>
   );
 }

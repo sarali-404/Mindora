@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotePage from "./pages/NotePage";
+import AiNotePage from "./pages/AiNotePage";
 import NotFound from "./pages/NotFound";
 
 
@@ -38,6 +39,7 @@ function App() {
           <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="/app/notifications" element={<NotificationsPage />} />
           <Route path="/app/note/:id" element={<NotePage />} />
+          <Route path="/app/ai-note/:noteId" element={<AiNotePage />} />
           {/* later: add /app/community, /app/library, /app/goals/:id, etc. */}
         </Route>
 

@@ -82,6 +82,20 @@ const handleMulterError = (err, req, res, next) => {
 // Get real-time AI suggestions for goal title (no auth required for faster response)
 router.get('/suggestions', protect, goalController.getGoalSuggestions);
 
+// Get public AI-generated notes (for Library page)
+router.get('/public-notes', protect, goalController.getPublicNotes);
+
+// Get a single public AI note by ID
+router.get('/public-notes/:noteId', protect, goalController.getPublicNote);
+
+// Comments on AI notes
+router.get('/public-notes/:noteId/comments', protect, goalController.getAiNoteComments);
+router.post('/public-notes/:noteId/comments', protect, goalController.addAiNoteComment);
+router.delete('/public-notes/:noteId/comments/:commentId', protect, goalController.deleteAiNoteComment);
+
+// Like/unlike an AI note
+router.post('/public-notes/:noteId/like', protect, goalController.toggleAiNoteLike);
+
 // ==================== GOAL CRUD ROUTES ====================
 
 // Create goal without materials
@@ -172,5 +186,8 @@ router.get('/:goalId/difficulty-suggestions', protect, goalController.getDifficu
 
 // Get per-topic analytics (reading status, quiz stats, engagement)
 router.get('/:goalId/topic-analytics', protect, goalController.getTopicAnalytics);
+
+// Toggle content visibility (public/private)
+router.patch('/:goalId/content/:contentId/visibility', protect, goalController.toggleContentVisibility);
 
 module.exports = router;
