@@ -139,6 +139,18 @@ const userSchema = new mongoose.Schema({
   socketId: {
     type: String,
     default: null
+  },
+
+  // Gamification references
+  gameProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserGameProfile',
+    sparse: true
+  },
+  preferences: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserPreferences',
+    sparse: true
   }
 }, {
   timestamps: true,

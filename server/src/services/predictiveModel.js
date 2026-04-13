@@ -148,7 +148,7 @@ async function extractQuizFeatures(goalId, topicName) {
 
     const quizLogs = logs.filter(l => l.activityType === 'quiz_attempt');
     const essayLogs = logs.filter(l => l.activityType === 'essay_submission');
-    const timeLogs = logs.filter(l => l.activityType === 'note_time_spent');
+    const timeLogs = logs.filter(l => l.activityType === 'note_time_spent' || l.activityType === 'summary_time_spent');
 
     // Feature 0: Average quiz score
     const quizScores = quizLogs.map(l => l.data?.score || 0);
@@ -220,7 +220,7 @@ async function buildTrainingData(goalId) {
             // Build features from prior data
             const priorQuizzes = priorLogs.filter(l => l.activityType === 'quiz_attempt');
             const priorEssays = priorLogs.filter(l => l.activityType === 'essay_submission');
-            const priorTime = priorLogs.filter(l => l.activityType === 'note_time_spent');
+            const priorTime = priorLogs.filter(l => l.activityType === 'note_time_spent' || l.activityType === 'summary_time_spent');
 
             const priorScores = priorQuizzes.map(l => l.data?.score || 0);
             const avgScore = priorScores.length > 0

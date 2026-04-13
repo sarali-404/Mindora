@@ -46,7 +46,6 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
             <section className={styles.card}>
                 <header className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <div className={styles.iconCircle}>🧠</div>
                         <h2 className={styles.title}>Knowledge Insights</h2>
                     </div>
                 </header>
@@ -87,7 +86,6 @@ export default function KnowledgeDashboard({ goalId, topics = [] }) {
         <section className={styles.card}>
             <header className={styles.header}>
                 <div className={styles.headerLeft}>
-                    <div className={styles.iconCircle}>🧠</div>
                     <h2 className={styles.title}>Knowledge Insights</h2>
                 </div>
                 <button className={styles.refreshBtn} onClick={fetchKnowledgeState} title="Refresh">

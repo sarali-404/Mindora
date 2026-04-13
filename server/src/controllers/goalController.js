@@ -5,6 +5,8 @@ const { extractText, isSupportedFileType } = require('../utils/textExtractor');
 const aiService = require('../services/aiService');
 const knowledgeService = require('../services/knowledgeStateService');
 const predictiveModel = require('../services/predictiveModel');
+const gamificationService = require('../services/gamificationService');
+const notificationService = require('../services/notificationService');
 const path = require('path');
 const fs = require('fs');
 
@@ -74,6 +76,18 @@ exports.createGoal = async (req, res) => {
     });
 
     await goal.save();
+
+    // --- Fire-and-forget: Update gamification ---
+    gamificationService.addXP(userId, 'goal_created', 25).then(() => {
+      gamificationService.updateActivityStats(userId, { goalsCreated: 1 }).catch(e =>
+        console.error('Update activity stats error:', e.message)
+      );
+      gamificationService.evaluateAchievements(userId).catch(e =>
+        console.error('Evaluate achievements error:', e.message)
+      );
+    }).catch(e =>
+      console.error('Add XP error:', e.message)
+    );
 
     res.status(201).json({
       success: true,
@@ -286,6 +300,20 @@ exports.updateGoal = async (req, res) => {
         success: false,
         message: 'Goal not found'
       });
+    }
+
+    // --- Fire-and-forget: Update gamification if goal is completed ---
+    if (filteredUpdates.status === 'completed') {
+      gamificationService.addXP(userId, 'goal_completed', 100).then(() => {
+        gamificationService.updateActivityStats(userId, { goalsCompleted: 1 }).catch(e =>
+          console.error('Update activity stats error:', e.message)
+        );
+        gamificationService.evaluateAchievements(userId).catch(e =>
+          console.error('Evaluate achievements error:', e.message)
+        );
+      }).catch(e =>
+        console.error('Add XP error:', e.message)
+      );
     }
 
     res.json({
@@ -1421,6 +1449,18 @@ exports.submitQuizAttempt = async (req, res) => {
     // Get recommended next difficulty
     const recommendedDifficulty = content.getRecommendedDifficulty();
 
+    // --- Fire-and-forget: Update gamification ---
+    gamificationService.addXP(userId, 'quiz', xpEarned).then(() => {
+      gamificationService.updateActivityStats(userId, { quizzesCompleted: 1, quizAvgScore: percentage }).catch(e =>
+        console.error('Update activity stats error:', e.message)
+      );
+      gamificationService.evaluateAchievements(userId).catch(e =>
+        console.error('Evaluate achievements error:', e.message)
+      );
+    }).catch(e =>
+      console.error('Add XP error:', e.message)
+    );
+
     res.json({
       success: true,
       message: 'Quiz submitted successfully',
@@ -1769,6 +1809,18 @@ exports.submitEssayAnswer = async (req, res) => {
 
     console.log(`✅ Essay graded: ${aiFeedback.score}% | XP: +${xpEarned}`);
 
+    // --- Fire-and-forget: Update gamification ---
+    gamificationService.addXP(userId, 'essay', xpEarned).then(() => {
+      gamificationService.updateActivityStats(userId, { essaysSubmitted: 1 }).catch(e =>
+        console.error('Update activity stats error:', e.message)
+      );
+      gamificationService.evaluateAchievements(userId).catch(e =>
+        console.error('Evaluate achievements error:', e.message)
+      );
+    }).catch(e =>
+      console.error('Add XP error:', e.message)
+    );
+
     res.json({
       success: true,
       message: 'Essay answer submitted and graded',
@@ -1843,7 +1895,7 @@ exports.trackActivity = async (req, res) => {
     }
 
     // Validate activityType
-    const allowedTypes = ['note_view', 'summary_view', 'flashcard_review', 'note_time_spent'];
+    const allowedTypes = ['note_view', 'summary_view', 'flashcard_review', 'note_time_spent', 'summary_time_spent'];
     if (!allowedTypes.includes(activityType)) {
       return res.status(400).json({
         success: false,

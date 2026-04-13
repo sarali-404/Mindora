@@ -1,5 +1,6 @@
 const Material = require('../models/Material');
 const Comment = require('../models/Comment');
+const gamificationService = require('../services/gamificationService');
 const path = require('path');
 const fs = require('fs');
 
@@ -54,6 +55,18 @@ exports.uploadMaterial = async (req, res) => {
 
     await material.save();
     await material.populate('author', 'username email profilePicture university');
+
+    // --- Fire-and-forget: Update gamification ---
+    gamificationService.addXP(req.user._id, 'material_shared', 25).then(() => {
+      gamificationService.updateActivityStats(req.user._id, { materialsShared: 1 }).catch(e =>
+        console.error('Update activity stats error:', e.message)
+      );
+      gamificationService.evaluateAchievements(req.user._id).catch(e =>
+        console.error('Evaluate achievements error:', e.message)
+      );
+    }).catch(e =>
+      console.error('Add XP error:', e.message)
+    );
 
     res.status(201).json({
       success: true,

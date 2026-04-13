@@ -27,6 +27,10 @@ const ACTIVITY_WEIGHTS = {
     summary_view: {
         base: 0.2
     },
+    summary_time_spent: {
+        perMinute: 0.45,  // 0.45 points per minute of summary reading
+        maxMinutes: 20    // Cap at 20 min per session
+    },
     note_time_spent: {
         perMinute: 0.5,  // 0.5 points per minute of reading
         maxMinutes: 30   // Cap at 30 min per session
@@ -122,6 +126,15 @@ function processActivity(log) {
 
         case 'summary_view': {
             rawScore = ACTIVITY_WEIGHTS.summary_view.base;
+            break;
+        }
+
+        case 'summary_time_spent': {
+            const minutes = Math.min(
+                (log.data?.duration || 0) / 60,
+                ACTIVITY_WEIGHTS.summary_time_spent.maxMinutes
+            );
+            rawScore = minutes * ACTIVITY_WEIGHTS.summary_time_spent.perMinute;
             break;
         }
 

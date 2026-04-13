@@ -1,6 +1,7 @@
 import Lottie from "lottie-react";
 import { MdMenu, MdPerson } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import styles from "./TopNavbar.module.css";
 import fireAnim from "../../assets/animations/Fire.json";
 import starAnim from "../../assets/animations/star.json";
@@ -9,6 +10,52 @@ import authService from "../../services/authService";
 export default function TopNavbar({ onMenuClick }) {
   const navigate = useNavigate();
   const currentUser = authService.getUser();
+  const [xpData, setXpData] = useState({ totalXP: 0, currentLevel: 'Bronze' });
+  const [streakDays, setStreakDays] = useState(0);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch gamification data
+  useEffect(() => {
+    const fetchGamificationData = async () => {
+      try {
+        // Fetch level info and activity stats
+        const levelRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/level-info`, {
+          headers: {
+            'Authorization': `Bearer ${authService.getToken()}`
+          }
+        });
+        
+        if (levelRes.ok) {
+          const levelData = await levelRes.json();
+          setXpData({
+            totalXP: levelData.totalXP || 0,
+            currentLevel: levelData.currentLevel || 'Bronze'
+          });
+        }
+
+        // Fetch activity stats for streak
+        const statsRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/activity-stats`, {
+          headers: {
+            'Authorization': `Bearer ${authService.getToken()}`
+          }
+        });
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          const currentStreak = statsData.streaks?.current || 0;
+          setStreakDays(currentStreak);
+        }
+      } catch (error) {
+        console.error('Failed to fetch gamification data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (currentUser) {
+      fetchGamificationData();
+    }
+  }, [currentUser]);
   
   // Dynamic user data
   const userName = currentUser?.profile?.firstName && currentUser?.profile?.lastName 
@@ -57,8 +104,9 @@ export default function TopNavbar({ onMenuClick }) {
             />
           </div>
           <div>
-            <div className={styles.inlineStatValue}>7 days streak</div>
-         
+            <div className={styles.inlineStatValue}>
+              {loading ? '...' : `${streakDays} day${streakDays !== 1 ? 's' : ''} streak`}
+            </div>
           </div>
         </div>
 
@@ -73,7 +121,9 @@ export default function TopNavbar({ onMenuClick }) {
             />
           </div>
           <div>
-            <div className={styles.inlineStatValue}>2,450 XP</div>
+            <div className={styles.inlineStatValue}>
+              {loading ? '...' : `${xpData.totalXP.toLocaleString()} XP`}
+            </div>
           </div>
         </div>
 

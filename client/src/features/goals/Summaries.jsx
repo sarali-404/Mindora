@@ -27,7 +27,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
         if (viewStartTime.current && currentTopic.current) {
           const duration = Math.round((Date.now() - viewStartTime.current) / 1000);
           if (duration >= 5) {
-            goalService.trackActivity(goalId, currentTopic.current, 'note_time_spent', { duration }).catch(() => { });
+            goalService.trackActivity(goalId, currentTopic.current, 'summary_time_spent', { duration }).catch(() => { });
           }
         }
         viewStartTime.current = null;

@@ -1,10 +1,10 @@
 /* Knowledge Dashboard */
 .card {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(139, 92, 246, 0.15);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 24px;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
 .header {
@@ -24,7 +24,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(14, 165, 233, 0.14));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,23 +34,24 @@
 .title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #0f172a;
   margin: 0;
 }
 
 .refreshBtn {
-  background: rgba(51, 65, 85, 0.5);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  color: #334155;
 }
 
 .refreshBtn:hover {
-  background: rgba(71, 85, 105, 0.6);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
 /* Loading */
@@ -60,14 +61,14 @@
   align-items: center;
   gap: 12px;
   padding: 48px 0;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(139, 92, 246, 0.2);
-  border-top-color: #8b5cf6;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -80,7 +81,7 @@
 .emptyState {
   text-align: center;
   padding: 32px 0;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .emptyIcon {
@@ -89,7 +90,7 @@
 }
 
 .emptyState h3 {
-  color: #cbd5e1;
+  color: #0f172a;
   margin: 0 0 8px;
 }
 
@@ -100,8 +101,8 @@
 
 /* Score Overview */
 .scoreOverview {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.06));
-  border: 1px solid rgba(139, 92, 246, 0.12);
+  background: linear-gradient(135deg, #f8fafc, #eef6ff);
+  border: 1px solid #dbeafe;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
@@ -132,7 +133,7 @@
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.9);
+  background: #ffffff;
 }
 
 .scoreValue {
@@ -140,7 +141,7 @@
   z-index: 1;
   font-size: 1.4rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: #0f172a;
   line-height: 1;
 }
 
@@ -154,7 +155,7 @@
 .scoreInfo h3 {
   margin: 0 0 4px;
   font-size: 1rem;
-  color: #e2e8f0;
+  color: #0f172a;
 }
 
 .trendBadge {
@@ -172,15 +173,16 @@
 .stat {
   text-align: center;
   padding: 8px 4px;
-  background: rgba(15, 23, 42, 0.4);
+  background: #ffffff;
   border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .statValue {
   display: block;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #0f172a;
 }
 
 .statLabel {
@@ -194,7 +196,7 @@
 .tabs {
   display: flex;
   gap: 4px;
-  background: rgba(15, 23, 42, 0.4);
+  background: #f1f5f9;
   border-radius: 10px;
   padding: 4px;
   margin-bottom: 16px;
@@ -205,7 +207,7 @@
   padding: 8px 12px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #475569;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -214,13 +216,14 @@
 }
 
 .tab:hover {
-  color: #cbd5e1;
+  color: #0f172a;
 }
 
 .tabActive {
-  background: rgba(139, 92, 246, 0.15);
-  color: #c4b5fd;
+  background: #ffffff;
+  color: #2563eb;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 /* Chart Container */
@@ -245,9 +248,9 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  background: rgba(15, 23, 42, 0.4);
+  background: #ffffff;
   border-radius: 8px;
-  border: 1px solid rgba(51, 65, 85, 0.3);
+  border: 1px solid #e5e7eb;
 }
 
 .topicInfo {
@@ -266,7 +269,7 @@
 .topicName {
   display: block;
   font-size: 0.9rem;
-  color: #e2e8f0;
+  color: #0f172a;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -289,7 +292,7 @@
 .progressBar {
   width: 80px;
   height: 6px;
-  background: rgba(51, 65, 85, 0.4);
+  background: #e5e7eb;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -303,7 +306,7 @@
 .scoreText {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #0f172a;
   min-width: 24px;
   text-align: right;
 }
@@ -312,15 +315,15 @@
 .recommendations {
   margin-top: 16px;
   padding: 14px;
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.12);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
   border-radius: 10px;
 }
 
 .recTitle {
   margin: 0 0 10px;
   font-size: 0.9rem;
-  color: #fca5a5;
+  color: #9a3412;
 }
 
 .recList {
@@ -337,13 +340,13 @@
 }
 
 .weakTag {
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 .untouchedTag {
-  background: rgba(100, 116, 139, 0.12);
-  color: #94a3b8;
-  border: 1px solid rgba(100, 116, 139, 0.2);
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
