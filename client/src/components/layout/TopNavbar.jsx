@@ -1,18 +1,26 @@
 import Lottie from "lottie-react";
-import { MdMenu, MdPerson } from "react-icons/md";
+import { MdMenu } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import styles from "./TopNavbar.module.css";
 import fireAnim from "../../assets/animations/Fire.json";
 import starAnim from "../../assets/animations/star.json";
 import authService from "../../services/authService";
+import UserAvatar from "../shared/UserAvatar";
 
 export default function TopNavbar({ onMenuClick }) {
   const navigate = useNavigate();
-  const currentUser = authService.getUser();
+  const [currentUser, setCurrentUser] = useState(authService.getUser());
   const [xpData, setXpData] = useState({ totalXP: 0, currentLevel: 'Bronze' });
   const [streakDays, setStreakDays] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Re-read user whenever it's updated (e.g. after profile picture upload)
+  useEffect(() => {
+    const handler = (e) => setCurrentUser(e.detail || authService.getUser());
+    window.addEventListener('mindora:userUpdated', handler);
+    return () => window.removeEventListener('mindora:userUpdated', handler);
+  }, []);
   
   // Fetch gamification data
   useEffect(() => {
@@ -69,15 +77,9 @@ export default function TopNavbar({ onMenuClick }) {
   const getProfilePictureUrl = () => {
     if (!currentUser?.profile?.avatar) return null;
     const avatar = currentUser.profile.avatar;
-    // Check if it's a full URL (Google picture) or a relative path
-    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
-      return avatar;
-    }
-    // Otherwise it's a relative path to our server
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
     return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${avatar}`;
   };
-  
-  const profilePicture = getProfilePictureUrl();
 
   return (
     <header className={styles.navbar}>
@@ -133,23 +135,7 @@ export default function TopNavbar({ onMenuClick }) {
           onClick={() => navigate('/app/profile')}
           aria-label="Go to profile"
         >
-          {profilePicture ? (
-            <img
-              src={profilePicture}
-              alt="Profile"
-              className={styles.avatar}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <div 
-            className={styles.avatarFallback}
-            style={{ display: profilePicture ? 'none' : 'flex' }}
-          >
-            <MdPerson size={20} />
-          </div>
+          <UserAvatar user={currentUser} size={32} />
         </button>
       </div>
     </header>

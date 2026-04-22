@@ -119,10 +119,11 @@
 }
 
 .levelNumber {
-  font-size: 2.5rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #ffffff;
   line-height: 1;
+  letter-spacing: 0.02em;
 }
 
 .levelLabel {
@@ -135,6 +136,14 @@
 .xpProgress {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.8);
+}
+
+.xpNeeded {
+  font-size: 0.65rem;
+  color: rgba(251, 191, 36, 0.9);
+  font-weight: 600;
+  margin-top: 0.1rem;
+  white-space: nowrap;
 }
 
 /* Stats Grid */
@@ -291,10 +300,11 @@
 }
 
 .achievementsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 1.25rem;
+  align-content: flex-start;
 }
 
 .achievementBadge {
@@ -309,6 +319,8 @@
   gap: 0.4rem;
   transition: all 0.3s ease;
   cursor: pointer;
+  width: 130px;
+  flex-shrink: 0;
 }
 
 .achievementBadge:hover {

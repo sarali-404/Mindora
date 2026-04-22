@@ -253,9 +253,10 @@ class AuthService {
     return userData ? JSON.parse(userData) : null;
   }
 
-  // Store user data
+  // Store user data and notify all listeners
   setUser(user) {
     localStorage.setItem('user', JSON.stringify(user));
+    window.dispatchEvent(new CustomEvent('mindora:userUpdated', { detail: user }));
   }
 
   // Clear user data

@@ -130,8 +130,9 @@ const getLevelInfo = async (req, res) => {
       gold: { min: 15000, max: null }
     };
 
-    const currentThreshold = xpThresholds[level];
-    const nextLevel = level === 'bronze' ? 'silver' : level === 'silver' ? 'gold' : null;
+    const levelKey = level.toLowerCase();
+    const currentThreshold = xpThresholds[levelKey];
+    const nextLevel = levelKey === 'bronze' ? 'silver' : levelKey === 'silver' ? 'gold' : null;
     const nextThreshold = nextLevel ? xpThresholds[nextLevel] : null;
     const xpToNextLevel = nextThreshold ? nextThreshold.min - profile.totalXP : null;
 

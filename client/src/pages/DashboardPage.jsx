@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [userStats, setUserStats] = useState({ goalsAchieved: 0, hoursStudied: 0, materialsUploaded: 0, activeGoals: 0 });
   const [rank, setRank] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
   const [activeGoals, setActiveGoals] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [recentAchievements, setRecentAchievements] = useState([]);
@@ -80,7 +81,7 @@ export default function DashboardPage() {
           api.get('/users/stats'),
           api.get('/gamification/activity-stats'),
           api.get('/gamification/rank'),
-          api.get('/gamification/leaderboard?limit=5'),
+          api.get('/gamification/leaderboard?limit=10'),
           goalService.getMyGoals({ status: 'active', limit: 5 }),
           sessionService.getUpcomingSessions(3),
           api.get('/gamification/profile'),
@@ -89,7 +90,7 @@ export default function DashboardPage() {
         if (levelRes.status === 'fulfilled') setLevelInfo(levelRes.value);
         if (statsRes.status === 'fulfilled' && statsRes.value.success) setUserStats(statsRes.value.data);
         if (activityRes.status === 'fulfilled') setStreakData(activityRes.value.streaks || { current: 0, longest: 0 });
-        if (rankRes.status === 'fulfilled') setRank(rankRes.value.rank);
+        if (rankRes.status === 'fulfilled') setRank(rankRes.value.rank?.rank ?? rankRes.value.rank);
         if (leaderboardRes.status === 'fulfilled') {
           const lb = leaderboardRes.value.leaderboard || [];
           setLeaderboard(lb.map((entry, idx) => ({
@@ -131,12 +132,15 @@ export default function DashboardPage() {
   }, []);
 
   // XP progress calculation
-  const xpThresholds = { Bronze: 0, Silver: 5000, Gold: 15000 };
-  const currentLevelMin = xpThresholds[levelInfo.currentLevel] || 0;
-  const nextLevelMin = levelInfo.nextLevel ? (xpThresholds[levelInfo.nextLevel] || 0) : currentLevelMin + 5000;
+  const xpThresholds = { bronze: 0, silver: 5000, gold: 15000 };
+  const currentLevelKey = (levelInfo.currentLevel || 'Bronze').toLowerCase();
+  const nextLevelKey = levelInfo.nextLevel ? levelInfo.nextLevel.toLowerCase() : null;
+  const currentLevelMin = xpThresholds[currentLevelKey] ?? 0;
+  const nextLevelMin = nextLevelKey ? (xpThresholds[nextLevelKey] ?? (currentLevelMin + 5000)) : null;
   const xpInLevel = levelInfo.totalXP - currentLevelMin;
-  const xpLevelRange = nextLevelMin - currentLevelMin;
+  const xpLevelRange = nextLevelMin !== null ? nextLevelMin - currentLevelMin : 1;
   const xpPercentage = xpLevelRange > 0 ? Math.min((xpInLevel / xpLevelRange) * 100, 100) : 100;
+  const xpNeeded = nextLevelMin !== null ? Math.max(0, nextLevelMin - levelInfo.totalXP) : 0;
 
   return (
     <div className={styles.page}>
@@ -176,6 +180,15 @@ export default function DashboardPage() {
                   <p className={styles.statLabel}>Goals Done</p>
                 </div>
               </div>
+              <div className={styles.quickStat}>
+                <span className={styles.statIcon}>
+                  <FaTrophy style={{ color: "#fbbf24" }} />
+                </span>
+                <div>
+                  <p className={styles.statValue}>{rank ? `#${rank}` : '—'}</p>
+                  <p className={styles.statLabel}>Global Rank</p>
+                </div>
+              </div>
             </div>
           </div>
           <div className={styles.heroRight}>
@@ -203,62 +216,31 @@ export default function DashboardPage() {
                 <p className={styles.xpProgress}>
                   {levelInfo.totalXP?.toLocaleString()} XP
                 </p>
+                {xpNeeded > 0 && (
+                  <p className={styles.xpNeeded}>
+                    {xpNeeded.toLocaleString()} to {levelInfo.nextLevel
+                      ? levelInfo.nextLevel.charAt(0).toUpperCase() + levelInfo.nextLevel.slice(1)
+                      : 'Max'}
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Grid */}
-      <section className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardIcon}>
-              <FaChartBar style={{ color: "#0073a0" }} />
-            </span>
-            <h3 className={styles.statCardTitle}>Total XP</h3>
-          </div>
-          <p className={styles.statCardValue}>{levelInfo.totalXP?.toLocaleString()}</p>
-          <p className={styles.statCardChange}>{levelInfo.currentLevel} tier</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardIcon}>
-              <FaTrophy style={{ color: "#0073a0" }} />
-            </span>
-            <h3 className={styles.statCardTitle}>Rank</h3>
-          </div>
-          <p className={styles.statCardValue}>{rank ? `#${rank}` : '—'}</p>
-          <p className={styles.statCardChange}>Global ranking</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardIcon}>
-              <FaBullseye style={{ color: "#0073a0" }} />
-            </span>
-            <h3 className={styles.statCardTitle}>Goals</h3>
-          </div>
-          <p className={styles.statCardValue}>{userStats.goalsAchieved}</p>
-          <p className={styles.statCardChange}>Completed</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardIcon}>
-              <FaBolt style={{ color: "#0073a0" }} />
-            </span>
-            <h3 className={styles.statCardTitle}>Best Streak</h3>
-          </div>
-          <p className={styles.statCardValue}>{streakData.longest} days</p>
-          <p className={styles.statCardChange}>Personal record</p>
-        </div>
-      </section>
-
       {/* Achievements + Leaderboard row */}
-      <section className={styles.chartSection}>
-        <div className={styles.achievementsCard}>
+      <section
+        className={styles.chartSection}
+        style={{
+          gridTemplateColumns: recentAchievements.length === 0
+            ? '0fr 1fr'
+            : recentAchievements.length <= 2
+            ? '1fr 2fr'
+            : '2fr 1fr'
+        }}
+      >
+        <div className={styles.achievementsCard} style={recentAchievements.length === 0 ? { display: 'none' } : {}}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>Recent Achievements</h2>
             <button className={styles.sectionLink} onClick={() => navigate('/app/profile')}>View All</button>
@@ -303,7 +285,7 @@ export default function DashboardPage() {
             {leaderboard.length === 0 ? (
               <p className={styles.emptyText}>No leaderboard data yet.</p>
             ) : (
-              leaderboard.map((user) => (
+              leaderboard.slice(0, showAllLeaderboard ? 10 : 5).map((user) => (
                 <div
                   key={user.rank}
                   className={`${styles.leaderboardItem} ${
@@ -335,6 +317,15 @@ export default function DashboardPage() {
               ))
             )}
           </div>
+          {leaderboard.length > 5 && (
+            <button
+              className={styles.sectionLink}
+              style={{ marginTop: '0.75rem', display: 'block' }}
+              onClick={() => setShowAllLeaderboard(v => !v)}
+            >
+              {showAllLeaderboard ? 'Show Less' : 'View More'}
+            </button>
+          )}
         </div>
       </section>
 
@@ -379,9 +370,11 @@ export default function DashboardPage() {
                 <p className={styles.sessionTitle}>{session.title}</p>
                 <p className={styles.sessionMeta}>Host: {session.host?.username || 'Unknown'}</p>
                 <p className={styles.sessionTime}>
-                  {new Date(session.scheduledFor || session.startTime).toLocaleString(undefined, {
-                    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-                  })}
+                  {session.scheduledAt
+                    ? new Date(session.scheduledAt).toLocaleString(undefined, {
+                        weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                      })
+                    : 'Time not set'}
                 </p>
                 <button className={styles.primaryButton} onClick={() => navigate(`/app/sessions`)}>
                   View

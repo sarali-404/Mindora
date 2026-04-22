@@ -8,6 +8,7 @@ const {
   verifyToken 
 } = require('../utils/tokenUtils');
 const { generateOTP, sendOTPEmail, sendWelcomeEmail, sendPasswordResetOTP } = require('../services/emailService');
+const gamificationService = require('../services/gamificationService');
 
 // Google OAuth client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -269,7 +270,12 @@ const googleAuth = async (req, res) => {
       setTokenCookie(res, token);
       
       await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-      
+
+      // Fire-and-forget: ensure game profile exists and evaluate for welcome_aboard
+      gamificationService.initializeGameProfile(user._id)
+        .then(() => gamificationService.evaluateAchievements(user._id))
+        .catch(e => console.error('Gamification login check error:', e.message));
+
       return res.json({
         success: true,
         message: 'Login successful.',
@@ -427,6 +433,12 @@ const updateProfile = async (req, res) => {
     // If step 4 completed (either verified or skipped)
     if (step === 4 || step === 'skip') {
       const isSkipped = step === 'skip';
+
+      // Fire-and-forget: initialize game profile and award welcome_aboard
+      gamificationService.initializeGameProfile(user._id)
+        .then(() => gamificationService.evaluateAchievements(user._id))
+        .catch(e => console.error('Gamification init error:', e.message));
+
       return res.json({
         success: true,
         message: isSkipped 
@@ -561,7 +573,12 @@ const login = async (req, res) => {
     setTokenCookie(res, token);
     
     await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-    
+
+    // Fire-and-forget: ensure game profile exists and evaluate for welcome_aboard
+    gamificationService.initializeGameProfile(user._id)
+      .then(() => gamificationService.evaluateAchievements(user._id))
+      .catch(e => console.error('Gamification login check error:', e.message));
+
     res.json({
       success: true,
       message: 'Login successful.',

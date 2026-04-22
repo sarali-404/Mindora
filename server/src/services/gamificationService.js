@@ -24,17 +24,13 @@ function calculateLevel(totalXP) {
  */
 async function initializeGameProfile(userId) {
   try {
-    const existingProfile = await UserGameProfile.findOne({ user: userId });
-    if (existingProfile) return existingProfile;
-
-    const profile = new UserGameProfile({
-      user: userId,
-      totalXP: 0,
-      currentLevel: 'Bronze',
-      currentStreak: { count: 0 }
-    });
-
-    await profile.save();
+    // Use atomic upsert to avoid race conditions when multiple requests
+    // fire simultaneously for a user with no existing game profile
+    const profile = await UserGameProfile.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
     return profile;
   } catch (error) {
     console.error('Initialize game profile error:', error);
@@ -292,12 +288,12 @@ async function createAchievementNotification(userId, achievement, tier) {
  */
 async function getUserGameProfile(userId) {
   try {
-    let profile = await UserGameProfile.findOne({ user: userId })
-      .populate('achievementsEarned.achievement');
-    
-    if (!profile) {
-      profile = await initializeGameProfile(userId);
-    }
+    // Atomic upsert: creates profile if missing, handles concurrent requests safely
+    const profile = await UserGameProfile.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).populate('achievementsEarned.achievement');
 
     return profile;
   } catch (error) {

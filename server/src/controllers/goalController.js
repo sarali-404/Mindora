@@ -80,16 +80,10 @@ exports.createGoal = async (req, res) => {
     await goal.save();
 
     // --- Fire-and-forget: Update gamification ---
-    gamificationService.addXP(userId, 'goal_created', 25).then(() => {
-      gamificationService.updateActivityStats(userId, { goalsCreated: 1 }).catch(e =>
-        console.error('Update activity stats error:', e.message)
-      );
-      gamificationService.evaluateAchievements(userId).catch(e =>
-        console.error('Evaluate achievements error:', e.message)
-      );
-    }).catch(e =>
-      console.error('Add XP error:', e.message)
-    );
+    gamificationService.addXP(userId, 'goal_created', 25)
+      .then(() => gamificationService.updateActivityStats(userId, { goalsCreated: 1 }))
+      .then(() => gamificationService.evaluateAchievements(userId))
+      .catch(e => console.error('Gamification error:', e.message));
 
     res.status(201).json({
       success: true,
@@ -306,16 +300,10 @@ exports.updateGoal = async (req, res) => {
 
     // --- Fire-and-forget: Update gamification if goal is completed ---
     if (filteredUpdates.status === 'completed') {
-      gamificationService.addXP(userId, 'goal_completed', 100).then(() => {
-        gamificationService.updateActivityStats(userId, { goalsCompleted: 1 }).catch(e =>
-          console.error('Update activity stats error:', e.message)
-        );
-        gamificationService.evaluateAchievements(userId).catch(e =>
-          console.error('Evaluate achievements error:', e.message)
-        );
-      }).catch(e =>
-        console.error('Add XP error:', e.message)
-      );
+      gamificationService.addXP(userId, 'goal_completed', 100)
+        .then(() => gamificationService.updateActivityStats(userId, { goalsCompleted: 1 }))
+        .then(() => gamificationService.evaluateAchievements(userId))
+        .catch(e => console.error('Gamification error:', e.message));
     }
 
     res.json({
@@ -1452,16 +1440,10 @@ exports.submitQuizAttempt = async (req, res) => {
     const recommendedDifficulty = content.getRecommendedDifficulty();
 
     // --- Fire-and-forget: Update gamification ---
-    gamificationService.addXP(userId, 'quiz', xpEarned).then(() => {
-      gamificationService.updateActivityStats(userId, { quizzesCompleted: 1, quizAvgScore: percentage }).catch(e =>
-        console.error('Update activity stats error:', e.message)
-      );
-      gamificationService.evaluateAchievements(userId).catch(e =>
-        console.error('Evaluate achievements error:', e.message)
-      );
-    }).catch(e =>
-      console.error('Add XP error:', e.message)
-    );
+    gamificationService.addXP(userId, 'quiz', xpEarned)
+      .then(() => gamificationService.updateActivityStats(userId, { quizzesCompleted: 1, quizAvgScore: percentage }))
+      .then(() => gamificationService.evaluateAchievements(userId))
+      .catch(e => console.error('Gamification error:', e.message));
 
     res.json({
       success: true,
@@ -1812,16 +1794,10 @@ exports.submitEssayAnswer = async (req, res) => {
     console.log(`✅ Essay graded: ${aiFeedback.score}% | XP: +${xpEarned}`);
 
     // --- Fire-and-forget: Update gamification ---
-    gamificationService.addXP(userId, 'essay', xpEarned).then(() => {
-      gamificationService.updateActivityStats(userId, { essaysSubmitted: 1 }).catch(e =>
-        console.error('Update activity stats error:', e.message)
-      );
-      gamificationService.evaluateAchievements(userId).catch(e =>
-        console.error('Evaluate achievements error:', e.message)
-      );
-    }).catch(e =>
-      console.error('Add XP error:', e.message)
-    );
+    gamificationService.addXP(userId, 'essay', xpEarned)
+      .then(() => gamificationService.updateActivityStats(userId, { essaysSubmitted: 1 }))
+      .then(() => gamificationService.evaluateAchievements(userId))
+      .catch(e => console.error('Gamification error:', e.message));
 
     res.json({
       success: true,
