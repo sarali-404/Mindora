@@ -2116,6 +2116,8 @@ exports.getTopicAnalytics = async (req, res) => {
       }
 
       // Essay stats
+      const essayContent = topicContent.filter(c => c.contentType === 'essay');
+      const totalEssayQuestions = essayContent.reduce((sum, e) => sum + (e.essayContent?.questions?.length || 0), 0);
       const essayLogs = topicLogs.filter(l => l.activityType === 'essay_submission');
       const essayScores = essayLogs.map(l => l.data?.score || 0);
       const avgEssayScore = essayScores.length > 0
@@ -2140,7 +2142,7 @@ exports.getTopicAnalytics = async (req, res) => {
         notes: { total: notes.length, read: notesRead, totalReadingTime: totalNoteTime },
         summaries: { total: summaries.length, read: summariesRead, totalReadingTime: totalSummaryTime },
         quizzes: { attempts: quizLogs.length, avgScore: avgQuizScore, bestScore: bestQuizScore, trend: quizTrend },
-        essays: { submissions: essayLogs.length, avgScore: avgEssayScore },
+        essays: { submissions: essayLogs.length, total: totalEssayQuestions, avgScore: avgEssayScore },
         totalStudyTime: totalNoteTime + totalSummaryTime,
         engagementScore,
         lastActivity: lastLog?.createdAt || null,

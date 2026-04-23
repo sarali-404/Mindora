@@ -1,5 +1,6 @@
 const ActivityLog = require('../models/ActivityLog');
 const Goal = require('../models/Goal');
+const GeneratedContent = require('../models/GeneratedContent');
 
 // ============================================================
 // Knowledge State Service
@@ -259,13 +260,37 @@ async function calculateTopicKnowledge(goalId, topicName) {
     // Scale factor: dividing by expected range to keep sigmoid in useful zone
     const scaleFactor = Math.max(logs.length * 0.5, 1); // Prevent division issues
     const normalized = sigmoid(weightedSum / scaleFactor);
-    const score = Math.round(normalized * 100);
+    let score = Math.round(normalized * 100);
 
     // 4. Compute details
     const quizScores = quizLogs.map(l => l.data?.score || 0);
     const avgQuizScore = quizScores.length > 0
         ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length)
         : 0;
+
+    // Count wrong answers across all quiz attempts
+    let wrongAnswerCount = 0;
+    let totalAnswerCount = 0;
+    for (const qlog of quizLogs) {
+        const results = qlog.data?.questionResults || [];
+        if (results.length > 0) {
+            wrongAnswerCount += results.filter(r => !r.isCorrect).length;
+            totalAnswerCount += results.length;
+        } else if (qlog.data?.totalQuestions) {
+            // Fallback: derive from score percentage
+            const wrong = Math.round(qlog.data.totalQuestions * (1 - (qlog.data.score || 0) / 100));
+            wrongAnswerCount += wrong;
+            totalAnswerCount += qlog.data.totalQuestions;
+        }
+    }
+
+    const hasPassedQuiz = quizScores.some(s => s >= 70);
+
+    // Cap score at 39 (just below WEAK threshold) if no quiz has ever been attempted.
+    // Reading alone is engagement, not proven knowledge.
+    if (quizLogs.length === 0) {
+        score = Math.min(score, 39);
+    }
 
     // Trend detection
     let trend = 'stable';
@@ -295,6 +320,9 @@ async function calculateTopicKnowledge(goalId, topicName) {
             totalActivities: logs.length,
             quizAttempts: quizLogs.length,
             avgQuizScore,
+            hasPassedQuiz,
+            wrongAnswerCount,
+            totalAnswerCount,
             lastActivity: logs[logs.length - 1]?.createdAt,
             trend,
             rawScore: Math.round(weightedSum * 100) / 100
@@ -394,16 +422,47 @@ async function updateGoalLearningProfile(goalId) {
         lastAnalyzedAt: new Date()
     };
 
-    // Also update individual topic difficulty levels based on knowledge scores
+    // Fetch essay content existence per topic (to cap progress when essays exist but untried)
+    const essayDocs = await GeneratedContent.find({
+        goal: goalId, contentType: 'essay', status: 'active'
+    }).select('topic').lean();
+    const topicsWithEssays = new Set(essayDocs.map(e => e.topic).filter(Boolean));
+
+    // Pre-count essay submissions per topic from activity logs
+    const essaySubmitLogs = await ActivityLog.find({
+        goal: goalId, activityType: 'essay_submission'
+    }).select('topicName').lean();
+    const essaySubmissionsByTopic = {};
+    for (const log of essaySubmitLogs) {
+        if (log.topicName) essaySubmissionsByTopic[log.topicName] = (essaySubmissionsByTopic[log.topicName] || 0) + 1;
+    }
+
+    // Update individual topic difficulty levels and auto-advance progress from BKT
     for (const topic of goal.topics) {
         const topicData = knowledgeState.topicScores[topic.name];
         if (topicData) {
+            // Adaptive content difficulty
             if (topicData.score >= THRESHOLDS.STRONG) {
                 topic.difficultyLevel = 'hard'; // They're strong, challenge them
             } else if (topicData.score <= THRESHOLDS.WEAK) {
                 topic.difficultyLevel = 'easy'; // They're struggling, ease up
             } else {
                 topic.difficultyLevel = 'medium';
+            }
+
+            // Cap progress at 85 if essays exist for this topic but none have been attempted.
+            // This signals the user needs to demonstrate written comprehension for full mastery.
+            const hasUntriedEssays = topicsWithEssays.has(topic.name) && !essaySubmissionsByTopic[topic.name];
+            const progressCap = hasUntriedEssays ? 85 : 100;
+
+            // Enforce cap on existing progress (corrects any previously over-advanced value)
+            if (topic.progress > progressCap) {
+                topic.progress = progressCap;
+            }
+
+            // Sync BKT score → topic.progress (only increase, capped by essay gate)
+            if (topicData.score > (topic.progress || 0)) {
+                topic.progress = Math.min(topicData.score, progressCap);
             }
         }
     }

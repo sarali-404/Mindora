@@ -44,10 +44,12 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
       if (elapsed >= 60) {
         completionSent.current = true;
         const topicName = currentTopic.current;
+        if (topicName) {
         goalService.trackActivity(goalId, topicName, 'summary_completed', {
           duration: Math.round(elapsed),
           scrollPercent: maxScrollPercent.current
         }).catch(() => {});
+        }
         if (selectedSummary) {
           setReadSummaries(prev => new Set(prev).add(selectedSummary._id));
         }
@@ -57,7 +59,7 @@ export default function Summaries({ summaries = [], topics = [], goalId }) {
 
   // --- ML Activity Tracking: summary view + time spent ---
   useEffect(() => {
-    if (selectedSummary && goalId) {
+    if (selectedSummary && goalId && selectedSummary.topic) {
       const topicName = selectedSummary.topic;
       currentTopic.current = topicName;
       viewStartTime.current = Date.now();

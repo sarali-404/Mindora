@@ -136,6 +136,24 @@ class SocketService {
     this.on('friend_removed', callback);
   }
 
+  // ==================== GROUP EVENT LISTENERS ====================
+
+  onNewGroupMessage(callback) {
+    this.on('new_group_message', callback);
+  }
+
+  onGroupJoined(callback) {
+    this.on('group_joined', callback);
+  }
+
+  onGroupLeft(callback) {
+    this.on('group_left', callback);
+  }
+
+  onGroupUpdated(callback) {
+    this.on('group_updated', callback);
+  }
+
   // ==================== EMIT EVENTS ====================
 
   emitTyping(receiverId) {
@@ -167,6 +185,10 @@ class SocketService {
       this.socket.off('user_stop_typing');
       this.socket.off('presence_update');
       this.socket.off('friend_removed');
+      this.socket.off('new_group_message');
+      this.socket.off('group_joined');
+      this.socket.off('group_left');
+      this.socket.off('group_updated');
     }
     this.eventHandlers = {};
   }

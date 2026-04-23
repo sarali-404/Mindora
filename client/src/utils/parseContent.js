@@ -90,20 +90,32 @@ export function extractTextContent(item, fallbackTitle = '') {
 
   if (!tc || typeof tc !== 'object') return empty;
 
-  // ──────────── Handle content field containing the full JSON ────────────
+  // ──────────── Handle content field containing JSON (possibly multi-level) ────────────
+  // The AI occasionally double-encodes: content = '{ "title": ..., "content": "..." }'
+  // Loop until content is a plain string, up to 4 levels deep.
   if (tc.content && typeof tc.content === 'string') {
-    const trimmedContent = tc.content.trim();
-    if (trimmedContent.startsWith('{')) {
-      const inner = safeJSONParse(trimmedContent);
-      if (inner && typeof inner === 'object' && inner.content) {
-        return {
-          title: inner.title || tc.title || fallbackTitle,
-          content: inner.content,
-          keyPoints: inner.keyPoints || tc.keyPoints || [],
-          sections: inner.sections || tc.sections || [],
-          quickReview: inner.quickReview || tc.quickReview || ''
-        };
-      }
+    let current = tc;
+    for (let depth = 0; depth < 4; depth++) {
+      const trimmed = (current.content || '').trim();
+      if (!trimmed.startsWith('{')) break;
+      const inner = safeJSONParse(trimmed);
+      if (!inner || typeof inner !== 'object' || !inner.content) break;
+      current = {
+        title: inner.title || current.title || fallbackTitle,
+        content: inner.content,
+        keyPoints: (inner.keyPoints && inner.keyPoints.length) ? inner.keyPoints : (current.keyPoints || []),
+        sections: (inner.sections && inner.sections.length) ? inner.sections : (current.sections || []),
+        quickReview: inner.quickReview || current.quickReview || ''
+      };
+    }
+    if (current !== tc) {
+      return {
+        title: current.title || fallbackTitle,
+        content: current.content,
+        keyPoints: Array.isArray(current.keyPoints) ? current.keyPoints : [],
+        sections: Array.isArray(current.sections) ? current.sections : [],
+        quickReview: current.quickReview || ''
+      };
     }
   }
 

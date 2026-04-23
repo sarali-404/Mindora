@@ -1096,3 +1096,296 @@
     justify-content: center;
   }
 }
+
+
+/* ==================== GROUP CHAT STYLES ==================== */
+
+/* Sub-tab toggle (DMs / Groups) */
+.chatSubTabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0;
+}
+
+.chatSubTab {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  border: none;
+  background: none;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chatSubTab:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.chatSubTabActive {
+  background: #6c63ff;
+  color: #fff;
+}
+
+.chatSubTabActive:hover {
+  background: #5a52e0;
+  color: #fff;
+}
+
+/* Group avatar in conversation list */
+.groupAvatarThumb {
+  background: #ede9fe;
+  color: #6c63ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* Group avatar in chat header */
+.groupAvatar {
+  background: #ede9fe;
+  color: #6c63ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Leave group button in chat header */
+.leaveGroupBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  padding: 0.4rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.leaveGroupBtn:hover {
+  background: #fee2e2;
+}
+
+/* New group button in empty state */
+.newGroupBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.newGroupBtn:hover {
+  background: #5a52e0;
+}
+
+/* Sender name above group message bubble */
+.groupSenderName {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6c63ff;
+  margin-bottom: 0.2rem;
+}
+
+/* ==================== NEW GROUP MODAL ==================== */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1e293b;
+}
+
+.modalHeader button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  border-radius: 0.375rem;
+  transition: background 0.15s;
+}
+
+.modalHeader button:hover {
+  background: #f1f5f9;
+}
+
+.modalBody {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modalLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.modalInput:focus {
+  border-color: #6c63ff;
+}
+
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #334155;
+  transition: background 0.1s;
+}
+
+.memberItem:hover {
+  background: #f8fafc;
+}
+
+.memberItem input[type="checkbox"] {
+  accent-color: #6c63ff;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ede9fe;
+  color: #6c63ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.memberAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.cancelModalBtn {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1.5px solid #e2e8f0;
+  background: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #64748b;
+  transition: background 0.15s;
+}
+
+.cancelModalBtn:hover {
+  background: #f1f5f9;
+}
+
+.createGroupBtn {
+  flex: 1;
+  padding: 0.6rem;
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.createGroupBtn:hover:not(:disabled) {
+  background: #5a52e0;
+}
+
+.createGroupBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

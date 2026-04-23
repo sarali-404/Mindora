@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./TopicsBreakdown.module.css";
-import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome, MdMenuBook, MdTrendingUp, MdTrendingDown, MdAssignment, MdCheckCircle } from "react-icons/md";
+import { MdEmojiEvents, MdWarningAmber, MdAutoAwesome, MdMenuBook, MdTrendingUp, MdTrendingDown, MdAssignment, MdCheckCircle, MdRefresh } from "react-icons/md";
 import goalService from "../../services/goalService";
 
 export default function TopicsBreakdown({ 
@@ -11,19 +11,39 @@ export default function TopicsBreakdown({
   onGenerateContent 
 }) {
   const [analytics, setAnalytics] = useState(null);
+  const [knowledgeState, setKnowledgeState] = useState(null);
+  const [ksLoading, setKsLoading] = useState(false);
 
-  // Fetch topic analytics
+  // Fetch topic analytics and knowledge state
   useEffect(() => {
     if (!goalId) return;
     goalService.getTopicAnalytics(goalId)
       .then(res => { if (res.success) setAnalytics(res.data); })
       .catch(() => {});
+    fetchKnowledgeState();
   }, [goalId]);
 
-  // Identify weak topics (low progress or low quiz scores)
-  const weakTopics = topics.filter(t => 
-    t.progress < 50 || (t.averageScore && t.averageScore < 60)
-  );
+  const fetchKnowledgeState = () => {
+    setKsLoading(true);
+    goalService.getKnowledgeState(goalId)
+      .then(res => { if (res.data) setKnowledgeState(res.data); })
+      .catch(() => {})
+      .finally(() => setKsLoading(false));
+  };
+
+  // Derive weak topics: use BKT scores if available, fall back to progress/averageScore
+  const weakTopics = knowledgeState
+    ? knowledgeState.weakTopics
+        .map(name => topics.find(t => t.name === name))
+        .filter(Boolean)
+    : topics.filter(t => t.progress < 50 || (t.averageScore && t.averageScore < 60));
+
+  // Also include untouched topics (never studied) as low-priority weak areas
+  const untouchedTopics = knowledgeState
+    ? knowledgeState.untouchedTopics
+        .map(name => topics.find(t => t.name === name))
+        .filter(Boolean)
+    : [];
 
   // No topics yet
   if (topics.length === 0) {
@@ -64,17 +84,41 @@ export default function TopicsBreakdown({
         <div className={styles.weakHeader}>
           <div className={styles.warningIcon}><MdWarningAmber size={18} style={{ color: '#f59e0b' }} /></div>
           <h3 className={styles.weakTitle}>Weak Areas</h3>
+          <button className={styles.ksRefreshBtn} onClick={fetchKnowledgeState} title="Refresh" disabled={ksLoading}>
+            <MdRefresh size={15} className={ksLoading ? styles.spinning : ''} />
+          </button>
         </div>
 
-        {weakTopics.length === 0 ? (
+        {!knowledgeState && !ksLoading && (
+          <p className={styles.ksHint}>Complete quizzes or read notes to unlock dynamic weak area analysis.</p>
+        )}
+
+        {weakTopics.length === 0 && (!untouchedTopics.length || !knowledgeState) ? (
           <div className={styles.noWeakAreas}>
-            <p>Great job! No weak areas identified yet.</p>
+            <p>{knowledgeState ? '🎉 No weak areas! Keep it up.' : 'No weak areas identified yet.'}</p>
           </div>
         ) : (
           <div className={styles.weakList}>
             {weakTopics.map((topic, index) => (
-              <WeakArea key={topic._id || index} topic={topic} />
+              <WeakArea
+                key={topic._id || index}
+                topic={topic}
+                topicScore={knowledgeState?.topicScores?.[topic.name]}
+              />
             ))}
+            {untouchedTopics.length > 0 && (
+              <>
+                {weakTopics.length > 0 && <div className={styles.weakDivider}>Not started</div>}
+                {untouchedTopics.map((topic, index) => (
+                  <WeakArea
+                    key={`u-${topic._id || index}`}
+                    topic={topic}
+                    topicScore={knowledgeState?.topicScores?.[topic.name]}
+                    untouched
+                  />
+                ))}
+              </>
+            )}
           </div>
         )}
       </aside>
@@ -92,6 +136,14 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, anal
       case 'easy': return '#10b981';
       case 'hard': return '#ef4444';
       default: return '#f59e0b';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty) => {
+    switch (difficulty) {
+      case 'easy': return 'Beginner';
+      case 'hard': return 'Advanced';
+      default: return 'Intermediate';
     }
   };
 
@@ -134,8 +186,9 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, anal
         <span 
           className={styles.difficultyBadge}
           style={{ backgroundColor: getDifficultyColor(topic.difficultyLevel) }}
+          title="AI-adapted content difficulty based on your performance"
         >
-          {topic.difficultyLevel || 'medium'}
+          {getDifficultyLabel(topic.difficultyLevel)}
         </span>
         
         {/* Content status indicator */}
@@ -164,15 +217,51 @@ function TopicRow({ topic, onProgressUpdate, hasContent, onGenerateContent, anal
           </button>
         )}
 
-        {/* Reading status icons */}
+        {/* Reading status pills */}
         {analytics && (
-          <span className={styles.readingIcons}>
-            <span title={`Notes: ${analytics.notes.read}/${analytics.notes.total} read`}>
-              {analytics.notes.total > 0 ? (<><MdMenuBook size={14} color={analytics.notes.read >= analytics.notes.total ? '#10b981' : '#6b7280'} />{analytics.notes.read >= analytics.notes.total && <MdCheckCircle size={10} color="#10b981" />}</>) : ''}
-            </span>
-            <span title={`Summaries: ${analytics.summaries.read}/${analytics.summaries.total} read`}>
-              {analytics.summaries.total > 0 ? (<><MdAssignment size={14} color={analytics.summaries.read >= analytics.summaries.total ? '#10b981' : '#6b7280'} />{analytics.summaries.read >= analytics.summaries.total && <MdCheckCircle size={10} color="#10b981" />}</>) : ''}
-            </span>
+          <span className={styles.readingPills}>
+            {analytics.notes.total > 0 && (
+              <span
+                className={`${styles.readPill} ${
+                  analytics.notes.read >= analytics.notes.total
+                    ? styles.readPillComplete
+                    : analytics.notes.read > 0
+                    ? styles.readPillPartial
+                    : styles.readPillNone
+                }`}
+                title={`Notes: ${analytics.notes.read}/${analytics.notes.total} read`}
+              >
+                N {analytics.notes.read}/{analytics.notes.total}
+              </span>
+            )}
+            {analytics.summaries.total > 0 && (
+              <span
+                className={`${styles.readPill} ${
+                  analytics.summaries.read >= analytics.summaries.total
+                    ? styles.readPillComplete
+                    : analytics.summaries.read > 0
+                    ? styles.readPillPartial
+                    : styles.readPillNone
+                }`}
+                title={`Summaries: ${analytics.summaries.read}/${analytics.summaries.total} read`}
+              >
+                S {analytics.summaries.read}/{analytics.summaries.total}
+              </span>
+            )}
+            {analytics.essays.total > 0 && (
+              <span
+                className={`${styles.readPill} ${
+                  analytics.essays.submissions >= analytics.essays.total
+                    ? styles.readPillComplete
+                    : analytics.essays.submissions > 0
+                    ? styles.readPillPartial
+                    : styles.readPillNone
+                }`}
+                title={`Essays: ${analytics.essays.submissions}/${analytics.essays.total} submitted`}
+              >
+                E {analytics.essays.submissions}/{analytics.essays.total}
+              </span>
+            )}
             {analytics.quizzes.trend && analytics.quizzes.trend !== 'stable' && (
               <span title={`Quiz trend: ${analytics.quizzes.trend}`}>{getTrendIcon(analytics.quizzes.trend)}</span>
             )}
@@ -275,33 +364,96 @@ function ProgressBar({ value, small = false }) {
   );
 }
 
-function WeakArea({ topic }) {
-  const level = topic.progress < 30 || (topic.averageScore && topic.averageScore < 50) ? 'High' : 'Medium';
-  
+function WeakArea({ topic, topicScore, untouched = false }) {
+  // Determine priority level
+  const score = topicScore?.score ?? null;
+  const level = untouched ? 'Untouched'
+    : score !== null ? (score < 25 ? 'High' : 'Medium')
+    : (topic.progress < 30 || (topic.averageScore && topic.averageScore < 50) ? 'High' : 'Medium');
+
   const getRecommendation = () => {
-    if (topic.averageScore && topic.averageScore < 60) {
+    if (untouched) return 'You haven\'t studied this topic yet. Start with the notes.';
+    if (topicScore) {
+      const { details } = topicScore;
+      if (details.quizAttempts === 0 && details.totalActivities === 0)
+        return 'No activity recorded. Read the notes and attempt the quiz.';
+      if (details.quizAttempts === 0)
+        return 'You\'ve read some content but haven\'t taken the quiz yet.';
+      if (details.avgQuizScore < 50)
+        return `Quiz average is ${details.avgQuizScore}%. Re-read the notes and retry.`;
+      if (details.trend === 'declining')
+        return 'Your scores are declining. Review recent material and practice more.';
+      if (details.trend === 'improving')
+        return `Improving! Keep going — you're at ${score}/100.`;
+      return `Knowledge score is ${score}/100. More practice will push you higher.`;
+    }
+    if (topic.averageScore && topic.averageScore < 60)
       return `Quiz average is ${topic.averageScore}%. Review notes and try again.`;
-    }
-    if (topic.progress < 30) {
+    if (topic.progress < 30)
       return 'Start with the basics and build up gradually.';
-    }
     return 'Continue practicing to improve your understanding.';
   };
 
+  const scoreColor = score === null ? '#6b7280'
+    : score < 25 ? '#ef4444'
+    : score < 40 ? '#f59e0b'
+    : '#10b981';
+
   return (
-    <div className={styles.weakItem}>
+    <div className={`${styles.weakItem} ${untouched ? styles.weakItemUntouched : ''}`}>
       <div className={styles.weakTopRow}>
         <h4 className={styles.weakItemTitle}>{topic.name}</h4>
-        <span
-          className={`${styles.badge} ${
-            level === "High" ? styles.badgeHigh : styles.badgeMedium
-          }`}
-        >
-          {level}
-        </span>
+        <span className={`${styles.badge} ${
+          level === 'High' ? styles.badgeHigh
+          : level === 'Untouched' ? styles.badgeUntouched
+          : styles.badgeMedium
+        }`}>{level}</span>
       </div>
-      <ProgressBar value={topic.progress || 0} small />
+      {score !== null ? (
+        <div className={styles.weakScoreRow}>
+          <div className={styles.weakScoreBar}>
+            <div className={styles.weakScoreFill} style={{ width: `${score}%`, backgroundColor: scoreColor }} />
+          </div>
+          <span className={styles.weakScoreNum} style={{ color: scoreColor }}>{score}</span>
+        </div>
+      ) : (
+        <ProgressBar value={topic.progress || 0} small />
+      )}
+      {topicScore?.details?.trend && topicScore.details.trend !== 'stable' && (
+        <div className={styles.weakTrend}>
+          {topicScore.details.trend === 'improving'
+            ? <MdTrendingUp size={13} color="#10b981" />
+            : <MdTrendingDown size={13} color="#ef4444" />}
+          <span style={{ color: topicScore.details.trend === 'improving' ? '#10b981' : '#ef4444' }}>
+            {topicScore.details.trend}
+          </span>
+        </div>
+      )}
       <p className={styles.weakDescription}>{getRecommendation()}</p>
+
+      {/* Wrong answers stat from quiz history */}
+      {topicScore?.details?.totalAnswerCount > 0 && (
+        <div className={styles.weakQuizStat}>
+          <span className={styles.weakQuizWrong}>
+            ✗ {topicScore.details.wrongAnswerCount}/{topicScore.details.totalAnswerCount} questions wrong
+          </span>
+        </div>
+      )}
+
+      {/* Sub-topics checklist */}
+      {topic.subTopics?.length > 0 && (
+        <div className={styles.weakSubTopics}>
+          <p className={styles.weakSubTopicsLabel}>Sub-topics to review:</p>
+          <ul className={styles.weakSubTopicsList}>
+            {topic.subTopics.map((st, i) => (
+              <li key={i} className={styles.weakSubTopicItem}>
+                <span className={styles.weakSubTopicDot} />
+                {st.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

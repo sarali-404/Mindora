@@ -77,6 +77,9 @@ class SocketService {
     // Join user to their own room (for direct messages)
     socket.join(userId);
 
+    // Join all group rooms this user belongs to
+    this.joinUserGroupRooms(socket, userId);
+
     // Handle events
     socket.on('typing', (data) => this.handleTyping(socket, data));
     socket.on('stop_typing', (data) => this.handleStopTyping(socket, data));
@@ -173,6 +176,40 @@ class SocketService {
       return true;
     }
     return false;
+  }
+
+  // Send event to all members of a group via Socket.IO room
+  sendToGroup(groupId, event, data) {
+    this.io.to(`group:${groupId}`).emit(event, data);
+  }
+
+  // Add a user's current socket(s) to a group room
+  addUserToGroupRoom(userId, groupId) {
+    const socketId = this.connectedUsers.get(userId.toString());
+    if (socketId) {
+      const socket = this.io.sockets.sockets.get(socketId);
+      if (socket) socket.join(`group:${groupId}`);
+    }
+  }
+
+  // Remove a user's current socket(s) from a group room
+  removeUserFromGroupRoom(userId, groupId) {
+    const socketId = this.connectedUsers.get(userId.toString());
+    if (socketId) {
+      const socket = this.io.sockets.sockets.get(socketId);
+      if (socket) socket.leave(`group:${groupId}`);
+    }
+  }
+
+  // On connect: join all group rooms the user belongs to
+  async joinUserGroupRooms(socket, userId) {
+    try {
+      const GroupConversation = require('../models/GroupConversation');
+      const groups = await GroupConversation.find({ members: userId }).select('_id');
+      groups.forEach(g => socket.join(`group:${g._id.toString()}`));
+    } catch (error) {
+      console.error('joinUserGroupRooms error:', error);
+    }
   }
 
   // Check if user is online

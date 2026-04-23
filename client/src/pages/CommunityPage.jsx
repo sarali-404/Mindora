@@ -13,7 +13,10 @@ import {
   MdMoreVert,
   MdDelete,
   MdVerified,
-  MdRefresh
+  MdRefresh,
+  MdGroupAdd,
+  MdGroup,
+  MdExitToApp
 } from "react-icons/md";
 import { FaCircle } from "react-icons/fa";
 import styles from "./CommunityPage.module.css";
@@ -21,6 +24,7 @@ import friendService, { formatLastSeen, getDisplayName, getInitials } from "../s
 import chatService, { formatMessageTime, formatConversationTime, isImageFile, getFileIcon, formatFileSize } from "../services/chatService";
 import socketService from "../services/socketService";
 import authService from "../services/authService";
+import groupService from "../services/groupService";
 
 export default function CommunityPage() {
   const currentUser = authService.getUser();
@@ -45,16 +49,30 @@ export default function CommunityPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [typingUsers, setTypingUsers] = useState({});
   const [attachmentFile, setAttachmentFile] = useState(null);
+
+  // Group chat states
+  const [groups, setGroups] = useState([]);
+  const [selectedGroupChat, setSelectedGroupChat] = useState(null);
+  const [chatSubTab, setChatSubTab] = useState('dms');
+  const [groupMessages, setGroupMessages] = useState([]);
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedMembersForGroup, setSelectedMembersForGroup] = useState([]);
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const selectedChatRef = useRef(null);
+  const selectedGroupChatRef = useRef(null);
 
   // Keep selectedChatRef in sync with selectedChat state
   useEffect(() => {
     selectedChatRef.current = selectedChat;
   }, [selectedChat]);
+
+  useEffect(() => {
+    selectedGroupChatRef.current = selectedGroupChat;
+  }, [selectedGroupChat]);
 
   // Initialize socket and fetch initial data
   useEffect(() => {
@@ -131,6 +149,36 @@ export default function CommunityPage() {
       fetchConversations();
     });
 
+    // Group socket listeners
+    socketService.onNewGroupMessage(({ groupId, message }) => {
+      const currentGroup = selectedGroupChatRef.current;
+      if (currentGroup?._id === groupId) {
+        setGroupMessages(prev => [...prev, message]);
+      }
+      fetchGroups();
+    });
+
+    socketService.onGroupJoined(() => {
+      fetchGroups();
+    });
+
+    socketService.onGroupLeft(({ groupId }) => {
+      const currentGroup = selectedGroupChatRef.current;
+      if (currentGroup?._id === groupId) {
+        setSelectedGroupChat(null);
+        setGroupMessages([]);
+      }
+      fetchGroups();
+    });
+
+    socketService.onGroupUpdated(({ group }) => {
+      setGroups(prev => prev.map(g => g._id === group._id ? group : g));
+      const currentGroup = selectedGroupChatRef.current;
+      if (currentGroup?._id === group._id) {
+        setSelectedGroupChat(group);
+      }
+    });
+
     return () => {
       socketService.removeAllListeners();
     };
@@ -148,6 +196,7 @@ export default function CommunityPage() {
         fetchFriends(),
         fetchPendingRequests(),
         fetchConversations(),
+        fetchGroups(),
         fetchUnreadCount()
       ]);
     } catch (error) {
@@ -194,6 +243,15 @@ export default function CommunityPage() {
       setConversations(response.data || []);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const response = await groupService.getMyGroups();
+      setGroups(response.data || []);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
     }
   };
 
@@ -254,6 +312,76 @@ export default function CommunityPage() {
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  // Group actions
+  const openGroupChat = async (group) => {
+    setSelectedGroupChat(group);
+    setSelectedChat(null);
+    setActiveTab('chat');
+    setChatSubTab('groups');
+    setChatLoading(true);
+    try {
+      const response = await groupService.getGroupMessages(group._id);
+      setGroupMessages(response.data || []);
+    } catch (error) {
+      console.error('Error loading group chat:', error);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleSendGroupMessage = async (e) => {
+    e.preventDefault();
+    if ((!messageInput.trim() && !attachmentFile) || !selectedGroupChat) return;
+    try {
+      let response;
+      if (attachmentFile) {
+        response = await groupService.sendGroupMessageWithAttachment(
+          selectedGroupChat._id, messageInput, attachmentFile
+        );
+        setAttachmentFile(null);
+      } else {
+        response = await groupService.sendGroupMessage(selectedGroupChat._id, messageInput);
+      }
+      setGroupMessages(prev => [...prev, response.data]);
+      setMessageInput('');
+      fetchGroups();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroupName.trim() || selectedMembersForGroup.length === 0) return;
+    try {
+      await groupService.createGroup(newGroupName.trim(), selectedMembersForGroup);
+      setShowNewGroupModal(false);
+      setNewGroupName('');
+      setSelectedMembersForGroup([]);
+      fetchGroups();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleLeaveGroup = async (groupId) => {
+    if (!confirm('Are you sure you want to leave this group?')) return;
+    try {
+      await groupService.leaveGroup(groupId);
+      setSelectedGroupChat(null);
+      setGroupMessages([]);
+      fetchGroups();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const toggleMemberForGroup = (userId) => {
+    setSelectedMembersForGroup(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
   };
 
   // Chat actions
@@ -340,12 +468,14 @@ export default function CommunityPage() {
     }
     if (tab !== 'chat') {
       setSelectedChat(null);
+      setSelectedGroupChat(null);
     }
   };
 
   const totalRequestsCount = pendingRequests.length + sentRequests.length;
 
   return (
+    <>
     <div className={styles.page}>
       {/* Header */}
       <header className={styles.header}>
@@ -513,67 +643,128 @@ export default function CommunityPage() {
             {/* Chat Tab */}
             {activeTab === 'chat' && (
               <div className={styles.chatContainer}>
-                {/* Conversations List */}
+                {/* Sidebar: sub-tab toggle + list */}
                 <div className={styles.conversationsList}>
-                  <div className={styles.conversationsHeader}>
-                    <h3>Messages</h3>
-                    <button className={styles.refreshBtn} onClick={fetchConversations}>
-                      <MdRefresh size={18} />
+                  <div className={styles.chatSubTabs}>
+                    <button
+                      className={`${styles.chatSubTab} ${chatSubTab === 'dms' ? styles.chatSubTabActive : ''}`}
+                      onClick={() => setChatSubTab('dms')}
+                    >
+                      <MdChat size={15} /> DMs
+                    </button>
+                    <button
+                      className={`${styles.chatSubTab} ${chatSubTab === 'groups' ? styles.chatSubTabActive : ''}`}
+                      onClick={() => setChatSubTab('groups')}
+                    >
+                      <MdGroup size={15} /> Groups
                     </button>
                   </div>
-                  
-                  {conversations.length === 0 ? (
-                    <div className={styles.emptyConversations}>
-                      <p>No conversations yet</p>
-                      <small>Message a friend to start chatting</small>
-                    </div>
-                  ) : (
-                    conversations.map((conv) => (
-                      <div
-                        key={conv.conversationId}
-                        className={`${styles.conversationItem} ${
-                          selectedChat?._id === conv.otherUser._id ? styles.conversationActive : ''
-                        }`}
-                        onClick={() => openChat(conv.otherUser)}
-                      >
-                        <div className={styles.conversationAvatar}>
-                          {conv.otherUser.profile?.avatar ? (
-                            <img src={conv.otherUser.profile.avatar} alt="" />
-                          ) : (
-                            <span>{getInitials(conv.otherUser)}</span>
-                          )}
-                          {conv.otherUser.isOnline && <span className={styles.onlineDot}></span>}
-                        </div>
-                        <div className={styles.conversationInfo}>
-                          <div className={styles.conversationTop}>
-                            <span className={styles.conversationName}>
-                              {getDisplayName(conv.otherUser)}
-                            </span>
-                            <span className={styles.conversationTime}>
-                              {formatConversationTime(conv.lastMessage.createdAt)}
-                            </span>
-                          </div>
-                          <p className={styles.conversationPreview}>
-                            {conv.lastMessage.attachment ? '📎 Attachment' : conv.lastMessage.content}
-                          </p>
-                        </div>
-                        {conv.unreadCount > 0 && (
-                          <span className={styles.unreadBadge}>{conv.unreadCount}</span>
-                        )}
+
+                  {chatSubTab === 'dms' ? (
+                    <>
+                      <div className={styles.conversationsHeader}>
+                        <h3>Messages</h3>
+                        <button className={styles.refreshBtn} onClick={fetchConversations}>
+                          <MdRefresh size={18} />
+                        </button>
                       </div>
-                    ))
+                      {conversations.length === 0 ? (
+                        <div className={styles.emptyConversations}>
+                          <p>No conversations yet</p>
+                          <small>Message a friend to start chatting</small>
+                        </div>
+                      ) : (
+                        conversations.map((conv) => (
+                          <div
+                            key={conv.conversationId}
+                            className={`${styles.conversationItem} ${
+                              selectedChat?._id === conv.otherUser._id ? styles.conversationActive : ''
+                            }`}
+                            onClick={() => { openChat(conv.otherUser); setSelectedGroupChat(null); }}
+                          >
+                            <div className={styles.conversationAvatar}>
+                              {conv.otherUser.profile?.avatar ? (
+                                <img src={conv.otherUser.profile.avatar} alt="" />
+                              ) : (
+                                <span>{getInitials(conv.otherUser)}</span>
+                              )}
+                              {conv.otherUser.isOnline && <span className={styles.onlineDot}></span>}
+                            </div>
+                            <div className={styles.conversationInfo}>
+                              <div className={styles.conversationTop}>
+                                <span className={styles.conversationName}>
+                                  {getDisplayName(conv.otherUser)}
+                                </span>
+                                <span className={styles.conversationTime}>
+                                  {formatConversationTime(conv.lastMessage.createdAt)}
+                                </span>
+                              </div>
+                              <p className={styles.conversationPreview}>
+                                {conv.lastMessage.attachment ? '📎 Attachment' : conv.lastMessage.content}
+                              </p>
+                            </div>
+                            {conv.unreadCount > 0 && (
+                              <span className={styles.unreadBadge}>{conv.unreadCount}</span>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className={styles.conversationsHeader}>
+                        <h3>Groups</h3>
+                        <button className={styles.refreshBtn} onClick={() => setShowNewGroupModal(true)} title="New Group">
+                          <MdGroupAdd size={18} />
+                        </button>
+                      </div>
+                      {groups.length === 0 ? (
+                        <div className={styles.emptyConversations}>
+                          <p>No groups yet</p>
+                          <button className={styles.newGroupBtn} onClick={() => setShowNewGroupModal(true)}>
+                            <MdGroupAdd size={14} /> Create Group
+                          </button>
+                        </div>
+                      ) : (
+                        groups.map((group) => (
+                          <div
+                            key={group._id}
+                            className={`${styles.conversationItem} ${
+                              selectedGroupChat?._id === group._id ? styles.conversationActive : ''
+                            }`}
+                            onClick={() => { openGroupChat(group); setSelectedChat(null); }}
+                          >
+                            <div className={`${styles.conversationAvatar} ${styles.groupAvatarThumb}`}>
+                              <MdGroup size={18} />
+                            </div>
+                            <div className={styles.conversationInfo}>
+                              <div className={styles.conversationTop}>
+                                <span className={styles.conversationName}>{group.name}</span>
+                                <span className={styles.conversationTime}>
+                                  {formatConversationTime(group.lastMessageAt)}
+                                </span>
+                              </div>
+                              <p className={styles.conversationPreview}>
+                                {group.lastMessagePreview || `${group.members.length} members`}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
 
                 {/* Chat Window */}
                 <div className={styles.chatWindow}>
-                  {!selectedChat ? (
+                  {!selectedChat && !selectedGroupChat ? (
                     <div className={styles.noChatSelected}>
                       <MdChat size={64} />
                       <h3>Select a conversation</h3>
-                      <p>Choose a friend to start messaging</p>
+                      <p>Choose a DM or group to start messaging</p>
                     </div>
-                  ) : (
+                  ) : selectedChat ? (
+                    /* DM Window */
                     <>
                       <div className={styles.chatHeader}>
                         <div className={styles.chatHeaderInfo}>
@@ -666,6 +857,90 @@ export default function CommunityPage() {
                         </div>
                       </form>
                     </>
+                  ) : (
+                    /* Group Chat Window */
+                    <>
+                      <div className={styles.chatHeader}>
+                        <div className={styles.chatHeaderInfo}>
+                          <div className={`${styles.chatAvatar} ${styles.groupAvatar}`}>
+                            <MdGroup size={22} />
+                          </div>
+                          <div>
+                            <h4>{selectedGroupChat.name}</h4>
+                            <p className={styles.chatStatus}>
+                              {selectedGroupChat.members.length} members
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className={styles.leaveGroupBtn}
+                          onClick={() => handleLeaveGroup(selectedGroupChat._id)}
+                          title="Leave group"
+                        >
+                          <MdExitToApp size={20} />
+                        </button>
+                      </div>
+
+                      <div className={styles.messagesContainer}>
+                        {chatLoading ? (
+                          <div className={styles.loadingMessages}>
+                            <div className={styles.spinner}></div>
+                          </div>
+                        ) : (
+                          <>
+                            {groupMessages.map((message) => (
+                              <GroupMessageBubble
+                                key={message._id}
+                                message={message}
+                                isOwn={message.sender._id === currentUser?.id || message.sender._id === currentUser?._id}
+                              />
+                            ))}
+                            <div ref={messagesEndRef} />
+                          </>
+                        )}
+                      </div>
+
+                      <form className={styles.messageForm} onSubmit={handleSendGroupMessage}>
+                        {attachmentFile && (
+                          <div className={styles.attachmentPreview}>
+                            <span>{attachmentFile.name}</span>
+                            <button type="button" onClick={() => setAttachmentFile(null)}>
+                              <MdClose />
+                            </button>
+                          </div>
+                        )}
+                        <div className={styles.messageInputRow}>
+                          <button
+                            type="button"
+                            className={styles.attachButton}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <MdAttachFile size={20} />
+                          </button>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            hidden
+                            onChange={(e) => setAttachmentFile(e.target.files[0])}
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                          />
+                          <input
+                            className={styles.messageInput}
+                            placeholder={`Message ${selectedGroupChat.name}...`}
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            maxLength={2000}
+                          />
+                          <button
+                            type="submit"
+                            className={styles.sendButton}
+                            disabled={!messageInput.trim() && !attachmentFile}
+                          >
+                            <MdSend size={20} />
+                          </button>
+                        </div>
+                      </form>
+                    </>
                   )}
                 </div>
               </div>
@@ -674,6 +949,74 @@ export default function CommunityPage() {
         )}
       </div>
     </div>
+
+      {/* New Group Modal */}
+      {showNewGroupModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowNewGroupModal(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>New Group</h3>
+              <button onClick={() => setShowNewGroupModal(false)}><MdClose /></button>
+            </div>
+            <form onSubmit={handleCreateGroup}>
+              <div className={styles.modalBody}>
+                <label className={styles.modalLabel}>Group Name</label>
+                <input
+                  className={styles.modalInput}
+                  placeholder="Enter group name..."
+                  value={newGroupName}
+                  onChange={e => setNewGroupName(e.target.value)}
+                  maxLength={100}
+                  required
+                />
+                <label className={styles.modalLabel}>
+                  Add Friends ({selectedMembersForGroup.length} selected)
+                </label>
+                <div className={styles.membersList}>
+                  {friends.length === 0 ? (
+                    <p className={styles.emptyText}>No friends to add</p>
+                  ) : (
+                    friends.map(({ user }) => (
+                      <label key={user._id} className={styles.memberItem}>
+                        <input
+                          type="checkbox"
+                          checked={selectedMembersForGroup.includes(user._id)}
+                          onChange={() => toggleMemberForGroup(user._id)}
+                        />
+                        <div className={styles.memberAvatar}>
+                          {user.profile?.avatar ? (
+                            <img src={user.profile.avatar} alt="" />
+                          ) : (
+                            <span>{getInitials(user)}</span>
+                          )}
+                        </div>
+                        <span>{getDisplayName(user)}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.cancelModalBtn}
+                  onClick={() => setShowNewGroupModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.createGroupBtn}
+                  disabled={!newGroupName.trim() || selectedMembersForGroup.length === 0}
+                >
+                  Create Group
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -889,6 +1232,54 @@ function MessageBubble({ message, isOwn, onDelete }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupMessageBubble({ message, isOwn }) {
+  if (message.deletedForEveryone) {
+    return (
+      <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''} ${styles.messageDeleted}`}>
+        <em>This message was deleted</em>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}>
+      {!isOwn && (
+        <span className={styles.groupSenderName}>
+          {message.sender?.profile?.firstName || message.sender?.username}
+        </span>
+      )}
+      {message.attachment && (
+        <div className={styles.messageAttachment}>
+          {isImageFile(message.attachment.mimeType) ? (
+            <img
+              src={chatService.getAttachmentUrl(message.attachment.filename)}
+              alt="attachment"
+              className={styles.attachmentImage}
+            />
+          ) : (
+            <a
+              href={chatService.getAttachmentUrl(message.attachment.filename)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.attachmentFile}
+            >
+              <span>{getFileIcon(message.attachment.mimeType)}</span>
+              <div>
+                <p>{message.attachment.originalName}</p>
+                <small>{formatFileSize(message.attachment.size)}</small>
+              </div>
+            </a>
+          )}
+        </div>
+      )}
+      {message.content && <p className={styles.messageContent}>{message.content}</p>}
+      <div className={styles.messageFooter}>
+        <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
+      </div>
     </div>
   );
 }

@@ -36,7 +36,10 @@ const activityLogSchema = new mongoose.Schema({
             'note_view',
             'summary_view',
             'flashcard_review',
-            'note_time_spent'
+            'note_time_spent',
+            'summary_time_spent',
+            'note_completed',
+            'summary_completed'
         ],
         required: true
     },
@@ -57,6 +60,9 @@ const activityLogSchema = new mongoose.Schema({
 
         // Note/Summary time tracking
         duration: Number,           // seconds spent reading
+
+        // Scroll tracking
+        scrollPercent: Number,
 
         // Flashcard review
         cardsReviewed: Number,

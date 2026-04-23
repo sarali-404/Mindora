@@ -154,6 +154,33 @@ function safeJSONParse(text, fallback = null) {
 }
 
 /**
+ * Unwrap double-encoded AI responses.
+ * Sometimes the LLM generates: { "content": "{ \"title\": ..., \"content\": \"...\" }" }
+ * i.e. the `content` field is itself a JSON blob. Unwrap up to 3 levels.
+ */
+function unwrapDoubleEncoded(parsed) {
+  if (!parsed || typeof parsed !== 'object') return parsed;
+  let obj = parsed;
+  for (let i = 0; i < 3; i++) {
+    const c = obj.content;
+    if (typeof c !== 'string') break;
+    const trimmed = c.trim();
+    if (!trimmed.startsWith('{')) break;
+    const inner = safeJSONParse(trimmed, null);
+    if (!inner || typeof inner !== 'object' || !inner.content) break;
+    // Merge: prefer inner fields but keep outer title/keyPoints if inner lacks them
+    obj = {
+      title: inner.title || obj.title,
+      content: inner.content,
+      keyPoints: (inner.keyPoints && inner.keyPoints.length) ? inner.keyPoints : (obj.keyPoints || []),
+      sections: (inner.sections && inner.sections.length) ? inner.sections : (obj.sections || []),
+      quickReview: inner.quickReview || obj.quickReview || ''
+    };
+  }
+  return obj;
+}
+
+/**
  * Make an AI request with retry logic
  */
 async function makeAIRequest(prompt, options = {}) {
@@ -385,7 +412,7 @@ IMPORTANT: Respond with ONLY a valid JSON object, no markdown, no extra text. Us
     };
   }
 
-  return parsed;
+  return unwrapDoubleEncoded(parsed);
 }
 
 /**
@@ -423,7 +450,7 @@ IMPORTANT: Respond with ONLY a valid JSON object, no markdown, no extra text:
     };
   }
 
-  return parsed;
+  return unwrapDoubleEncoded(parsed);
 }
 
 /**

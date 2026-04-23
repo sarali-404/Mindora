@@ -15,6 +15,7 @@ const chatRoutes = require('./src/routes/chatRoutes');
 const goalRoutes = require('./src/routes/goalRoutes');
 const gamificationRoutes = require('./src/routes/gamificationRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const groupRoutes = require('./src/routes/groupRoutes');
 
 // Import email service for verification
 const { verifyEmailConnection } = require('./src/services/emailService');
@@ -112,6 +113,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/groups', groupRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -47,10 +47,12 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
       if (elapsed >= 120) {
         completionSent.current = true;
         const topicName = currentTopic.current;
+        if (topicName) {
         goalService.trackActivity(goalId, topicName, 'note_completed', {
           duration: Math.round(elapsed),
           scrollPercent: maxScrollPercent.current
         }).catch(() => {});
+        }
         // Mark locally
         if (selectedNote) {
           setReadNotes(prev => new Set(prev).add(selectedNote._id));
@@ -61,7 +63,7 @@ export default function FullNotes({ notes = [], topics = [], goalId }) {
 
   // --- ML Activity Tracking: note view + time spent ---
   useEffect(() => {
-    if (selectedNote && goalId) {
+    if (selectedNote && goalId && selectedNote.topic) {
       const topicName = selectedNote.topic;
       currentTopic.current = topicName;
       viewStartTime.current = Date.now();
