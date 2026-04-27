@@ -27,23 +27,13 @@ const achievementSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  tiers: {
-    bronze: {
-      xpReward: { type: Number, default: 0 },
-      criteria: { type: String, default: '' },
-      description: String
-    },
-    silver: {
-      xpReward: { type: Number, default: 0 },
-      criteria: { type: String, default: '' },
-      description: String
-    },
-    gold: {
-      xpReward: { type: Number, default: 0 },
-      criteria: { type: String, default: '' },
-      description: String
-    }
-  },
+  // Array of tiers — level 1 is easiest, level N is hardest
+  tiers: [{
+    level:       { type: Number, required: true, min: 1 },
+    xpReward:    { type: Number, default: 0 },
+    criteria:    { type: String, default: '' },
+    description: { type: String }
+  }],
   
   // For one-time achievements
   oneTimeTier: {

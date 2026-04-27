@@ -39,26 +39,16 @@ const ACHIEVEMENTS = [
   {
     key: 'goal_architect',
     name: 'Goal Architect',
-    description: 'Plan your learning goals with precision',
+    description: 'Plan your learning journey one goal at a time',
     image: '/assets/achievements/goal_architect.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 50,
-        criteria: 'Create 1 goal with topics extraction',
-        description: 'Create your first planned goal'
-      },
-      silver: {
-        xpReward: 100,
-        criteria: 'Create 3 goals with researched topics',
-        description: 'Create 3 well-planned goals'
-      },
-      gold: {
-        xpReward: 200,
-        criteria: 'Create 5 goals with full planning and sub-topics',
-        description: 'Architect 5 comprehensive goals'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 50,  criteria: 'Create 1 goal',   description: 'First Blueprint' },
+      { level: 2, xpReward: 100, criteria: 'Create 3 goals',  description: 'Habit Builder' },
+      { level: 3, xpReward: 200, criteria: 'Create 5 goals',  description: 'Consistent Planner' },
+      { level: 4, xpReward: 350, criteria: 'Create 10 goals', description: 'Dedicated Architect' },
+      { level: 5, xpReward: 500, criteria: 'Create 20 goals', description: 'Master Strategist' }
+    ],
     category: 'goals',
     evaluationKey: 'goal_architect',
     enabled: true
@@ -66,26 +56,16 @@ const ACHIEVEMENTS = [
   {
     key: 'quiz_master',
     name: 'Quiz Master',
-    description: 'Achieve mastery through quizzes',
+    description: 'Prove your knowledge by scoring high on quizzes',
     image: '/assets/achievements/quiz_master.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 75,
-        criteria: 'Score 70%+ on 5 quizzes',
-        description: 'Pass 5 quizzes at 70% or higher'
-      },
-      silver: {
-        xpReward: 150,
-        criteria: 'Score 80%+ on 15 quizzes',
-        description: 'Ace 15 quizzes at 80% or higher'
-      },
-      gold: {
-        xpReward: 300,
-        criteria: 'Score 90%+ on 30 quizzes',
-        description: 'Perfect 30 quizzes at 90% or higher'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 75,  criteria: 'Complete 5 quizzes with 70%+ score',   description: 'Quiz Rookie' },
+      { level: 2, xpReward: 150, criteria: 'Complete 15 quizzes with 75%+ score',  description: 'Quiz Apprentice' },
+      { level: 3, xpReward: 300, criteria: 'Complete 30 quizzes with 80%+ score',  description: 'Quiz Veteran' },
+      { level: 4, xpReward: 500, criteria: 'Complete 60 quizzes with 85%+ score',  description: 'Quiz Expert' },
+      { level: 5, xpReward: 800, criteria: 'Complete 100 quizzes with 90%+ score', description: 'Quiz Legend' }
+    ],
     category: 'quizzes',
     evaluationKey: 'quiz_master',
     enabled: true
@@ -93,26 +73,16 @@ const ACHIEVEMENTS = [
   {
     key: 'reading_bird',
     name: 'Reading Bird',
-    description: 'Learn through reading and studying',
+    description: 'Build deep understanding through consistent reading',
     image: '/assets/achievements/reading_bird.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 50,
-        criteria: 'Spend 5 hours reading notes and summaries',
-        description: 'Read for 5 hours'
-      },
-      silver: {
-        xpReward: 100,
-        criteria: 'Spend 15 hours reading',
-        description: 'Read for 15 hours'
-      },
-      gold: {
-        xpReward: 200,
-        criteria: 'Spend 30 hours reading',
-        description: 'Read for 30 hours'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 50,  criteria: 'Accumulate 5 hours of reading',   description: 'Curious Reader' },
+      { level: 2, xpReward: 100, criteria: 'Accumulate 15 hours of reading',  description: 'Avid Reader' },
+      { level: 3, xpReward: 200, criteria: 'Accumulate 30 hours of reading',  description: 'Devoted Scholar' },
+      { level: 4, xpReward: 350, criteria: 'Accumulate 60 hours of reading',  description: 'Knowledge Seeker' },
+      { level: 5, xpReward: 500, criteria: 'Accumulate 100 hours of reading', description: 'Bibliophile' }
+    ],
     category: 'reading',
     evaluationKey: 'reading_bird',
     enabled: true
@@ -120,26 +90,16 @@ const ACHIEVEMENTS = [
   {
     key: 'streak_master',
     name: 'Streak Master',
-    description: 'Maintain consistent study habits',
+    description: 'Study every day without breaking your streak',
     image: '/assets/achievements/streak_master.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 75,
-        criteria: 'Maintain 7-day study streak',
-        description: 'Study 7 days in a row'
-      },
-      silver: {
-        xpReward: 150,
-        criteria: 'Maintain 30-day streak',
-        description: 'Study 30 days in a row'
-      },
-      gold: {
-        xpReward: 300,
-        criteria: 'Maintain 90-day streak',
-        description: 'Study 90 days in a row'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 75,   criteria: 'Maintain a 7-day study streak',   description: 'Week Warrior' },
+      { level: 2, xpReward: 150,  criteria: 'Maintain a 30-day study streak',  description: 'Month of Focus' },
+      { level: 3, xpReward: 300,  criteria: 'Maintain a 90-day study streak',  description: 'Iron Discipline' },
+      { level: 4, xpReward: 500,  criteria: 'Maintain a 180-day study streak', description: 'Half-Year Grinder' },
+      { level: 5, xpReward: 1000, criteria: 'Maintain a 365-day study streak', description: 'Unstoppable' }
+    ],
     category: 'streaks',
     evaluationKey: 'streak_master',
     enabled: true
@@ -147,26 +107,16 @@ const ACHIEVEMENTS = [
   {
     key: 'goal_crusher',
     name: 'Goal Crusher',
-    description: 'Complete multiple learning goals',
+    description: 'Complete your learning goals and prove your dedication',
     image: '/assets/achievements/goal_crusher.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 100,
-        criteria: 'Complete 1 goal',
-        description: 'Finish your first goal'
-      },
-      silver: {
-        xpReward: 200,
-        criteria: 'Complete 3 goals',
-        description: 'Complete 3 goals'
-      },
-      gold: {
-        xpReward: 400,
-        criteria: 'Complete 10 goals',
-        description: 'Complete 10 goals'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 100,  criteria: 'Complete 1 goal',  description: 'First Finish' },
+      { level: 2, xpReward: 200,  criteria: 'Complete 3 goals',  description: 'Goal Getter' },
+      { level: 3, xpReward: 400,  criteria: 'Complete 10 goals', description: 'Overachiever' },
+      { level: 4, xpReward: 600,  criteria: 'Complete 20 goals', description: 'Goal Machine' },
+      { level: 5, xpReward: 1000, criteria: 'Complete 50 goals', description: 'Unstoppable Force' }
+    ],
     category: 'goals',
     evaluationKey: 'goal_crusher',
     enabled: true
@@ -174,26 +124,16 @@ const ACHIEVEMENTS = [
   {
     key: 'memory_master',
     name: 'Memory Master',
-    description: 'Achieve high scores consistently',
+    description: 'Maintain excellent quiz averages across many attempts',
     image: '/assets/achievements/memory_master.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 100,
-        criteria: 'Reach 75% average on 10 quizzes',
-        description: 'Maintain 75% average'
-      },
-      silver: {
-        xpReward: 200,
-        criteria: 'Reach 80% average on 20 quizzes',
-        description: 'Maintain 80% average'
-      },
-      gold: {
-        xpReward: 400,
-        criteria: 'Reach 90% average on 30 quizzes',
-        description: 'Maintain 90% average'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 100, criteria: 'Maintain 70%+ average on 10 quizzes',  description: 'Sharp Mind' },
+      { level: 2, xpReward: 200, criteria: 'Maintain 75%+ average on 20 quizzes',  description: 'Quick Recall' },
+      { level: 3, xpReward: 350, criteria: 'Maintain 80%+ average on 30 quizzes',  description: 'Precision Thinker' },
+      { level: 4, xpReward: 500, criteria: 'Maintain 85%+ average on 50 quizzes',  description: 'Elite Memory' },
+      { level: 5, xpReward: 750, criteria: 'Maintain 90%+ average on 75 quizzes',  description: 'Photographic Mind' }
+    ],
     category: 'quizzes',
     evaluationKey: 'memory_master',
     enabled: true
@@ -201,26 +141,16 @@ const ACHIEVEMENTS = [
   {
     key: 'teaching_bird',
     name: 'Teaching Bird',
-    description: 'Share knowledge with the community',
+    description: 'Share your knowledge and materials with the community',
     image: '/assets/achievements/teaching_bird.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 75,
-        criteria: 'Share 1 material',
-        description: 'Share your first material'
-      },
-      silver: {
-        xpReward: 150,
-        criteria: 'Share 5 materials',
-        description: 'Share 5 materials'
-      },
-      gold: {
-        xpReward: 300,
-        criteria: 'Share 20 materials',
-        description: 'Share 20 materials'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 75,  criteria: 'Share 1 material with the community',   description: 'First Contribution' },
+      { level: 2, xpReward: 150, criteria: 'Share 5 materials with the community',   description: 'Helper' },
+      { level: 3, xpReward: 300, criteria: 'Share 20 materials with the community',  description: 'Community Pillar' },
+      { level: 4, xpReward: 500, criteria: 'Share 50 materials with the community',  description: 'Knowledge Hub' },
+      { level: 5, xpReward: 800, criteria: 'Share 100 materials with the community', description: 'Mentor' }
+    ],
     category: 'social',
     evaluationKey: 'teaching_bird',
     enabled: true
@@ -228,26 +158,16 @@ const ACHIEVEMENTS = [
   {
     key: 'morning_champion',
     name: 'Morning Champion',
-    description: 'Study before 8 AM consistently',
+    description: 'Start your days early with morning study sessions',
     image: '/assets/achievements/morning_champion.png',
     isTiered: true,
-    tiers: {
-      bronze: {
-        xpReward: 50,
-        criteria: 'Study before 8 AM for 14 consecutive days',
-        description: 'Morning study for 14 days'
-      },
-      silver: {
-        xpReward: 100,
-        criteria: 'Study before 8 AM for 30 consecutive days',
-        description: 'Morning study for 30 days'
-      },
-      gold: {
-        xpReward: 200,
-        criteria: 'Study before 8 AM for 60 consecutive days',
-        description: 'Morning study for 60 days'
-      }
-    },
+    tiers: [
+      { level: 1, xpReward: 50,  criteria: 'Study before 8 AM on 14 different days',  description: 'Early Riser' },
+      { level: 2, xpReward: 100, criteria: 'Study before 8 AM on 30 different days',  description: 'Dawn Devotee' },
+      { level: 3, xpReward: 200, criteria: 'Study before 8 AM on 60 different days',  description: 'Morning Warrior' },
+      { level: 4, xpReward: 350, criteria: 'Study before 8 AM on 120 different days', description: 'Sunrise Scholar' },
+      { level: 5, xpReward: 600, criteria: 'Study before 8 AM on 365 different days', description: 'Early Bird Legend' }
+    ],
     category: 'streaks',
     evaluationKey: 'morning_champion',
     enabled: true
@@ -259,17 +179,17 @@ async function seedAchievements() {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mindora');
     console.log('✅ Connected to MongoDB');
 
-    // Clear existing achievements
-    await Achievement.deleteMany({});
-    console.log('🗑️ Cleared existing achievements');
+    // Upsert by key — preserves existing _id so user earned-entries stay valid
+    for (const ach of ACHIEVEMENTS) {
+      const result = await Achievement.findOneAndUpdate(
+        { key: ach.key },
+        { $set: ach },
+        { upsert: true, new: true }
+      );
+      console.log(`  ✓ ${result.name} (${result.key})`);
+    }
 
-    // Insert new achievements
-    const result = await Achievement.insertMany(ACHIEVEMENTS);
-    console.log(`✅ Seeded ${result.length} achievements`);
-
-    result.forEach(a => {
-      console.log(`  - ${a.name} (${a.key})`);
-    });
+    console.log(`✅ Upserted ${ACHIEVEMENTS.length} achievements`);
 
     await mongoose.connection.close();
     console.log('✅ Database connection closed');

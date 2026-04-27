@@ -130,8 +130,76 @@ async function updateActivityStats(userId, updates) {
 }
 
 /**
- * Check and award achievements based on criteria
- * Returns array of newly awarded achievements
+ * Determine the highest qualifying level number for a tiered achievement.
+ * Returns 0 if no tier is met.
+ */
+function getHighestQualifyingLevel(achievement, profile) {
+  const stats = profile.activityStats;
+  const streak = profile.currentStreak.count;
+
+  switch (achievement.evaluationKey) {
+    case 'goal_architect': {
+      const thresholds = [1, 3, 5, 10, 20];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (stats.goalsCreated >= t) level = i + 1; });
+      return level;
+    }
+    case 'quiz_master': {
+      // [quizzes, minAvgScore] per level
+      const criteria = [[5, 70], [15, 75], [30, 80], [60, 85], [100, 90]];
+      let level = 0;
+      criteria.forEach(([q, s], i) => {
+        if (stats.quizzesCompleted >= q && stats.quizAvgScore >= s) level = i + 1;
+      });
+      return level;
+    }
+    case 'reading_bird': {
+      const thresholds = [5, 15, 30, 60, 100];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (stats.readingHoursTotal >= t) level = i + 1; });
+      return level;
+    }
+    case 'memory_master': {
+      const criteria = [[10, 70], [20, 75], [30, 80], [50, 85], [75, 90]];
+      let level = 0;
+      criteria.forEach(([q, s], i) => {
+        if (stats.quizzesCompleted >= q && stats.quizAvgScore >= s) level = i + 1;
+      });
+      return level;
+    }
+    case 'goal_crusher': {
+      const thresholds = [1, 3, 10, 20, 50];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (stats.goalsCompleted >= t) level = i + 1; });
+      return level;
+    }
+    case 'teaching_bird': {
+      const thresholds = [1, 5, 20, 50, 100];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (stats.materialsShared >= t) level = i + 1; });
+      return level;
+    }
+    case 'streak_master': {
+      const thresholds = [7, 30, 90, 180, 365];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (streak >= t) level = i + 1; });
+      return level;
+    }
+    case 'morning_champion': {
+      const thresholds = [14, 30, 60, 120, 365];
+      let level = 0;
+      thresholds.forEach((t, i) => { if (stats.morningStudyDays >= t) level = i + 1; });
+      return level;
+    }
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Check and award achievements based on criteria.
+ * Supports tiered upgrades (level 1→2→3→4→5) and one-time achievements.
+ * Returns array of newly awarded/upgraded achievements.
  */
 async function evaluateAchievements(userId) {
   try {
@@ -142,102 +210,75 @@ async function evaluateAchievements(userId) {
     const newlyAwarded = [];
 
     for (const achievement of achievements) {
-      // Check if already awarded
-      const alreadyAwarded = profile.achievementsEarned.some(
+      const existingIndex = profile.achievementsEarned.findIndex(
         a => a.achievement.toString() === achievement._id.toString()
       );
+      const existingEntry = existingIndex !== -1 ? profile.achievementsEarned[existingIndex] : null;
 
-      if (alreadyAwarded) continue;
+      // --- One-time achievements ---
+      if (!achievement.isTiered) {
+        if (existingEntry) continue; // already earned, skip
 
-      // Evaluate based on achievement key
-      let tierToAward = null;
+        let shouldAward = false;
+        if (achievement.evaluationKey === 'welcome_aboard') shouldAward = true;
+        if (achievement.evaluationKey === 'first_steps' && profile.activityStats.goalsCompleted >= 1) shouldAward = true;
 
-      switch (achievement.evaluationKey) {
-        case 'welcome_aboard':
-          tierToAward = 'one-time';
-          break;
-
-        case 'first_steps':
-          if (profile.activityStats.goalsCompleted >= 1) {
-            tierToAward = 'one-time';
+        if (shouldAward) {
+          const xpReward = achievement.oneTimeTier?.xpReward || 0;
+          profile.achievementsEarned.push({
+            achievement: achievement._id,
+            tier: 'one-time',
+            unlockedAt: Date.now()
+          });
+          if (xpReward > 0) {
+            await addXP(userId, `achievement:${achievement.key}:one-time`, xpReward);
           }
-          break;
-
-        case 'goal_architect':
-          if (profile.activityStats.goalsCreated >= 5) tierToAward = 'gold';
-          else if (profile.activityStats.goalsCreated >= 3) tierToAward = 'silver';
-          else if (profile.activityStats.goalsCreated >= 1) tierToAward = 'bronze';
-          break;
-
-        case 'quiz_master':
-          if (profile.activityStats.quizzesCompleted >= 30 && profile.activityStats.quizAvgScore >= 90) tierToAward = 'gold';
-          else if (profile.activityStats.quizzesCompleted >= 15 && profile.activityStats.quizAvgScore >= 80) tierToAward = 'silver';
-          else if (profile.activityStats.quizzesCompleted >= 5 && profile.activityStats.quizAvgScore >= 70) tierToAward = 'bronze';
-          break;
-
-        case 'reading_bird':
-          if (profile.activityStats.readingHoursTotal >= 30) tierToAward = 'gold';
-          else if (profile.activityStats.readingHoursTotal >= 15) tierToAward = 'silver';
-          else if (profile.activityStats.readingHoursTotal >= 5) tierToAward = 'bronze';
-          break;
-
-        case 'memory_master':
-          if (profile.activityStats.quizzesCompleted >= 30 && profile.activityStats.quizAvgScore >= 90) tierToAward = 'gold';
-          else if (profile.activityStats.quizzesCompleted >= 20 && profile.activityStats.quizAvgScore >= 80) tierToAward = 'silver';
-          else if (profile.activityStats.quizzesCompleted >= 10 && profile.activityStats.quizAvgScore >= 75) tierToAward = 'bronze';
-          break;
-
-        case 'goal_crusher':
-          if (profile.activityStats.goalsCompleted >= 10) tierToAward = 'gold';
-          else if (profile.activityStats.goalsCompleted >= 3) tierToAward = 'silver';
-          else if (profile.activityStats.goalsCompleted >= 1) tierToAward = 'bronze';
-          break;
-
-        case 'teaching_bird':
-          if (profile.activityStats.materialsShared >= 20) tierToAward = 'gold';
-          else if (profile.activityStats.materialsShared >= 5) tierToAward = 'silver';
-          else if (profile.activityStats.materialsShared >= 1) tierToAward = 'bronze';
-          break;
-
-        case 'streak_master':
-          if (profile.currentStreak.count >= 90) tierToAward = 'gold';
-          else if (profile.currentStreak.count >= 30) tierToAward = 'silver';
-          else if (profile.currentStreak.count >= 7) tierToAward = 'bronze';
-          break;
-
-        case 'morning_champion':
-          if (profile.activityStats.morningStudyDays >= 60) tierToAward = 'gold';
-          else if (profile.activityStats.morningStudyDays >= 30) tierToAward = 'silver';
-          else if (profile.activityStats.morningStudyDays >= 14) tierToAward = 'bronze';
-          break;
+          newlyAwarded.push({ achievementId: achievement._id, key: achievement.key, name: achievement.name, tier: 'one-time', xpReward });
+          console.log(`🏆 Achievement Awarded: User=${userId}, Achievement=${achievement.name}, Tier=one-time, XP=${xpReward}`);
+        }
+        continue;
       }
 
-      if (tierToAward) {
-        const tierData = tierToAward === 'one-time' ? achievement.oneTimeTier : achievement.tiers[tierToAward];
-        const xpReward = tierData?.xpReward || 0;
+      // --- Tiered achievements ---
+      const currentLevel = existingEntry ? (parseInt(existingEntry.tier) || 0) : 0;
+      const highestQualifying = getHighestQualifyingLevel(achievement, profile);
 
-        // Award achievement
+      if (highestQualifying <= currentLevel) continue; // no new level earned
+
+      // Award XP for each newly unlocked level
+      let totalXpAwarded = 0;
+      for (let lvl = currentLevel + 1; lvl <= highestQualifying; lvl++) {
+        const tierData = achievement.tiers.find(t => t.level === lvl);
+        const xpReward = tierData?.xpReward || 0;
+        if (xpReward > 0) {
+          await addXP(userId, `achievement:${achievement.key}:${lvl}`, xpReward);
+          totalXpAwarded += xpReward;
+        }
+      }
+
+      // Update or create earned entry
+      const newTierStr = String(highestQualifying);
+      if (existingIndex !== -1) {
+        profile.achievementsEarned[existingIndex].tier = newTierStr;
+        profile.achievementsEarned[existingIndex].unlockedAt = Date.now();
+      } else {
         profile.achievementsEarned.push({
           achievement: achievement._id,
-          tier: tierToAward,
+          tier: newTierStr,
           unlockedAt: Date.now()
         });
-
-        // Add XP reward
-        if (xpReward > 0) {
-          await addXP(userId, `achievement:${achievement.key}:${tierToAward}`, xpReward);
-        }
-
-        newlyAwarded.push({
-          achievementId: achievement._id,
-          key: achievement.key,
-          name: achievement.name,
-          tier: tierToAward,
-          xpReward
-        });
-
-        console.log(`🏆 Achievement Awarded: User=${userId}, Achievement=${achievement.name}, Tier=${tierToAward}, XP=${xpReward}`);
       }
+
+      newlyAwarded.push({
+        achievementId: achievement._id,
+        key: achievement.key,
+        name: achievement.name,
+        tier: newTierStr,
+        xpReward: totalXpAwarded,
+        previousLevel: currentLevel
+      });
+
+      console.log(`🏆 Achievement Upgraded: User=${userId}, Achievement=${achievement.name}, Lv.${currentLevel}→Lv.${highestQualifying}, XP=${totalXpAwarded}`);
     }
 
     if (newlyAwarded.length > 0) {
@@ -257,8 +298,14 @@ async function evaluateAchievements(userId) {
  */
 async function createAchievementNotification(userId, achievement, tier) {
   try {
-    const tierLabel = tier === 'one-time' ? '' : ` (${tier.charAt(0).toUpperCase() + tier.slice(1)})`;
-    
+    const isOneTime = tier === 'one-time';
+    const levelNum = isOneTime ? null : parseInt(tier);
+    const tierLabel = isOneTime ? '' : ` (Lv.${levelNum})`;
+
+    const xpReward = isOneTime
+      ? (achievement.oneTimeTier?.xpReward || 0)
+      : (achievement.tiers?.find(t => t.level === levelNum)?.xpReward || 0);
+
     const notification = new Notification({
       user: userId,
       type: 'achievement',
@@ -271,7 +318,7 @@ async function createAchievementNotification(userId, achievement, tier) {
       metadata: {
         achievementKey: achievement.key,
         tier: tier,
-        xpReward: tier === 'one-time' ? achievement.oneTimeTier.xpReward : achievement.tiers[tier].xpReward
+        xpReward
       }
     });
 

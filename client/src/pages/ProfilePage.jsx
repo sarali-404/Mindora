@@ -219,12 +219,16 @@ export default function ProfilePage() {
         if (response.success && response.data) {
           const mapped = response.data.map((ach) => ({
             id: ach._id,
+            key: ach.key,
             name: ach.name,
             description: ach.description,
             image: achievementImageMap[ach.key] || welcomeAboardImg,
             unlocked: ach.earned,
             tier: ach.tier,
+            isTiered: ach.isTiered,
             hasLevels: ach.isTiered,
+            tiers: ach.tiers,
+            oneTimeTier: ach.oneTimeTier,
             unlockedAt: ach.unlockedAt,
           }));
           setAchievements(mapped);
@@ -805,27 +809,103 @@ function StatCard({ label, value, icon: Icon }) {
   );
 }
 
+const LEVEL_COLORS = { 1: '#10b981', 2: '#0073a0', 3: '#f59e0b', 4: '#8b5cf6', 5: '#ef4444' };
+
 function AchievementCard({ achievement }) {
   const [showTooltip, setShowTooltip] = useState(false);
-  
-  const tierLabel = achievement.tier && achievement.tier !== 'one-time' 
-    ? achievement.tier.charAt(0).toUpperCase() + achievement.tier.slice(1)
-    : null;
+
+  const isOneTime = !achievement.isTiered;
+  // For tiered: tier is stored as a string number like '1','2','3'...
+  const currentLevelNum = (!isOneTime && achievement.tier && achievement.tier !== 'one-time')
+    ? (parseInt(achievement.tier) || 0)
+    : 0;
+
+  const tiersArray = Array.isArray(achievement.tiers) ? achievement.tiers : [];
+  const maxLevel = tiersArray.length > 0 ? Math.max(...tiersArray.map(t => t.level)) : 5;
+  const isMaxLevel = currentLevelNum >= maxLevel;
+
+  // Badge label + color
+  let levelLabel = null;
+  let badgeColor = null;
+  if (isOneTime && achievement.unlocked) {
+    levelLabel = '✓';
+    badgeColor = '#16a34a';
+  } else if (currentLevelNum > 0) {
+    levelLabel = `Lv. ${currentLevelNum}`;
+    badgeColor = LEVEL_COLORS[currentLevelNum] || '#6b7280';
+  }
+
+  const renderTooltipBody = () => {
+    if (isOneTime) {
+      const info = achievement.oneTimeTier || {};
+      return (
+        <div className={styles.tooltipSection}>
+          <p className={styles.tooltipSectionLabel}>How to unlock</p>
+          <p className={styles.tooltipCriteria}>{info.criteria || achievement.description}</p>
+          <div className={styles.tooltipXPRow}>
+            <span className={styles.tooltipXP}>+{info.xpReward || 0} XP</span>
+            {achievement.unlockedAt && (
+              <span className={styles.tooltipUnlocked}>
+                ✓ {new Date(achievement.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Show only the relevant next level (or the max level if fully completed)
+    const targetTier = isMaxLevel
+      ? tiersArray.find(t => t.level === currentLevelNum)
+      : tiersArray.find(t => t.level === currentLevelNum + 1);
+
+    if (!targetTier) return null;
+
+    const rowClass = isMaxLevel ? styles.tooltipLevelEarned : styles.tooltipLevelNext;
+
+    return (
+      <>
+        <div className={styles.tooltipLevels}>
+          <div className={`${styles.tooltipLevelRow} ${rowClass}`}>
+            <span
+              className={styles.tooltipLevelBadge}
+              style={isMaxLevel ? { background: LEVEL_COLORS[targetTier.level] || '#6b7280' } : undefined}
+            >
+              {isMaxLevel ? '✓' : targetTier.level}
+            </span>
+            <div className={styles.tooltipLevelInfo}>
+              <span className={styles.tooltipLevelLabel}>{targetTier.description || `Level ${targetTier.level}`}</span>
+              <span className={styles.tooltipLevelCriteria}>{targetTier.criteria || ''}</span>
+            </div>
+            <span className={styles.tooltipXPBadge}>+{targetTier.xpReward || 0} XP</span>
+          </div>
+        </div>
+        {achievement.unlockedAt && (
+          <p className={styles.tooltipUnlocked}>
+            Lv.{currentLevelNum} unlocked {new Date(achievement.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </p>
+        )}
+        {isMaxLevel && (
+          <p className={styles.tooltipMaxMsg}>🏆 All levels unlocked!</p>
+        )}
+      </>
+    );
+  };
 
   return (
-    <div 
+    <div
       className={`${styles.achievementCard} ${!achievement.unlocked ? styles.locked : ''}`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      {tierLabel && (
-        <div className={styles.levelBadge}>
-          {tierLabel}
+      {levelLabel && (
+        <div className={styles.levelBadge} style={{ background: badgeColor }}>
+          {levelLabel}
         </div>
       )}
       <div className={styles.achievementImageWrapper}>
-        <img 
-          src={achievement.image} 
+        <img
+          src={achievement.image}
           alt={achievement.name}
           className={styles.achievementImage}
         />
@@ -836,16 +916,12 @@ function AchievementCard({ achievement }) {
         )}
       </div>
       <p className={styles.achievementName}>{achievement.name}</p>
-      
+
       {showTooltip && (
         <div className={styles.achievementTooltip}>
           <p className={styles.tooltipTitle}>{achievement.name}</p>
-          <p className={styles.tooltipText}>{achievement.description}</p>
-          {achievement.unlockedAt && (
-            <p className={styles.tooltipText}>
-              Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
-            </p>
-          )}
+          <p className={styles.tooltipDesc}>{achievement.description}</p>
+          {renderTooltipBody()}
         </div>
       )}
     </div>

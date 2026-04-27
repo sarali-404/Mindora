@@ -28,8 +28,8 @@ const userGameProfileSchema = new mongoose.Schema({
     },
     tier: {
       type: String,
-      enum: ['bronze', 'silver', 'gold', 'one-time'],
       default: 'one-time'
+      // Values: 'one-time' for one-time achievements, or level number as string ('1','2','3',...)
     },
     unlockedAt: {
       type: Date,

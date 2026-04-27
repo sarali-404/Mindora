@@ -282,15 +282,14 @@
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
-  background: rgba(251, 191, 36, 0.95);
   color: #ffffff;
   padding: 0.1rem 0.35rem;
   border-radius: 0.3rem;
   font-size: 0.65rem;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   z-index: 2;
-  backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
 }
 
 .achievementName {
@@ -364,13 +363,13 @@
   transform: translateX(-50%);
   background-color: #1f2937;
   color: #ffffff;
-  padding: 0.75rem 0.9rem;
-  border-radius: 0.65rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.75rem;
   font-size: 0.8rem;
-  min-width: 220px;
-  max-width: 280px;
+  min-width: 260px;
+  max-width: 320px;
   z-index: 10;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
@@ -387,23 +386,170 @@
 .tooltipTitle {
   font-size: 0.9rem;
   font-weight: 700;
-  margin: 0 0 0.3rem 0;
+  margin: 0 0 0.25rem 0;
   color: #fbbf24;
 }
 
-.tooltipText {
-  margin: 0 0 0.6rem 0;
-  color: #d1d5db;
+.tooltipDesc {
   font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0 0 0;
   line-height: 1.4;
 }
+
+/* ── Tiered level rows ── */
 
 .tooltipLevels {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tooltipLevelRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.4rem;
+}
+
+.tooltipLevelEarned {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.tooltipLevelNext {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.tooltipLevelLocked {
+  opacity: 0.45;
+}
+
+.tooltipLevelBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #374151;
+  color: #d1d5db;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.tooltipLevelInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.tooltipLevelLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+.tooltipLevelEarned .tooltipLevelLabel {
+  color: #6ee7b7;
+}
+
+.tooltipLevelNext .tooltipLevelLabel {
+  color: #fcd34d;
+}
+
+.tooltipLevelCriteria {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  line-height: 1.3;
+}
+
+.tooltipLevelEarned .tooltipLevelCriteria,
+.tooltipLevelNext .tooltipLevelCriteria {
+  color: #d1d5db;
+}
+
+.tooltipXPBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.32rem;
+  border-radius: 0.3rem;
+  background: rgba(251, 191, 36, 0.18);
+  color: #fcd34d;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.tooltipLevelEarned .tooltipXPBadge {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+
+/* ── One-time unlock section ── */
+
+.tooltipSection {
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tooltipSectionLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.3rem 0;
+}
+
+.tooltipCriteria {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.tooltipXPRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tooltipXP {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.3rem;
+  background: rgba(251, 191, 36, 0.18);
+  color: #fcd34d;
+}
+
+.tooltipUnlocked {
+  font-size: 0.68rem;
+  color: #6ee7b7;
+  margin: 0.45rem 0 0 0;
+  text-align: center;
+}
+
+.tooltipMaxMsg {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fcd34d;
+  text-align: center;
+  margin: 0.4rem 0 0 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tooltipLevel {
