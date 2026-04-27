@@ -9,6 +9,16 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(null);
   const [feedbackMap, setFeedbackMap] = useState({});
+  const [expandedFeedback, setExpandedFeedback] = useState(new Set());
+
+  const toggleFeedback = (answerId) => {
+    setExpandedFeedback(prev => {
+      const next = new Set(prev);
+      if (next.has(answerId)) next.delete(answerId);
+      else next.add(answerId);
+      return next;
+    });
+  };
 
   // Submit an essay answer
   const handleSubmitAnswer = async (essayId, questionId) => {
@@ -134,32 +144,45 @@ export default function EssayQuestions({ essays = [], topics = [], goalId }) {
                         
                         {existingAnswer.aiFeedback && (
                           <div className={styles.feedbackBox}>
-                            <span className={styles.feedbackLabel}>AI Feedback:</span>
-                            <p className={styles.feedbackText}>
-                              {existingAnswer.aiFeedback.feedback}
-                            </p>
-                            
-                            {existingAnswer.aiFeedback.strengths?.length > 0 && (
-                              <div className={styles.strengthsWeaknesses}>
-                                <strong>Strengths:</strong>
-                                <ul>
-                                  {existingAnswer.aiFeedback.strengths.map((s, i) => (
-                                    <li key={i}>{s}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            
-                            {existingAnswer.aiFeedback.improvements?.length > 0 && (
-                              <div className={styles.strengthsWeaknesses}>
-                                <strong>Areas for Improvement:</strong>
-                                <ul>
-                                  {existingAnswer.aiFeedback.improvements.map((s, i) => (
-                                    <li key={i}>{s}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            <div className={styles.feedbackHeader}>
+                              <span className={styles.feedbackLabel}>AI Feedback</span>
+                              {existingAnswer.aiFeedback.score !== undefined && (
+                                <span className={styles.feedbackScore}>{existingAnswer.aiFeedback.score}%</span>
+                              )}
+                            </div>
+                            <div className={`${styles.feedbackBody} ${expandedFeedback.has(answerId) ? styles.feedbackExpanded : styles.feedbackCollapsed}`}>
+                              <p className={styles.feedbackText}>
+                                {existingAnswer.aiFeedback.feedback}
+                              </p>
+
+                              {existingAnswer.aiFeedback.strengths?.length > 0 && (
+                                <div className={styles.strengthsWeaknesses}>
+                                  <strong>Strengths:</strong>
+                                  <ul>
+                                    {existingAnswer.aiFeedback.strengths.map((s, i) => (
+                                      <li key={i}>{s}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {existingAnswer.aiFeedback.improvements?.length > 0 && (
+                                <div className={styles.strengthsWeaknesses}>
+                                  <strong>Areas for Improvement:</strong>
+                                  <ul>
+                                    {existingAnswer.aiFeedback.improvements.map((s, i) => (
+                                      <li key={i}>{s}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              className={styles.readMoreBtn}
+                              onClick={() => toggleFeedback(answerId)}
+                            >
+                              {expandedFeedback.has(answerId) ? 'Read less ↑' : 'Read more ↓'}
+                            </button>
                           </div>
                         )}
                         

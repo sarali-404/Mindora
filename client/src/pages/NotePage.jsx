@@ -671,58 +671,45 @@ const NotePage = () => {
             </div>
           </div>
 
-          {/* Stats row */}
-          <div className={styles.statsRow}>
-            <div className={styles.statItem}>
-              <MdVisibility />
-              <span>{material.views || 0} views</span>
-            </div>
-            <div className={styles.statItem}>
-              <MdFavorite />
-              <span>{likesCount} likes</span>
-            </div>
-            <div className={styles.statItem}>
-              <MdBookmark />
-              <span>{savesCount} saves</span>
-            </div>
-            <div className={styles.statItem}>
-              <MdDownload />
-              <span>{material.downloads || 0} downloads</span>
-            </div>
-          </div>
-
-          {/* Action buttons */}
+          {/* Stats + Action buttons combined */}
           <div className={styles.actionButtons}>
+            <span className={styles.viewsStat}>
+              <MdVisibility />
+              {material.views || 0}
+            </span>
             <button 
               className={`${styles.actionBtn} ${isLiked ? styles.actionBtnActive : ''}`}
               onClick={handleLike}
               disabled={actionLoading === 'like'}
+              title={isLiked ? 'Unlike' : 'Like'}
             >
               {isLiked ? <MdFavorite /> : <MdFavoriteBorder />}
-              {isLiked ? 'Liked' : 'Like'}
+              <span className={styles.actionCount}>{likesCount}</span>
             </button>
             <button 
-              className={`${styles.actionBtn} ${isSaved ? styles.actionBtnActive : ''}`}
+              className={`${styles.actionBtn} ${isSaved ? styles.actionBtnSaved : ''}`}
               onClick={handleSave}
               disabled={actionLoading === 'save'}
+              title={isSaved ? 'Unsave' : 'Save'}
             >
               {isSaved ? <MdBookmark /> : <MdBookmarkBorder />}
-              {isSaved ? 'Saved' : 'Save'}
+              <span className={styles.actionCount}>{savesCount}</span>
             </button>
             <button 
               className={styles.actionBtn}
               onClick={handleDownload}
               disabled={actionLoading === 'download'}
+              title="Download"
             >
               <MdDownload />
-              Download
+              <span className={styles.actionCount}>{material.downloads || 0}</span>
             </button>
             <button 
               className={styles.actionBtn}
               onClick={handleShare}
+              title="Share"
             >
               <MdShare />
-              Share
             </button>
           </div>
 
@@ -737,7 +724,6 @@ const NotePage = () => {
           {/* Tags */}
           {material.tags && material.tags.length > 0 && (
             <div className={styles.tagsSection}>
-              <h4>Tags</h4>
               <div className={styles.tagsList}>
                 {material.tags.map((tag, index) => (
                   <span key={index} className={styles.tag}>#{tag}</span>

@@ -17,7 +17,8 @@ import {
   MdImage,
   MdVideoLibrary,
   MdArticle,
-  MdAutoAwesome
+  MdAutoAwesome,
+  MdAdd
 } from "react-icons/md";
 
 export default function LibraryPage() {
@@ -197,7 +198,8 @@ export default function LibraryPage() {
           )}
         </form>
         <Link to="/app/upload-material" className={styles.uploadButton} style={materialType === 'AI Generated' ? { display: 'none' } : {}}>
-          Upload Material
+          <MdAdd size={18} />
+          <span className={styles.uploadBtnText}>Upload Material</span>
         </Link>
       </header>
 

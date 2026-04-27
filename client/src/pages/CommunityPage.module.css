@@ -1040,6 +1040,24 @@
 }
 
 /* Responsive */
+/* Back button in chat header (hidden on desktop) */
+.chatBackBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  padding: 0.35rem;
+  border-radius: 0.4rem;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.chatBackBtn:hover {
+  background: #f1f5f9;
+}
+
 @media (max-width: 1024px) {
   .chatContainer {
     grid-template-columns: 280px 1fr;
@@ -1047,44 +1065,65 @@
 }
 
 @media (max-width: 768px) {
+  /* ---- Page ---- */
   .page {
-    padding: 1rem;
+    padding: 1rem 1.1rem 1.5rem;
   }
 
+  /* ---- Header ---- */
   .header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pageTitle {
+    font-size: 1.2rem;
   }
 
   .searchContainer {
     max-width: 100%;
+    padding: 0.45rem 0.85rem;
   }
 
+  /* ---- Tabs ---- */
   .tabs {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.35rem;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.82rem;
+    gap: 0.35rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
+  /* ---- Friends grid ---- */
   .friendsGrid {
     grid-template-columns: 1fr;
+    gap: 0.6rem;
   }
 
-  .chatContainer {
-    grid-template-columns: 1fr;
-    height: auto;
+  .friendCard,
+  .discoverCard {
+    padding: 0.85rem 1rem;
+    gap: 0.65rem;
   }
 
-  .conversationsList {
-    max-height: 300px;
-  }
-
-  .chatWindow {
-    min-height: 400px;
-  }
-
+  /* ---- Request cards ---- */
   .requestCard {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
   }
 
   .requestActions {
@@ -1094,6 +1133,160 @@
   .requestActions button {
     flex: 1;
     justify-content: center;
+  }
+
+  /* ---- Chat: mobile panel toggle ---- */
+  /* Default: show the conversation list, hide chat window */
+  .chatContainer {
+    display: block;       /* stack panels via position */
+    position: relative;
+    height: calc(100vh - 220px);
+    min-height: 400px;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+  }
+
+  .conversationsList {
+    position: absolute;
+    inset: 0;
+    max-height: none;
+    border-right: none;
+    transform: translateX(0);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    z-index: 1;
+  }
+
+  .chatWindow {
+    position: absolute;
+    inset: 0;
+    min-height: none;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* When a chat is open: slide list left, slide window in */
+  .chatContainerOpen .conversationsList {
+    transform: translateX(-100%);
+  }
+  .chatContainerOpen .chatWindow {
+    transform: translateX(0);
+  }
+
+  /* Back button visible on mobile */
+  .chatBackBtn {
+    display: flex;
+    margin-right: 0.25rem;
+  }
+
+  /* Messages fill remaining space */
+  .messagesContainer {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* Message bubbles wider on narrow screens */
+  .messageBubble {
+    max-width: 82%;
+  }
+
+  /* Chat header compact */
+  .chatHeader {
+    padding: 0.65rem 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .chatHeaderInfo {
+    gap: 0.5rem;
+  }
+
+  .chatAvatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.8rem;
+  }
+
+  .chatHeader h4 {
+    font-size: 0.88rem;
+  }
+
+  .chatStatus {
+    font-size: 0.72rem;
+  }
+
+  /* Message input */
+  .messageForm {
+    flex-shrink: 0;
+  }
+
+  .messageInputRow {
+    padding: 0.5rem 0.7rem;
+  }
+
+  .messageInput {
+    font-size: 0.88rem;
+  }
+
+  /* No-chat placeholder */
+  .noChatSelected {
+    font-size: 0.88rem;
+  }
+
+  /* Chat sub-tabs */
+  .chatSubTabs {
+    padding: 0.4rem 0.6rem 0;
+    gap: 0.2rem;
+  }
+
+  .chatSubTab {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Conversation items */
+  .conversationItem {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .conversationsHeader {
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 0.75rem 0.85rem 1.25rem;
+  }
+
+  .pageTitle {
+    font-size: 1.1rem;
+  }
+
+  .tab {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  .chatContainer {
+    height: calc(100vh - 200px);
+    min-height: 360px;
+  }
+
+  .messageBubble {
+    max-width: 88%;
+  }
+
+  .chatHeader h4 {
+    font-size: 0.85rem;
+  }
+
+  .requestCard {
+    padding: 0.7rem 0.85rem;
   }
 }
 

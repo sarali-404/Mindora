@@ -183,21 +183,76 @@
 
 .feedbackBox {
   margin-top: 0.7rem;
-  padding: 0.7rem 0.8rem;
+  padding: 0.75rem 0.85rem;
   border-radius: 0.9rem;
   background-color: #e5edf7;
-  display: flex;
-  gap: 0.35rem;
   font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.feedbackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .feedbackLabel {
   font-weight: 600;
   color: #111827;
+  font-size: 0.84rem;
+}
+
+.feedbackScore {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0073a0;
+  background-color: #dbeafe;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+
+.feedbackBody {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.feedbackCollapsed {
+  max-height: 4.5em;
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+.feedbackExpanded {
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .feedbackText {
-  color: #4b5563;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.readMoreBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0073a0;
+  cursor: pointer;
+  text-align: left;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+}
+
+.readMoreBtn:hover {
+  color: #005f82;
+  text-decoration: underline;
 }
 
 /* Submitted answer display */
@@ -449,6 +504,14 @@
     font-size: 0.8rem;
   }
 
+  .feedbackLabel {
+    font-size: 0.82rem;
+  }
+
+  .readMoreBtn {
+    font-size: 0.76rem;
+  }
+
   .answerArea {
     min-height: 100px;
     font-size: 0.88rem;
@@ -500,6 +563,15 @@
 
   .feedbackBox {
     font-size: 0.78rem;
+    padding: 0.6rem 0.7rem;
+  }
+
+  .feedbackLabel {
+    font-size: 0.8rem;
+  }
+
+  .readMoreBtn {
+    font-size: 0.74rem;
   }
 
   .answerArea {

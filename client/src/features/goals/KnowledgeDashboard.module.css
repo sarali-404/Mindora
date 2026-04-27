@@ -541,3 +541,119 @@
   color: #60a5fa;
   font-weight: 500;
 }
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .header {
+    margin-bottom: 14px;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .statValue {
+    font-size: 1rem;
+  }
+
+  .statLabel {
+    font-size: 0.68rem;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .scoreOverview {
+    padding: 14px;
+  }
+
+  .mainScore {
+    gap: 12px;
+  }
+
+  .scoreRing {
+    width: 60px;
+    height: 60px;
+  }
+
+  .scoreValue {
+    font-size: 1.15rem;
+  }
+
+  .progressBar {
+    width: 60px;
+  }
+
+  .readinessBar {
+    width: 90px;
+  }
+
+  .readinessGauge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .gaugeCircle {
+    width: 64px;
+    height: 64px;
+  }
+
+  .gaugeCircle::before {
+    width: 48px;
+    height: 48px;
+  }
+
+  .gaugeValue {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 12px;
+  }
+
+  .scoreRing {
+    width: 52px;
+    height: 52px;
+  }
+
+  .scoreValue {
+    font-size: 1rem;
+  }
+
+  .topicName {
+    font-size: 0.82rem;
+  }
+
+  .progressBar {
+    width: 48px;
+  }
+
+  .readinessBar {
+    width: 72px;
+  }
+}

@@ -696,15 +696,16 @@
   padding: 1rem 0;
 }
 
-/* Mobile Responsive */
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
 
 @media (max-width: 1280px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
   .chartSection {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -712,124 +713,300 @@
   .mainGrid {
     grid-template-columns: 1fr;
   }
-
   .tasksRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .heroCard {
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
     text-align: center;
+    align-items: center;
   }
-
+  .heroLeft {
+    width: 100%;
+  }
   .quickStats {
     justify-content: center;
   }
-
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-  }
-
-  .heroCard {
-    padding: 2rem 1.5rem;
-  }
-
-  .heroTitle {
-    font-size: 1.5rem;
-  }
-
-  .quickStats {
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .statsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .achievementsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .tasksRow {
-    grid-template-columns: 1fr;
+  .chartSection {
+    grid-template-columns: 1fr !important;
   }
 }
 
 @media (max-width: 768px) {
   .page {
-    padding: 1rem;
+    padding: 0.85rem 1.1rem 1.5rem;
   }
 
-  .sectionCard {
-    padding: 1.2rem 1.3rem;
-    border-radius: 1rem;
-  }
-
-  .sectionHeaderRow {
+  /* --- Hero --- */
+  .heroSection {
     margin-bottom: 1rem;
   }
-
-  .sectionTitle {
+  .heroCard {
+    padding: 1.2rem 1.1rem;
+    border-radius: 1rem;
+    gap: 1rem;
+    text-align: left;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .heroLeft {
+    width: 100%;
+  }
+  .heroTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+  }
+  .heroSubtitle {
+    font-size: 0.82rem;
+    margin-bottom: 0.85rem;
+  }
+  .quickStats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    justify-content: unset;
+    width: 100%;
+  }
+  .quickStat {
+    gap: 0.45rem;
+  }
+  .statIcon {
+    font-size: 1.5rem;
+  }
+  .statValue {
     font-size: 1rem;
   }
+  .statLabel {
+    font-size: 0.72rem;
+  }
+  .heroRight {
+    align-self: center;
+  }
+  .progressRing {
+    width: 110px;
+    height: 110px;
+    transform: rotate(-90deg);
+  }
+  .levelCircle {
+    width: 110px;
+    height: 110px;
+  }
 
-  .sectionLink {
+  /* --- Stats grid --- */
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .statCard {
+    padding: 0.9rem 0.85rem;
+  }
+  .statCardHeader {
+    margin-bottom: 0.5rem;
+  }
+  .statCardIcon {
+    font-size: 1.2rem;
+  }
+  .statCardTitle {
+    font-size: 0.76rem;
+  }
+  .statCardValue {
+    font-size: 1.25rem;
+  }
+  .statCardChange {
+    font-size: 0.7rem;
+  }
+
+  /* --- Chart section (achievements + leaderboard) --- */
+  .chartSection {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .achievementsCard {
+    padding: 1.1rem 1rem;
+    border-radius: 1rem;
+  }
+  .achievementsGrid {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.65rem;
+    padding-bottom: 0.3rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .achievementsGrid::-webkit-scrollbar {
+    display: none;
+  }
+  .achievementBadge {
+    width: 96px;
+    flex-shrink: 0;
+    padding: 0.7rem 0.5rem;
+    border-radius: 0.75rem;
+  }
+  .achievementImageWrapper {
+    width: 42px;
+    height: 42px;
+  }
+  .achievementName {
+    font-size: 0.73rem;
+  }
+  .achievementLevelBadge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.28rem;
+  }
+  .chartCard {
+    padding: 1.1rem 1rem;
+    border-radius: 1rem;
+  }
+  .leaderboardList {
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+  }
+  .leaderboardItem {
+    padding: 0.65rem 0.85rem;
+    gap: 0.6rem;
+    border-radius: 0.75rem;
+  }
+  .leaderboardRank {
+    font-size: 1rem;
+    min-width: 24px;
+  }
+  .leaderboardAvatar {
+    font-size: 1.25rem;
+  }
+  .leaderboardName {
     font-size: 0.85rem;
   }
-
-  .goalCard {
-    padding: 1rem 0;
+  .leaderboardXP {
+    font-size: 0.8rem;
   }
 
-  .sessionCard {
-    padding: 0.85rem 0;
-  }
-
-  .tasksRow {
+  /* --- Main grid --- */
+  .mainGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  .sectionCard {
+    padding: 1.1rem 1rem;
+    border-radius: 1rem;
+  }
+  .sectionHeaderRow {
+    margin-bottom: 0.85rem;
+  }
+  .sectionTitle {
+    font-size: 0.95rem;
+  }
+  .sectionLink {
+    font-size: 0.8rem;
+  }
+  .goalCard {
+    padding: 0.85rem 0;
+  }
+  .goalName {
+    font-size: 0.9rem;
+  }
+  .goalMeta {
+    font-size: 0.76rem;
+  }
+  .progressBarOuter {
+    margin-top: 0.5rem;
+    height: 6px;
+  }
+  .sessionCard {
+    padding: 0.85rem 0;
+  }
+  .sessionTitle {
+    font-size: 0.9rem;
+  }
+  .sessionMeta,
+  .sessionTime {
+    font-size: 0.76rem;
+  }
+  .primaryButton {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
+    margin-top: 0.5rem;
+  }
 
+  /* --- Tasks --- */
+  .tasksSection {
+    margin-top: 1.25rem;
+  }
+  .tasksRow {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    margin-top: 0.85rem;
+  }
   .taskCard {
-    padding: 1rem 1.1rem;
+    padding: 1rem 0.9rem;
+  }
+  .taskTitle {
+    font-size: 0.9rem;
+  }
+  .taskMeta {
+    font-size: 0.76rem;
+    margin-bottom: 0.65rem;
+  }
+  .taskButton {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
   .page {
-    padding: 0.75rem;
+    padding: 0.6rem 0.85rem 1.25rem;
   }
-
-  .sectionCard {
-    padding: 1rem 1.1rem;
+  .heroCard {
+    padding: 1rem 0.85rem;
   }
-
-  .sectionTitle {
-    font-size: 0.95rem;
+  .heroTitle {
+    font-size: 1.05rem;
   }
-
-  .goalName, .sessionTitle, .taskTitle {
-    font-size: 0.9rem;
-  }
-
-  .goalMeta, .sessionMeta, .taskMeta {
+  .heroSubtitle {
     font-size: 0.78rem;
   }
-
-  .sessionTime {
-    font-size: 0.8rem;
+  .statValue {
+    font-size: 0.95rem;
   }
-
-  .primaryButton, .taskButton {
-    font-size: 0.85rem;
-    padding: 0.6rem 0.9rem;
+  .statLabel {
+    font-size: 0.68rem;
+  }
+  .progressRing {
+    width: 96px;
+    height: 96px;
+  }
+  .levelCircle {
+    width: 96px;
+    height: 96px;
+  }
+  .levelNumber {
+    font-size: 0.95rem;
+  }
+  .levelLabel {
+    font-size: 0.78rem;
+  }
+  .xpProgress {
+    font-size: 0.68rem;
+  }
+  .xpNeeded {
+    font-size: 0.6rem;
+  }
+  .statsGrid {
+    gap: 0.6rem;
+  }
+  .statCard {
+    padding: 0.8rem 0.75rem;
+  }
+  .statCardValue {
+    font-size: 1.15rem;
+  }
+  .achievementBadge {
+    width: 88px;
   }
 }

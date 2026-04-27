@@ -193,7 +193,7 @@ export default function DashboardPage() {
           </div>
           <div className={styles.heroRight}>
             <div className={styles.levelCircle}>
-              <svg className={styles.progressRing} width="160" height="160">
+                <svg className={styles.progressRing} width="160" height="160" viewBox="0 0 160 160">
                 <circle
                   className={styles.progressRingBg}
                   cx="80"

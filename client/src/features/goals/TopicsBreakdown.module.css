@@ -676,42 +676,62 @@
   }
 
   .cardTitle {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
-  .overallRow {
+  .sectionRow {
     padding: 0.75rem 0.85rem;
   }
 
-  .overallLeft {
-    gap: 0.6rem;
+  .sectionHeader {
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
-  .overallLabel {
-    font-size: 0.82rem;
+  .sectionTitle {
+    font-size: 0.86rem;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
-  .overallValue {
-    font-size: 1rem;
-  }
-
-  .topicRow {
-    padding: 0.75rem 0;
-  }
-
-  .topicName {
-    font-size: 0.88rem;
-  }
-
-  .topicStats {
+  .sectionPercent {
     font-size: 0.78rem;
+    margin-left: auto;
   }
 
-  .progressBarOuter {
-    height: 6px;
+  .difficultyBadge {
+    font-size: 0.65rem;
+    padding: 0.04rem 0.4rem;
   }
 
-  .weakArea {
+  .readingPills {
+    order: 10;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    flex-wrap: wrap;
+  }
+
+  .subtopicRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .subtopicRight {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .analyticsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .weakCard {
+    padding: 1.2rem 1.3rem;
+  }
+
+  .weakItem {
     padding: 0.7rem 0.8rem;
   }
 
@@ -719,13 +739,13 @@
     font-size: 0.84rem;
   }
 
+  .weakDescription {
+    font-size: 0.76rem;
+  }
+
   .badge {
     font-size: 0.73rem;
     padding: 0.04rem 0.5rem;
-  }
-
-  .weakDescription {
-    font-size: 0.76rem;
   }
 }
 
@@ -735,35 +755,33 @@
   }
 
   .cardTitle {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .iconCircle {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
   }
 
-  .overallRow {
-    padding: 0.7rem 0.8rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
+  .sectionRow {
+    padding: 0.7rem 0.75rem;
   }
 
-  .overallLabel {
-    font-size: 0.8rem;
+  .sectionTitle {
+    font-size: 0.84rem;
   }
 
-  .overallValue {
-    font-size: 0.95rem;
-  }
-
-  .topicName {
-    font-size: 0.85rem;
-  }
-
-  .topicStats {
+  .sectionPercent {
     font-size: 0.75rem;
+  }
+
+  .generateButton {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .analyticsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .weakItemTitle {

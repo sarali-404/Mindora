@@ -16,7 +16,8 @@ import {
   MdRefresh,
   MdGroupAdd,
   MdGroup,
-  MdExitToApp
+  MdExitToApp,
+  MdArrowBack
 } from "react-icons/md";
 import { FaCircle } from "react-icons/fa";
 import styles from "./CommunityPage.module.css";
@@ -642,7 +643,7 @@ export default function CommunityPage() {
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
-              <div className={styles.chatContainer}>
+              <div className={`${styles.chatContainer}${(selectedChat || selectedGroupChat) ? ` ${styles.chatContainerOpen}` : ''}`}>
                 {/* Sidebar: sub-tab toggle + list */}
                 <div className={styles.conversationsList}>
                   <div className={styles.chatSubTabs}>
@@ -767,6 +768,13 @@ export default function CommunityPage() {
                     /* DM Window */
                     <>
                       <div className={styles.chatHeader}>
+                        <button
+                          className={styles.chatBackBtn}
+                          onClick={() => setSelectedChat(null)}
+                          aria-label="Back to conversations"
+                        >
+                          <MdArrowBack size={20} />
+                        </button>
                         <div className={styles.chatHeaderInfo}>
                           <div className={styles.chatAvatar}>
                             {selectedChat.profile?.avatar ? (
@@ -861,6 +869,13 @@ export default function CommunityPage() {
                     /* Group Chat Window */
                     <>
                       <div className={styles.chatHeader}>
+                        <button
+                          className={styles.chatBackBtn}
+                          onClick={() => setSelectedGroupChat(null)}
+                          aria-label="Back to conversations"
+                        >
+                          <MdArrowBack size={20} />
+                        </button>
                         <div className={styles.chatHeaderInfo}>
                           <div className={`${styles.chatAvatar} ${styles.groupAvatar}`}>
                             <MdGroup size={22} />

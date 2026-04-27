@@ -391,11 +391,11 @@
 
 @media (max-width: 768px) {
   .page {
-    padding: 1rem;
+    padding: 1rem 1.1rem 1.5rem;
   }
 
   .headerCard {
-    padding: 1.3rem 1.5rem 1.4rem;
+    padding: 1.3rem 1.25rem 1.4rem;
     border-radius: 1.2rem;
   }
 
@@ -406,6 +406,20 @@
     margin-bottom: 1.2rem;
   }
 
+  .headerActions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .newGoalButton,
+  .deleteGoalButton {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
   .title {
     font-size: 1.1rem;
   }
@@ -413,11 +427,6 @@
   .metaRow {
     font-size: 0.78rem;
     flex-wrap: wrap;
-  }
-
-  .newGoalButton {
-    font-size: 0.82rem;
-    padding: 0.4rem 1rem;
   }
 
   .progressBlock {
@@ -462,11 +471,11 @@
 
 @media (max-width: 480px) {
   .page {
-    padding: 0.75rem;
+    padding: 0.75rem 0.85rem 1.25rem;
   }
 
   .headerCard {
-    padding: 1.1rem 1.2rem;
+    padding: 1.1rem 1rem;
   }
 
   .subjectPill {

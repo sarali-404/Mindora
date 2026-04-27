@@ -10,7 +10,8 @@ import {
   MdSchedule,
   MdOpenInNew,
   MdVerified,
-  MdWarning
+  MdWarning,
+  MdAdd
 } from "react-icons/md";
 import { FaDiscord } from "react-icons/fa";
 import styles from "./SessionsPage.module.css";
@@ -197,7 +198,8 @@ export default function SessionsPage() {
           
           {isVerified ? (
             <Link to="/app/create-session" className={styles.createButton}>
-              Create Session
+              <MdAdd size={18} />
+              <span className={styles.createBtnText}>Create Session</span>
             </Link>
           ) : (
             <button 
@@ -205,8 +207,8 @@ export default function SessionsPage() {
               onClick={() => alert('You must be verified to create sessions. Please complete ID verification.')}
               title="Verification required"
             >
-              <MdVerified size={16} />
-              Create Session
+              <MdAdd size={18} />
+              <span className={styles.createBtnText}>Create Session</span>
             </button>
           )}
         </div>
