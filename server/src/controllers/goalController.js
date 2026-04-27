@@ -276,13 +276,18 @@ exports.updateGoal = async (req, res) => {
     const updates = req.body;
 
     // Fields that can be updated
-    const allowedUpdates = ['title', 'subject', 'targetMarks', 'deadline', 'status'];
+    const allowedUpdates = ['title', 'subject', 'targetMarks', 'deadline', 'status', 'completedCoverage'];
     const filteredUpdates = {};
 
     for (const field of allowedUpdates) {
       if (updates[field] !== undefined) {
         filteredUpdates[field] = updates[field];
       }
+    }
+
+    // Auto-set completedAt when marking as completed
+    if (filteredUpdates.status === 'completed') {
+      filteredUpdates.completedAt = new Date();
     }
 
     const goal = await Goal.findOneAndUpdate(

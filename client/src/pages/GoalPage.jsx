@@ -7,7 +7,7 @@ import Summaries from "../features/goals/Summaries";
 import Quizzes from "../features/goals/Quizzes";
 import EssayQuestions from "../features/goals/EssayQuestions";
 import KnowledgeDashboard from "../features/goals/KnowledgeDashboard";
-import { MdRocketLaunch, MdMenuBook, MdDelete, MdCheckCircle, MdWarning, MdError, MdPsychology, MdHourglassTop } from "react-icons/md";
+import { MdRocketLaunch, MdMenuBook, MdDelete, MdCheckCircle, MdWarning, MdError, MdPsychology, MdHourglassTop, MdCalendarMonth, MdFlag } from "react-icons/md";
 import goalService from "../services/goalService";
 
 export default function GoalPage() {
@@ -20,6 +20,11 @@ export default function GoalPage() {
   const [error, setError] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Deadline-passed actions state
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [extendDate, setExtendDate] = useState('');
+  const [updatingGoal, setUpdatingGoal] = useState(false);
 
   // ML state
   const [difficultySuggestions, setDifficultySuggestions] = useState([]);
@@ -185,6 +190,41 @@ export default function GoalPage() {
     return topicsSet;
   };
 
+  // Auto-complete goal with coverage when deadline passes (no extension chosen)
+  const handleAutoComplete = async () => {
+    const coverage = goal.progress || 0;
+    try {
+      setUpdatingGoal(true);
+      const res = await goalService.updateGoal(goalId, {
+        status: 'completed',
+        completedCoverage: coverage
+      });
+      if (res.success) setGoal(res.data);
+    } catch (err) {
+      setError(err.message || 'Failed to complete goal');
+    } finally {
+      setUpdatingGoal(false);
+    }
+  };
+
+  // Extend deadline
+  const handleExtendDeadline = async () => {
+    if (!extendDate) return;
+    try {
+      setUpdatingGoal(true);
+      const res = await goalService.updateGoal(goalId, { deadline: new Date(extendDate).toISOString() });
+      if (res.success) {
+        setGoal(res.data);
+        setShowExtendModal(false);
+        setExtendDate('');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to extend deadline');
+    } finally {
+      setUpdatingGoal(false);
+    }
+  };
+
   // Delete goal
   const handleDeleteGoal = async () => {
     try {
@@ -294,6 +334,53 @@ export default function GoalPage() {
           );
         })}
 
+      {/* Deadline passed banner — only for active goals past their deadline */}
+      {daysRemaining !== null && daysRemaining <= 0 && goal.status === 'active' && (
+        <div className={styles.deadlineBanner}>
+          <div className={styles.deadlineBannerLeft}>
+            <MdHourglassTop size={20} className={styles.deadlineIcon} />
+            <div>
+              <strong>
+                Deadline passed{goal.progress > 0 ? ` — ${goal.progress}% covered` : ''}
+              </strong>
+              <p>
+                This goal was due {formatDate(goal.deadline)}.
+                {goal.progress >= 80
+                  ? ' You\'re nearly done — complete it or extend to finish up.'
+                  : ' Choose how you\'d like to proceed.'}
+              </p>
+            </div>
+          </div>
+          <div className={styles.deadlineBannerActions}>
+            <button
+              className={styles.completeBtn}
+              onClick={handleAutoComplete}
+              disabled={updatingGoal}
+              title={`Complete with ${goal.progress || 0}% topic coverage`}
+            >
+              <MdFlag size={15} />
+              Complete ({goal.progress || 0}%)
+            </button>
+            <button
+              className={styles.extendBtn}
+              onClick={() => setShowExtendModal(true)}
+              disabled={updatingGoal}
+            >
+              <MdCalendarMonth size={15} />
+              Extend Deadline
+            </button>
+            <button
+              className={styles.deleteDeadlineBtn}
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={updatingGoal}
+            >
+              <MdDelete size={15} />
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header card */}
       <section className={styles.headerCard}>
         <div className={styles.topRow}>
@@ -304,10 +391,30 @@ export default function GoalPage() {
             </h1>
             <div className={styles.metaRow}>
               <span className={styles.metaItem}>
-                {daysRemaining !== null ? `${daysRemaining} days${daysRemaining < 0 ? ' overdue' : ' left'}` : 'No deadline'}
+                {goal.status === 'completed'
+                  ? 'Completed'
+                  : daysRemaining !== null
+                  ? (daysRemaining <= 0 ? 'Deadline passed' : `${daysRemaining} days left`)
+                  : 'No deadline'}
               </span>
               <span className={styles.metaDot}>•</span>
               <span className={styles.metaItem}>Due: {formatDate(goal.deadline)}</span>
+              {/* Coverage badge for deadline-completed goals */}
+              {goal.status === 'completed' && goal.completedCoverage != null && (
+                <>
+                  <span className={styles.metaDot}>•</span>
+                  <span
+                    className={`${styles.coverageBadge} ${
+                      goal.completedCoverage >= 80 ? styles.coverageHigh
+                      : goal.completedCoverage >= 50 ? styles.coverageMid
+                      : styles.coverageLow
+                    }`}
+                  >
+                    <MdCheckCircle size={12} />
+                    {goal.completedCoverage}% coverage
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className={styles.headerActions}>
@@ -496,6 +603,42 @@ export default function GoalPage() {
                 disabled={deleting}
               >
                 {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extend deadline modal */}
+      {showExtendModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowExtendModal(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Extend Deadline</h3>
+            <p className={styles.confirmText}>
+              Choose a new deadline for <strong>"{goal.refinedTitle || goal.title}"</strong>.
+              Your progress and all study content will be kept.
+            </p>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={extendDate}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setExtendDate(e.target.value)}
+            />
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.cancelButton}
+                onClick={() => { setShowExtendModal(false); setExtendDate(''); }}
+                disabled={updatingGoal}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.extendConfirmButton}
+                onClick={handleExtendDeadline}
+                disabled={!extendDate || updatingGoal}
+              >
+                {updatingGoal ? 'Saving...' : 'Extend Deadline'}
               </button>
             </div>
           </div>

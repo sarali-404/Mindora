@@ -15,6 +15,8 @@ import {
   MdWarning,
   MdLogout,
   MdCameraAlt,
+  MdCheckCircle,
+  MdCalendarToday,
 } from "react-icons/md";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -158,6 +160,13 @@ export default function ProfilePage() {
   // Achievements from gamification profile
   const [achievements, setAchievements] = useState([]);
 
+  // Goals section state
+  const [allProfileGoals, setAllProfileGoals] = useState([]);
+  const [profileGoalsLoading, setProfileGoalsLoading] = useState(true);
+  const [goalFilter, setGoalFilter] = useState('active');
+  const [goalAction, setGoalAction] = useState({ loading: false, goalId: null });
+  const [extendModal, setExtendModal] = useState({ show: false, goal: null, date: '' });
+
   // Fetch all profile data
   useEffect(() => {
     const fetchMyMaterials = async () => {
@@ -230,6 +239,19 @@ export default function ProfilePage() {
     fetchFriends();
     fetchAiNotes();
     fetchAchievements();
+
+    const fetchProfileGoals = async () => {
+      try {
+        setProfileGoalsLoading(true);
+        const res = await goalService.getMyGoals({ limit: 100 });
+        setAllProfileGoals(res.data || []);
+      } catch (err) {
+        console.error('Error fetching profile goals:', err);
+      } finally {
+        setProfileGoalsLoading(false);
+      }
+    };
+    fetchProfileGoals();
   }, []);
 
   // Handle edit material - navigate to NotePage with edit mode
@@ -261,6 +283,62 @@ export default function ProfilePage() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  // Goal filter helper
+  const now = new Date();
+  const filteredGoals = allProfileGoals.filter(g => {
+    if (goalFilter === 'active') return g.status === 'active' && (!g.deadline || new Date(g.deadline) > now);
+    if (goalFilter === 'completed') return g.status === 'completed';
+    if (goalFilter === 'unachieved') return g.status === 'active' && g.deadline && new Date(g.deadline) <= now;
+    return false;
+  });
+
+  // Goal action handlers
+  const handleGoalComplete = async (goal) => {
+    setGoalAction({ loading: true, goalId: goal._id });
+    try {
+      await goalService.updateGoal(goal._id, {
+        status: 'completed',
+        completedCoverage: Math.round(goal.progress || 0),
+      });
+      setAllProfileGoals(prev =>
+        prev.map(g => g._id === goal._id ? { ...g, status: 'completed', completedCoverage: Math.round(goal.progress || 0) } : g)
+      );
+    } catch (err) {
+      console.error('Error completing goal:', err);
+    } finally {
+      setGoalAction({ loading: false, goalId: null });
+    }
+  };
+
+  const handleGoalDelete = async (goal) => {
+    setGoalAction({ loading: true, goalId: goal._id });
+    try {
+      await goalService.deleteGoal(goal._id);
+      setAllProfileGoals(prev => prev.filter(g => g._id !== goal._id));
+    } catch (err) {
+      console.error('Error deleting goal:', err);
+    } finally {
+      setGoalAction({ loading: false, goalId: null });
+    }
+  };
+
+  const handleGoalExtend = async () => {
+    if (!extendModal.goal || !extendModal.date) return;
+    setGoalAction({ loading: true, goalId: extendModal.goal._id });
+    try {
+      const newDeadline = new Date(extendModal.date).toISOString();
+      await goalService.updateGoal(extendModal.goal._id, { deadline: newDeadline });
+      setAllProfileGoals(prev =>
+        prev.map(g => g._id === extendModal.goal._id ? { ...g, deadline: newDeadline } : g)
+      );
+      setExtendModal({ show: false, goal: null, date: '' });
+    } catch (err) {
+      console.error('Error extending deadline:', err);
+    } finally {
+      setGoalAction({ loading: false, goalId: null });
+    }
   };
 
   return (
@@ -331,9 +409,120 @@ export default function ProfilePage() {
         <StatCard label="Active Goals" value={stats.activeGoals} icon={MdPlayCircleOutline} />
       </section>
 
+      {/* Goals section */}
+      <section className={styles.goalsSection}>
+        <div className={styles.goalsHeader}>
+          <div className={styles.goalsTitleRow}>
+            <span className={styles.goalsIcon}><MdFlag size={18} style={{ color: '#0073a0' }} /></span>
+            <h2 className={styles.sectionTitle}>My Goals</h2>
+            <span className={styles.countBadge}>{allProfileGoals.length}</span>
+          </div>
+        </div>
+        <div className={styles.goalsFilterTabs}>
+          {['active', 'completed', 'unachieved'].map(tab => (
+            <button
+              key={tab}
+              className={`${styles.filterTab} ${goalFilter === tab ? styles.filterTabActive : ''}`}
+              onClick={() => setGoalFilter(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+        {profileGoalsLoading ? (
+          <div className={styles.loadingState}>
+            <div className={styles.spinner} />
+            <p>Loading goals...</p>
+          </div>
+        ) : filteredGoals.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>
+              {goalFilter === 'active' ? 'No active goals. Create one to get started!' :
+               goalFilter === 'completed' ? 'No completed goals yet.' :
+               'No goals with passed deadlines.'}
+            </p>
+            {goalFilter === 'active' && (
+              <button className={styles.uploadButton} onClick={() => navigate('/app/create-goal')}>
+                Create Goal
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={styles.goalCardsList}>
+            {filteredGoals.map(goal => (
+              <div
+                key={goal._id}
+                className={styles.goalCard}
+                onClick={() => navigate(`/app/goals/${goal._id}`)}
+              >
+                <div className={styles.goalCardMain}>
+                  <div className={styles.goalCardHeader}>
+                    <p className={styles.goalCardTitle}>{goal.title}</p>
+                    <span className={styles.goalSubjectBadge}>{goal.subject}</span>
+                  </div>
+                  <div className={styles.goalProgressBar}>
+                    <div
+                      className={styles.goalProgressFill}
+                      style={{ width: `${Math.min(Math.round(goal.progress || 0), 100)}%` }}
+                    />
+                  </div>
+                  <div className={styles.goalCardMeta}>
+                    {goalFilter === 'completed' && goal.completedCoverage != null ? (
+                      <span
+                        className={styles.goalCoverageBadge}
+                        style={{
+                          color: goal.completedCoverage >= 80 ? '#15803d'
+                            : goal.completedCoverage >= 50 ? '#b45309' : '#b91c1c'
+                        }}
+                      >
+                        <MdCheckCircle size={13} /> {goal.completedCoverage}% coverage
+                      </span>
+                    ) : goalFilter === 'completed' && goal.completedAt ? (
+                      <span className={styles.goalDeadline}>Completed {formatDate(goal.completedAt)}</span>
+                    ) : goal.deadline ? (
+                      <span className={styles.goalDeadline}>
+                        <MdCalendarToday size={12} />
+                        {goalFilter === 'unachieved'
+                          ? `Deadline passed ${formatDate(goal.deadline)}`
+                          : `Due ${formatDate(goal.deadline)}`}
+                      </span>
+                    ) : null}
+                    <span className={styles.goalProgressText}>{Math.round(goal.progress || 0)}% covered</span>
+                  </div>
+                </div>
+
+                {goalFilter === 'unachieved' && (
+                  <div className={styles.goalActionsRow} onClick={e => e.stopPropagation()}>
+                    <button
+                      className={styles.goalCompleteBtn}
+                      disabled={goalAction.loading && goalAction.goalId === goal._id}
+                      onClick={() => handleGoalComplete(goal)}
+                    >
+                      Complete ({Math.round(goal.progress || 0)}%)
+                    </button>
+                    <button
+                      className={styles.goalExtendBtn}
+                      onClick={() => setExtendModal({ show: true, goal, date: '' })}
+                    >
+                      Extend
+                    </button>
+                    <button
+                      className={styles.goalDeleteBtn}
+                      disabled={goalAction.loading && goalAction.goalId === goal._id}
+                      onClick={() => handleGoalDelete(goal)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Achievements section */}
-      <section className={styles.achievementsCard}>
-        <div className={styles.achievementsHeader}>
+      <section className={styles.achievementsCard}>        <div className={styles.achievementsHeader}>
           <div className={styles.achievementsTitleRow}>
             <span className={styles.achievementsIcon}>
               <MdEmojiEvents size={18} style={{ color: '#f59e0b' }} />
@@ -519,6 +708,46 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
+      {/* Extend Deadline Modal (for unachieved goals) */}
+      {extendModal.show && (
+        <div className={styles.modalOverlay} onClick={() => setExtendModal({ show: false, goal: null, date: '' })}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <button
+              className={styles.modalClose}
+              onClick={() => setExtendModal({ show: false, goal: null, date: '' })}
+            >
+              <MdClose size={20} />
+            </button>
+            <h2 className={styles.modalTitle}>Extend Deadline</h2>
+            <p className={styles.modalText}>
+              Choose a new deadline for <strong>"{extendModal.goal?.title}"</strong>
+            </p>
+            <input
+              type="date"
+              className={styles.dateInput}
+              min={new Date().toISOString().split('T')[0]}
+              value={extendModal.date}
+              onChange={e => setExtendModal(prev => ({ ...prev, date: e.target.value }))}
+            />
+            <div className={styles.modalActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setExtendModal({ show: false, goal: null, date: '' })}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.extendConfirmButton}
+                disabled={!extendModal.date || goalAction.loading}
+                onClick={handleGoalExtend}
+              >
+                {goalAction.loading ? 'Saving...' : 'Extend Deadline'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (

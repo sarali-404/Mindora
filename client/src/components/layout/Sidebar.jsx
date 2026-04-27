@@ -23,7 +23,7 @@ export default function AppSidebar({ isOpen, onClose }) {
   useEffect(() => {
     const fetchGoals = async () => {
       try {
-        const res = await goalService.getMyGoals();
+        const res = await goalService.getMyGoals({ status: 'active' });
         if (res.success && Array.isArray(res.data)) {
           setGoals(res.data);
         }

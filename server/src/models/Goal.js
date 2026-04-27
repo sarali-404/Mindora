@@ -190,7 +190,14 @@ const goalSchema = new mongoose.Schema({
     enum: ['active', 'paused', 'completed', 'abandoned'],
     default: 'active'
   },
-  completedAt: Date
+  completedAt: Date,
+  // Coverage % at the time of deadline-forced completion (0–100)
+  completedCoverage: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null
+  }
 }, {
   timestamps: true
 });

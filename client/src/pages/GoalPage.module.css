@@ -75,6 +75,161 @@
   50% { opacity: 0.5; }
 }
 
+/* ── Deadline passed banner ── */
+.deadlineBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border: 1px solid #fed7aa;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.deadlineBannerLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.deadlineIcon {
+  color: #ea580c;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.deadlineBannerLeft strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #c2410c;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.deadlineBannerLeft p {
+  font-size: 0.81rem;
+  color: #9a3412;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.deadlineBannerActions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.completeBtn,
+.extendBtn,
+.deleteDeadlineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.completeBtn {
+  background-color: #16a34a;
+  color: #fff;
+}
+.completeBtn:hover:not(:disabled) { background-color: #15803d; }
+
+.extendBtn {
+  background-color: #0073a0;
+  color: #fff;
+}
+.extendBtn:hover:not(:disabled) { background-color: #005f82; }
+
+.deleteDeadlineBtn {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+.deleteDeadlineBtn:hover:not(:disabled) { background-color: #fecaca; }
+
+.completeBtn:disabled,
+.extendBtn:disabled,
+.deleteDeadlineBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Coverage badge (shown in header meta row for completed goals) ── */
+.coverageBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.coverageHigh {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: #d1fae5;
+}
+
+.coverageMid {
+  background-color: rgba(251, 191, 36, 0.25);
+  color: #fef3c7;
+}
+
+.coverageLow {
+  background-color: rgba(239, 68, 68, 0.25);
+  color: #fee2e2;
+}
+
+/* ── Extend deadline modal date input ── */
+.dateInput {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #111827;
+  margin: 0.5rem 0 0.25rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dateInput:focus {
+  border-color: #0073a0;
+  box-shadow: 0 0 0 2px rgba(0, 115, 160, 0.15);
+}
+
+.extendConfirmButton {
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #0073a0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.extendConfirmButton:hover:not(:disabled) {
+  background-color: #005f82;
+}
+
+.extendConfirmButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
 /* Header card */
 
 .headerCard {
@@ -392,6 +547,22 @@
 @media (max-width: 768px) {
   .page {
     padding: 1rem 1.1rem 1.5rem;
+  }
+
+  .deadlineBanner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .deadlineBannerActions {
+    width: 100%;
+  }
+
+  .completeBtn,
+  .extendBtn,
+  .deleteDeadlineBtn {
+    flex: 1;
+    justify-content: center;
   }
 
   .headerCard {
