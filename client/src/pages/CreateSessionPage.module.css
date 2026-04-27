@@ -245,3 +245,20 @@
     left: 1rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .formShell { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .input,
+:global([data-theme="dark"]) .textarea { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .label { color: var(--text-primary); }
+:global([data-theme="dark"]) .helperText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .secondaryButton { background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .backButton { color: var(--text-secondary); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .subtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .discordInfo { background: #0c1a3a; border-color: #1e3a6e; color: #93c5fd; }
+:global([data-theme="dark"]) .verificationRequired h2 { color: var(--text-primary); }
+:global([data-theme="dark"]) .verificationRequired p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .errorMessage { background: #2c0a0a; border-color: #7f1d1d; color: #f87171; }
+:global([data-theme="dark"]) .sessionTypeToggle { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .typeBtn { background: var(--bg-card); border-color: var(--border-color); color: var(--text-secondary); }

@@ -447,3 +447,33 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .card { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .iconCircle { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .summaryRow { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .summaryRow:hover { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .iconBadge { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .summaryTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .summaryDate { color: var(--text-secondary); }
+:global([data-theme="dark"]) .summaryText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .fullTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .quickReview { background: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .keyPoints { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .keyPoints h3 { color: #60b8d4; }
+:global([data-theme="dark"]) .keyPoints li { color: var(--text-secondary); }
+:global([data-theme="dark"]) .summaryMarkdown { color: var(--text-secondary); }
+:global([data-theme="dark"]) .summaryMarkdown code { background: var(--bg-hover); color: #e2e8f0; }
+:global([data-theme="dark"]) .summaryMarkdown blockquote { border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .generateSection { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .generateTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .generateDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .backButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .backButton:hover { background: var(--bg-hover); }
+:global([data-theme="dark"]) .summaryMarkdown strong { color: var(--text-primary); }
+:global([data-theme="dark"]) .summaryMarkdown code { background: var(--bg-hover); color: #c4b5fd; }
+:global([data-theme="dark"]) .summaryMarkdown blockquote { border-color: #6366f1; color: var(--text-secondary); }
+:global([data-theme="dark"]) .readBadgeHeader { background: #052e16; color: #4ade80; }

@@ -81,3 +81,12 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .infoPanel { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .infoPanelTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .infoPanelText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .featureTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .featureDesc { color: var(--text-secondary); }
+:global([data-theme="dark"]) .tipTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .tipText { color: var(--text-secondary); }

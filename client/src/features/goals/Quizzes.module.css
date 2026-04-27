@@ -505,3 +505,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .card { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .iconCircle { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .quizCard { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .quizCard:hover { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .quizTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .metaText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .scoreBox { background-color: var(--bg-card); }
+:global([data-theme="dark"]) .scoreLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .scorePlaceholder { color: var(--text-muted); }
+:global([data-theme="dark"]) .attemptsText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyState { color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .generateSection { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .generateTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .generateDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .quizHeader h2 { color: var(--text-primary); }
+:global([data-theme="dark"]) .progress { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .questionText { color: var(--text-primary); }
+:global([data-theme="dark"]) .optionButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .optionButton:hover { background: var(--bg-hover); }
+:global([data-theme="dark"]) .optionLetter { background: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .resultHeader h2 { color: var(--text-primary); }
+:global([data-theme="dark"]) .resultSummary { color: var(--text-secondary); }
+:global([data-theme="dark"]) .answersReview h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .answerHeader { color: var(--text-primary); }
+:global([data-theme="dark"]) .answerItem.correct { background: #052e16; border-color: #14532d; }
+:global([data-theme="dark"]) .answerItem.incorrect { background: #2c0a0a; border-color: #7f1d1d; }
+:global([data-theme="dark"]) .explanation { color: var(--text-secondary); }
+:global([data-theme="dark"]) .levelEasy { background-color: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .levelMedium { background-color: #2d1a00; color: #fcd34d; }
+:global([data-theme="dark"]) .levelHard { background-color: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .errorBanner { background: #2c0a0a; border-color: #7f1d1d; color: #f87171; }
+:global([data-theme="dark"]) .correctAnswer { color: #4ade80; }
+:global([data-theme="dark"]) .navButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .navButton:hover { background: var(--bg-hover); }

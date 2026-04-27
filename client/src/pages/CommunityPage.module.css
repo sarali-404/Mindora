@@ -1582,3 +1582,54 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .pageTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .searchInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .tabs { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .tab { color: var(--text-secondary); }
+:global([data-theme="dark"]) .discoverCard { background: var(--bg-card); }
+:global([data-theme="dark"]) .friendName { color: var(--text-primary); }
+:global([data-theme="dark"]) .friendMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .userBio { color: var(--text-secondary); }
+:global([data-theme="dark"]) .requestCard { background: var(--bg-card); }
+:global([data-theme="dark"]) .sectionTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyText { color: var(--text-muted); }
+:global([data-theme="dark"]) .conversationsList { background: var(--bg-card); }
+:global([data-theme="dark"]) .conversationsHeader h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .conversationItem { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .conversationItem:hover { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .conversationActive { background: var(--bg-hover); }
+:global([data-theme="dark"]) .conversationName { color: var(--text-primary); }
+:global([data-theme="dark"]) .conversationTime { color: var(--text-muted); }
+:global([data-theme="dark"]) .conversationPreview { color: var(--text-secondary); }
+:global([data-theme="dark"]) .chatWindow { background: var(--bg-card); }
+:global([data-theme="dark"]) .chatHeader { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .chatHeader h4 { color: var(--text-primary); }
+:global([data-theme="dark"]) .chatStatus { color: var(--text-secondary); }
+:global([data-theme="dark"]) .messagesContainer { background: var(--bg-page); }
+:global([data-theme="dark"]) .messageBubble { background: var(--bg-subtle); color: var(--text-primary); }
+:global([data-theme="dark"]) .messageTime { color: var(--text-muted); }
+:global([data-theme="dark"]) .messageInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .modal { background: var(--bg-card); }
+:global([data-theme="dark"]) .modalHeader { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .modalHeader h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalLabel { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .memberItem { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .noChatSelected { color: var(--text-muted); }
+:global([data-theme="dark"]) .groupSenderName { color: var(--text-secondary); }
+:global([data-theme="dark"]) .menuDropdown { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .menuDropdown button { color: var(--text-primary); }
+:global([data-theme="dark"]) .menuDropdown button:hover { background: var(--bg-hover); }
+:global([data-theme="dark"]) .messageMenuDropdown { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .messageMenuDropdown button { color: var(--text-primary); }
+:global([data-theme="dark"]) .messageMenuDropdown button:hover { background: var(--bg-hover); }
+:global([data-theme="dark"]) .emptyConversations { color: var(--text-muted); }
+:global([data-theme="dark"]) .friendCard { background: var(--bg-card); }
+:global([data-theme="dark"]) .searchContainer { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .tabs { background: var(--bg-card); }
+:global([data-theme="dark"]) .requestCard { background: var(--bg-card); }
+:global([data-theme="dark"]) .cancelButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .messageMenu button { background: var(--bg-card); color: var(--text-secondary); }
+:global([data-theme="dark"]) .page { background-color: var(--bg-page); }

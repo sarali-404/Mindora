@@ -792,3 +792,47 @@
     font-size: 0.74rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .card { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .cardTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .iconCircle { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .sectionRow { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .sectionTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .chevronButton { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .subtopics { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .subtopicTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .subtopicPercent { color: var(--text-secondary); }
+:global([data-theme="dark"]) .progressOuter { background-color: var(--bg-muted); }
+:global([data-theme="dark"]) .weakCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .weakItem { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .weakItemTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .weakDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .weakItemUntouched { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .weakScoreBar { background-color: var(--bg-muted); }
+:global([data-theme="dark"]) .weakDivider { color: var(--text-muted); }
+:global([data-theme="dark"]) .ksHint { color: var(--text-muted); }
+:global([data-theme="dark"]) .emptyState { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .emptyState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .topicDescription { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .topicDescription p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .topicStats { color: var(--text-secondary); }
+:global([data-theme="dark"]) .subTopicsTitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .subTopicName { color: var(--text-primary); }
+:global([data-theme="dark"]) .subTopicDesc { color: var(--text-secondary); }
+:global([data-theme="dark"]) .noWeakAreas { color: var(--text-secondary); }
+:global([data-theme="dark"]) .analyticsGrid { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .analyticLabel { color: var(--text-muted); }
+:global([data-theme="dark"]) .analyticValue { color: var(--text-primary); }
+:global([data-theme="dark"]) .weakSubTopicsLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .weakSubTopicItem { color: var(--text-secondary); }
+:global([data-theme="dark"]) .subTopicsList { border-top-color: var(--border-subtle); }
+:global([data-theme="dark"]) .difficultyBadge { color: var(--text-primary); background: var(--bg-muted); }
+:global([data-theme="dark"]) .readPillComplete { background-color: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .readPillPartial { background-color: #2d1a00; color: #fcd34d; }
+:global([data-theme="dark"]) .readPillNone { background-color: var(--bg-subtle); color: var(--text-muted); }
+:global([data-theme="dark"]) .badgeHigh { background-color: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .badgeMedium { background-color: #2d1a00; color: #fcd34d; }
+:global([data-theme="dark"]) .badgeUntouched { background-color: var(--bg-muted); color: var(--text-secondary); }
+:global([data-theme="dark"]) .contentBadge { background: var(--bg-hover); color: var(--text-secondary); border-color: var(--border-color); }

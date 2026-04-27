@@ -972,3 +972,54 @@
     gap: 0.5rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .authorSection { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .authorName { color: var(--text-primary); }
+:global([data-theme="dark"]) .authorMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .descriptionSection h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .descriptionSection p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .previewContainer { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .commentInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .commentsTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .commentAuthor { color: var(--text-primary); }
+:global([data-theme="dark"]) .commentTime { color: var(--text-muted); }
+:global([data-theme="dark"]) .commentText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .noComments { color: var(--text-muted); }
+:global([data-theme="dark"]) .editForm { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .editFormTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .formLabel { color: var(--text-primary); }
+:global([data-theme="dark"]) .formInput,
+:global([data-theme="dark"]) .formTextarea,
+:global([data-theme="dark"]) .formSelect { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .fileLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .fileDetail span:last-child { color: var(--text-primary); }
+:global([data-theme="dark"]) .viewsStat { color: var(--text-secondary); }
+:global([data-theme="dark"]) .replyingTo { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .tag { background: var(--bg-hover); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .previewSection { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .previewContainer { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .previewBtn { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .commentsSection { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .editForm { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .previewHeader { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .previewHeader h2 { color: var(--text-primary); }
+:global([data-theme="dark"]) .tagsSection h4 { color: var(--text-primary); }
+:global([data-theme="dark"]) .fileInfoSection h4 { color: var(--text-primary); }
+:global([data-theme="dark"]) .fileInfoSection { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .subjectTag { background: #0c2a40; color: #60b8d4; }
+:global([data-theme="dark"]) .typeBadge { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .actionCount { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .actionBtn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .editModeBtn { background: #0c2a40; color: #60b8d4; }
+:global([data-theme="dark"]) .editModeBtn:hover { background: #0a1f30; }
+:global([data-theme="dark"]) .cancelEditBtn { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .cancelEditBtn:hover:not(:disabled) { background: var(--bg-hover); }
+:global([data-theme="dark"]) .visibilityOption { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .visibilityOption:hover { background: var(--bg-hover); }
+:global([data-theme="dark"]) .visibilityOption.active { background: #0c2a40; border-color: #0073a0; color: #60b8d4; }
+:global([data-theme="dark"]) .currentFile h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .filePreview { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .fileSize { color: var(--text-muted); }
+:global([data-theme="dark"]) .fileNote { color: var(--text-muted); }

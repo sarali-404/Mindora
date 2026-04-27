@@ -90,3 +90,11 @@
   text-align: center;
   padding: 2rem 0;
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .block { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .blockTitle { color: var(--text-primary); border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .keyPoint { color: var(--text-secondary); }
+:global([data-theme="dark"]) .sectionContent { color: var(--text-secondary); }
+:global([data-theme="dark"]) .fullContent { color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyContent { color: var(--text-muted); }

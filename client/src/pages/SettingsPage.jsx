@@ -9,13 +9,15 @@ import {
 } from "react-icons/fi";
 import styles from "./SettingsPage.module.css";
 import notificationService from "../services/notificationService";
+import { useTheme } from "../context/ThemeContext";
 
 export default function SettingsPage() {
   const [emailNoti, setEmailNoti] = useState(true);
   const [pushNoti, setPushNoti] = useState(true);
   const [reminders, setReminders] = useState(true);
   const [goalUpdates, setGoalUpdates] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, setIsDark } = useTheme();
+  const darkMode = isDark;
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function SettingsPage() {
           setPushNoti(noti.inApp?.achievements !== false);
           setReminders(noti.inApp?.recommendations !== false);
           setGoalUpdates(noti.inApp?.goalProgress !== false);
-          setDarkMode(prefs.display?.theme === 'dark');
+          // Dark mode is managed by ThemeContext (persisted in localStorage)
         }
       } catch (error) {
         console.error('Error loading preferences:', error);
@@ -82,7 +84,7 @@ export default function SettingsPage() {
 
   const toggleDarkMode = () => {
     const newVal = !darkMode;
-    setDarkMode(newVal);
+    setIsDark(newVal);
     savePreferences({
       display: { theme: newVal ? 'dark' : 'light' }
     });

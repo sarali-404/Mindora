@@ -380,3 +380,25 @@
     padding: 2rem 1rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .stageTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .stageSubtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .label { color: var(--text-primary); }
+:global([data-theme="dark"]) .helperText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .inputLarge { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .suggestionsDropdown { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .suggestionsHeader { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .suggestionItem { color: var(--text-primary); }
+:global([data-theme="dark"]) .suggestionItem:hover { background: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .suggestionItem:not(:last-child) { border-bottom-color: var(--border-subtle); }
+:global([data-theme="dark"]) .uploadLabel { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .uploadLabel:hover { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .uploadTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .uploadSubtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .filesHeader { color: var(--text-primary); }
+:global([data-theme="dark"]) .fileItem { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .fileName { color: var(--text-secondary); }
+:global([data-theme="dark"]) .reviewCard { background-color: var(--bg-subtle); }
+:global([data-theme="dark"]) .reviewLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .reviewValue { color: var(--text-primary); }

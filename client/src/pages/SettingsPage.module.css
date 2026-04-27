@@ -180,3 +180,29 @@
     padding: 1.6rem 1.3rem 2rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+:global([data-theme="dark"]) .cardTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .subtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .row,
+:global([data-theme="dark"]) .linkRow { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .rowLabel { color: var(--text-primary); }
+:global([data-theme="dark"]) .rowDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .storageLabel { color: var(--text-primary); }
+:global([data-theme="dark"]) .storageMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .storageBarOuter { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .storageBlock { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .clearLabel { color: var(--text-primary); }
+:global([data-theme="dark"]) .clearDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .clearButton {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .toggleButton { color: var(--text-muted); }
+:global([data-theme="dark"]) .cardIcon { background-color: var(--bg-hover); }

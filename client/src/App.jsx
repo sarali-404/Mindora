@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
 import AppLayout from "./components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -19,6 +20,7 @@ import NotFound from "./pages/NotFound";
 
 function App() {
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <Routes>
         {/* Public landing page without sidebar + navbar */}
@@ -47,6 +49,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

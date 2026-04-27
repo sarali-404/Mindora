@@ -244,3 +244,36 @@
     font-size: 0.95rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .sidebar {
+  background-color: var(--bg-card);
+  border-right-color: var(--border-color);
+}
+:global([data-theme="dark"]) .logoArea {
+  border-bottom-color: var(--border-color);
+}
+:global([data-theme="dark"]) .bottomNav {
+  border-top-color: var(--border-color);
+}
+:global([data-theme="dark"]) .navItem {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .goalsToggle {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .closeButton {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .closeButton:hover {
+  background-color: var(--bg-hover);
+}
+:global([data-theme="dark"]) .closeButton:active {
+  background-color: var(--bg-muted);
+}
+:global([data-theme="dark"]) .chevron {
+  color: var(--text-secondary);
+}
+:global([data-theme="dark"]) .goalSubject {
+  color: var(--text-secondary);
+}

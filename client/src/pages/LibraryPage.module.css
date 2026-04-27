@@ -503,3 +503,28 @@
     padding: 0.75rem 0.85rem 1.25rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .subtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .searchInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .filterChip { background-color: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .filterChipActive { background-color: var(--bg-hover); color: var(--text-primary); border-color: var(--border-color); }
+:global([data-theme="dark"]) .sortChip { background-color: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .sortChipActive { background-color: var(--bg-hover); color: var(--text-primary); border-color: var(--border-color); }
+:global([data-theme="dark"]) .card { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .cardTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .cardDescription { color: var(--text-secondary); }
+:global([data-theme="dark"]) .cardMetaText { color: var(--text-muted); }
+:global([data-theme="dark"]) .footerMeta { color: var(--text-muted); }
+:global([data-theme="dark"]) .resultsInfo { color: var(--text-secondary); }
+:global([data-theme="dark"]) .pageButton { background-color: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .pageNumber { background-color: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .pageNumberActive { background-color: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .statItem { color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .tagChip { background-color: var(--bg-hover); color: var(--text-secondary); border-color: var(--border-color); }
+:global([data-theme="dark"]) .iconCircle { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .cardFooter { border-top-color: var(--border-color); }
+:global([data-theme="dark"]) .typeBadge { background-color: var(--bg-hover); color: var(--text-secondary); }

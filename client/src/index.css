@@ -1,3 +1,34 @@
+/* ── CSS Design Tokens ── */
+:root {
+  --bg-page:       #f9fafb;
+  --bg-card:       #ffffff;
+  --bg-subtle:     #f3f4f6;
+  --bg-hover:      #e5e7eb;
+  --bg-muted:      #d1d5db;
+  --text-primary:  #111827;
+  --text-secondary:#6b7280;
+  --text-muted:    #9ca3af;
+  --border-color:  #e5e7eb;
+  --border-subtle: #f3f4f6;
+  --input-bg:      #ffffff;
+  --input-border:  #d1d5db;
+}
+
+[data-theme="dark"] {
+  --bg-page:       #0f1117;
+  --bg-card:       #1a1d27;
+  --bg-subtle:     #1f2335;
+  --bg-hover:      #252a3a;
+  --bg-muted:      #2d3748;
+  --text-primary:  #f3f4f6;
+  --text-secondary:#9ca3af;
+  --text-muted:    #6b7280;
+  --border-color:  #2d3748;
+  --border-subtle: #252a3a;
+  --input-bg:      #252a3a;
+  --input-border:  #374151;
+}
+
 *,
 *::before,
 *::after {
@@ -15,8 +46,9 @@ body,
 body {
   font-family: "Quicksand", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  background-color: #f9fafb; /* light background */
-  color: #111827;            /* dark text */
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 button {

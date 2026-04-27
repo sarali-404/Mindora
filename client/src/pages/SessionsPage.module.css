@@ -673,3 +673,32 @@
     padding: 0.75rem 0.85rem 1.25rem;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .sessionCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .sessionTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .hostName { color: var(--text-primary); }
+:global([data-theme="dark"]) .hostMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .description { color: var(--text-secondary); }
+:global([data-theme="dark"]) .metaText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .subtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .tabs { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .tab { color: var(--text-secondary); }
+:global([data-theme="dark"]) .filterChip { background-color: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .filterChipActive { background-color: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .filterLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .searchInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .errorState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .errorState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .statusGreen { background-color: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .statusBlue { background-color: #0c2a40; color: #60b8d4; }
+:global([data-theme="dark"]) .statusLive { background-color: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .statusGray { background-color: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .statusRed { background-color: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .hostBadge { background: #0c2240; color: #93c5fd; }
+:global([data-theme="dark"]) .subjectTag { background: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .tag { background: var(--bg-subtle); color: var(--text-secondary); }
+:global([data-theme="dark"]) .verificationBanner { background: #2d2008; border-color: #78350f; color: #fcd34d; }
+:global([data-theme="dark"]) .cancelButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .refreshBtn { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }

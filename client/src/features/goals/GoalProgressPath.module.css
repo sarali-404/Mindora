@@ -100,3 +100,8 @@
     padding: 0;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .pathStep { background-color: var(--bg-subtle); border-color: var(--border-color); color: var(--text-muted); }
+:global([data-theme="dark"]) .pathLine { background-color: var(--border-color); }
+:global([data-theme="dark"]) .stepLabel { color: var(--text-secondary); }

@@ -1359,3 +1359,65 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .statCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .statLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .statValue { color: var(--text-primary); }
+:global([data-theme="dark"]) .achievementsCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .sectionTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .friendsCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .friendAvatar { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .friendName { color: var(--text-primary); }
+:global([data-theme="dark"]) .materialsCard { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .materialTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .materialMetaRow { color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalsSection { background-color: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .goalCard { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .goalCardTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .goalCardMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalProgressBar { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .emptyText { color: var(--text-muted); }
+:global([data-theme="dark"]) .achievementCard { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .achievementName { color: var(--text-primary); }
+:global([data-theme="dark"]) .achievementProgressContainer { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .achievementProgressText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .name { color: #ffffff; }
+:global([data-theme="dark"]) .email { color: rgba(255,255,255,0.75); }
+:global([data-theme="dark"]) .memberSince { color: rgba(255,255,255,0.65); }
+:global([data-theme="dark"]) .filterTab { color: var(--text-secondary); border-color: var(--border-color); background: var(--bg-subtle); }
+:global([data-theme="dark"]) .filterTab:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-color); }
+:global([data-theme="dark"]) .filterTabActive { background-color: #0073a0; color: #ffffff; border-color: #0073a0; }
+:global([data-theme="dark"]) .filterTabActive:hover { background-color: #005f82; }
+:global([data-theme="dark"]) .dateInput { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary); }
+:global([data-theme="dark"]) .iconButton { color: var(--text-secondary); }
+:global([data-theme="dark"]) .modal { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .achievementCard { background-color: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .achievementCard.locked { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .achievementProgressBar { background-color: var(--bg-muted); }
+:global([data-theme="dark"]) .achievementMaxLevel { background-color: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .countBadge { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .friendAvatar { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .materialRow:hover { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .aiTag { background-color: #2d1752; color: #c4b5fd; }
+:global([data-theme="dark"]) .metaPill { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalCard { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .goalCard:hover { border-color: var(--border-color); box-shadow: none; }
+:global([data-theme="dark"]) .goalSubjectBadge { background: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalProgressBar { background: var(--bg-muted); }
+:global([data-theme="dark"]) .goalCompleteBtn { background: #052e16; color: #4ade80; }
+:global([data-theme="dark"]) .goalExtendBtn { background: #0c1a3a; color: #93c5fd; }
+:global([data-theme="dark"]) .goalDeleteBtn { background: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .visibilityBadge { background: var(--bg-subtle); color: var(--text-muted); }
+:global([data-theme="dark"]) .editBtn { background: #0c2a40; color: #60b8d4; }
+:global([data-theme="dark"]) .editBtn:hover { background: #0a1f30; }
+:global([data-theme="dark"]) .deleteBtn { background: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .deleteBtn:hover { background: #3d0e0e; }
+:global([data-theme="dark"]) .modalIcon { background: #2c0a0a; color: #f87171; }
+:global([data-theme="dark"]) .modalTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .modalText strong { color: var(--text-primary); }
+:global([data-theme="dark"]) .cancelBtn { background: var(--bg-subtle); color: var(--text-primary); }
+:global([data-theme="dark"]) .cancelBtn:hover:not(:disabled) { background: var(--bg-hover); }
+:global([data-theme="dark"]) .modalClose:hover { background: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .sectionTitle { color: var(--text-primary); }

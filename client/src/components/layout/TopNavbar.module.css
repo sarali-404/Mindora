@@ -198,6 +198,27 @@
   }
 }
 
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .navbar {
+  background-color: var(--bg-page);
+  border-bottom-color: var(--border-color);
+}
+:global([data-theme="dark"]) .hamburger {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .userName {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .userSubtitle {
+  color: var(--text-secondary);
+}
+:global([data-theme="dark"]) .inlineStatValue {
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .inlineStatLabel {
+  color: var(--text-secondary);
+}
+
 @media (max-width: 480px) {
   .navbar {
     padding: 0.75rem 1rem;

@@ -657,3 +657,44 @@
     width: 72px;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .card { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .title { color: var(--text-primary); }
+:global([data-theme="dark"]) .refreshBtn { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
+:global([data-theme="dark"]) .emptyState h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .emptyState p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .scoreOverview { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .scoreInfo h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .tabs { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .tab { color: var(--text-secondary); }
+:global([data-theme="dark"]) .tab:hover { color: var(--text-primary); }
+:global([data-theme="dark"]) .tabActive { background: var(--bg-card); color: #60b8d4; }
+:global([data-theme="dark"]) .topicRow { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .topicName { color: var(--text-primary); }
+:global([data-theme="dark"]) .topicMeta { color: var(--text-secondary); }
+:global([data-theme="dark"]) .recommendations { background: var(--bg-hover); border-color: var(--border-color); }
+:global([data-theme="dark"]) .recTitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .untouchedTag { background: var(--bg-muted); color: var(--text-secondary); }
+:global([data-theme="dark"]) .readinessGauge { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .gaugeCircle::before { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .gaugeValue { color: var(--text-primary); }
+:global([data-theme="dark"]) .gaugeLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .gaugeInfo h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .gaugeSubtext { color: var(--text-secondary); }
+:global([data-theme="dark"]) .breakdownTitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .readinessRow { border-bottom-color: var(--border-subtle); }
+:global([data-theme="dark"]) .readinessTopicName { color: var(--text-primary); }
+:global([data-theme="dark"]) .readinessMeta { color: var(--text-muted); }
+:global([data-theme="dark"]) .predictionsEmpty h3 { color: var(--text-primary); }
+:global([data-theme="dark"]) .predictionsEmpty p { color: var(--text-secondary); }
+:global([data-theme="dark"]) .studyRecommendation { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .recText { color: var(--text-secondary); }
+:global([data-theme="dark"]) .recReason { color: var(--text-muted); }
+:global([data-theme="dark"]) .recTime { color: var(--text-muted); }
+:global([data-theme="dark"]) .statLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .statValue { color: var(--text-primary); }
+:global([data-theme="dark"]) .stat { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .scoreText { color: var(--text-primary); }
+:global([data-theme="dark"]) .progressBar { background: var(--bg-muted); }
+:global([data-theme="dark"]) .weakTag { background: #2c0a0a; color: #f87171; border-color: #7f1d1d; }

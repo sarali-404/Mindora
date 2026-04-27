@@ -198,3 +198,11 @@
     width: 100%;
   }
 }
+
+/* ── Dark mode ── */
+:global([data-theme="dark"]) .modal { background-color: var(--bg-card); }
+:global([data-theme="dark"]) .modalTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalIntro { color: var(--text-secondary); }
+:global([data-theme="dark"]) .featureTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .featureDesc { color: var(--text-secondary); }
+:global([data-theme="dark"]) .iconWrapper { background-color: var(--bg-subtle); }
