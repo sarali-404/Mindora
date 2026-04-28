@@ -110,8 +110,9 @@ class AuthService {
         
         // If logged in (verified user)
         if (response.data.isLoggedIn && response.data.token) {
-          apiClient.setToken(response.data.token);
-          apiClient.setRefreshToken(response.data.refreshToken);
+          const remember = localStorage.getItem('rememberMe') !== '0';
+          apiClient.setToken(response.data.token, remember);
+          apiClient.setRefreshToken(response.data.refreshToken, remember);
           this.setUser(response.data.user);
         }
         
@@ -131,7 +132,7 @@ class AuthService {
   }
 
   // Login user
-  async login(credentials) {
+  async login(credentials, rememberMe = false) {
     try {
       const response = await apiClient.post('/auth/login', credentials);
       
@@ -148,8 +149,9 @@ class AuthService {
         
         // Store tokens and user data
         if (response.data.token) {
-          apiClient.setToken(response.data.token);
-          apiClient.setRefreshToken(response.data.refreshToken);
+          apiClient.setToken(response.data.token, rememberMe);
+          apiClient.setRefreshToken(response.data.refreshToken, rememberMe);
+          localStorage.setItem('rememberMe', rememberMe ? '1' : '0');
           this.setUser(response.data.user);
         }
         
@@ -211,8 +213,9 @@ class AuthService {
       const response = await apiClient.post('/auth/refresh', { refreshToken });
       
       if (response.success && response.data) {
-        apiClient.setToken(response.data.token);
-        apiClient.setRefreshToken(response.data.refreshToken);
+        const remember = localStorage.getItem('rememberMe') !== '0';
+        apiClient.setToken(response.data.token, remember);
+        apiClient.setRefreshToken(response.data.refreshToken, remember);
         return response.data.token;
       }
       
@@ -373,7 +376,7 @@ class AuthService {
       const formData = new FormData();
       formData.append('profilePicture', file);
 
-      const token = localStorage.getItem('authToken');
+      const token = apiClient.getToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile-picture`, {
         method: 'POST',
         headers: {

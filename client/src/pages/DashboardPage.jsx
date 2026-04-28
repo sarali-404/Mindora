@@ -285,7 +285,7 @@ export default function DashboardPage() {
             {leaderboard.length === 0 ? (
               <p className={styles.emptyText}>No leaderboard data yet.</p>
             ) : (
-              leaderboard.slice(0, showAllLeaderboard ? 10 : 5).map((user) => (
+              leaderboard.slice(0, showAllLeaderboard ? 10 : 3).map((user) => (
                 <div
                   key={user.rank}
                   className={`${styles.leaderboardItem} ${
@@ -317,7 +317,7 @@ export default function DashboardPage() {
               ))
             )}
           </div>
-          {leaderboard.length > 5 && (
+          {leaderboard.length > 3 && (
             <button
               className={styles.sectionLink}
               style={{ marginTop: '0.75rem', display: 'block' }}

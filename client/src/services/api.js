@@ -83,33 +83,42 @@ class ApiClient {
   }
 
   // Token management
-  setToken(token) {
+  setToken(token, remember = false) {
     if (token) {
-      localStorage.setItem('authToken', token);
+      const storage = remember ? localStorage : sessionStorage;
+      // Clear the other storage to avoid stale tokens
+      (!remember ? localStorage : sessionStorage).removeItem('authToken');
+      storage.setItem('authToken', token);
     } else {
       localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
     }
   }
 
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
   clearToken() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('refreshToken');
   }
 
   // Refresh token management
-  setRefreshToken(refreshToken) {
+  setRefreshToken(refreshToken, remember = false) {
     if (refreshToken) {
-      localStorage.setItem('refreshToken', refreshToken);
+      const storage = remember ? localStorage : sessionStorage;
+      (!remember ? localStorage : sessionStorage).removeItem('refreshToken');
+      storage.setItem('refreshToken', refreshToken);
     }
   }
 
   getRefreshToken() {
-    return localStorage.getItem('refreshToken');
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   }
 }
 

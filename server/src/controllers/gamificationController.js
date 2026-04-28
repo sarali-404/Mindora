@@ -160,6 +160,24 @@ const getActivityStats = async (req, res) => {
     const userId = req.user._id;
     const profile = await gamificationService.getUserGameProfile(userId);
 
+    // Check if streak needs to be reset (missed a day) on every app open
+    const lastStudy = profile.currentStreak?.lastStudyDate
+      ? new Date(profile.currentStreak.lastStudyDate)
+      : null;
+
+    if (lastStudy) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const lastStudyDay = new Date(lastStudy.getFullYear(), lastStudy.getMonth(), lastStudy.getDate());
+      const diffDays = Math.round((today - lastStudyDay) / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 1 && profile.currentStreak.count > 0) {
+        // User missed at least one day — reset streak
+        profile.currentStreak.count = 0;
+        await profile.save();
+      }
+    }
+
     res.json({
       activityStats: profile.activityStats,
       streaks: {

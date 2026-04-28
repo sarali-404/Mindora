@@ -10,6 +10,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const googleButtonRef = useRef(null);
+  const rememberMeRef = useRef(false);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -18,6 +19,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === 'rememberMe') rememberMeRef.current = checked;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -43,7 +45,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
       console.log('Attempting login:', loginData);
       
-      const response = await authService.login(loginData);
+      const response = await authService.login(loginData, formData.rememberMe);
       
       if (response.success) {
         // Check if user needs OTP verification
@@ -104,6 +106,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
     setError('');
     
     try {
+      // Write rememberMe preference before Google auth so authService can read it
+      localStorage.setItem('rememberMe', rememberMeRef.current ? '1' : '0');
       const result = await authService.googleAuth(response.credential);
       
       if (result.success) {

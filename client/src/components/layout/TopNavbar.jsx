@@ -26,12 +26,12 @@ export default function TopNavbar({ onMenuClick }) {
   useEffect(() => {
     const fetchGamificationData = async () => {
       try {
+        // Check both storages (respects rememberMe setting)
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
         // Fetch level info and activity stats
-        const levelRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/level-info`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
+        const levelRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/level-info`, { headers });
         
         if (levelRes.ok) {
           const levelData = await levelRes.json();
@@ -42,11 +42,7 @@ export default function TopNavbar({ onMenuClick }) {
         }
 
         // Fetch activity stats for streak
-        const statsRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/activity-stats`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
+        const statsRes = await fetch(`${import.meta.env.VITE_API_URL}/gamification/activity-stats`, { headers });
 
         if (statsRes.ok) {
           const statsData = await statsRes.json();

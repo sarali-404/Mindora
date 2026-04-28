@@ -231,6 +231,9 @@
 }
 
 .dividerText {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
   background-color: white;
   padding: 0 1rem;
   color: #6B7280;
