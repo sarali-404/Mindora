@@ -1,6 +1,7 @@
 const Friendship = require('../models/Friendship');
 const User = require('../models/User');
 const socketService = require('../services/socketService');
+const notificationService = require('../services/notificationService');
 
 // @desc    Send friend request
 // @route   POST /api/friends/request/:userId
@@ -80,6 +81,13 @@ exports.sendFriendRequest = async (req, res) => {
 
     await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar');
 
+    // --- Notify recipient ---
+    const requesterName = req.user.profile?.firstName
+      ? `${req.user.profile.firstName} ${req.user.profile.lastName || ''}`.trim()
+      : req.user.username;
+    notificationService.notifyFriendRequest(recipient, requesterName)
+      .catch(e => console.error('Friend request notification error:', e.message));
+
     res.status(201).json({
       success: true,
       message: 'Friend request sent',
@@ -141,6 +149,19 @@ exports.acceptFriendRequest = async (req, res) => {
 
     await friendship.populate('requester', 'username profile.firstName profile.lastName profile.avatar isOnline lastSeen');
     await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar isOnline lastSeen');
+
+    // --- Notify the original requester that their request was accepted ---
+    const accepterName = req.user.profile?.firstName
+      ? `${req.user.profile.firstName} ${req.user.profile.lastName || ''}`.trim()
+      : req.user.username;
+    notificationService.notifyIfPreferred(
+      friendship.requester._id,
+      'social',
+      'inApp.social',
+      'Friend Request Accepted',
+      `${accepterName} accepted your friend request`,
+      { accepterName }
+    ).catch(e => console.error('Accept notification error:', e.message));
 
     res.json({
       success: true,

@@ -6,7 +6,7 @@ class ChatService {
   }
 
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
   async request(endpoint, options = {}) {
@@ -35,12 +35,22 @@ class ChatService {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('refreshToken');
+          window.location.href = '/';
+        }
         throw new Error(data.message || 'Request failed');
       }
 
       return data;
     } catch (error) {
-      console.error('Chat API error:', error);
+      if (!(error.message === 'Invalid token.' || error.message?.includes('Session expired'))) {
+        console.error('Chat API error:', error);
+      }
       throw error;
     }
   }
@@ -52,6 +62,18 @@ class ChatService {
     return this.request('/conversations');
   }
 
+  // Get total unread message count
+  async getUnreadCount() {
+    return this.request('/unread-count');
+  }
+
+  // Get conversations that have unread messages (with sender names)
+  async getUnreadConversations() {
+    const data = await this.getConversations();
+    const list = data.data || data.conversations || data || [];
+    return list.filter(c => c.unreadCount > 0);
+  }
+
   // Get conversation with specific user
   async getConversation(userId, page = 1, limit = 50) {
     return this.request(`/conversation/${userId}?page=${page}&limit=${limit}`);
@@ -60,18 +82,19 @@ class ChatService {
   // ==================== MESSAGES ====================
 
   // Send text message
-  async sendMessage(userId, content) {
+  async sendMessage(userId, content, replyTo = null) {
     return this.request(`/send/${userId}`, {
       method: 'POST',
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, ...(replyTo && { replyTo }) })
     });
   }
 
   // Send message with attachment
-  async sendMessageWithAttachment(userId, content, file) {
+  async sendMessageWithAttachment(userId, content, file, replyTo = null) {
     const formData = new FormData();
     if (content) formData.append('content', content);
     if (file) formData.append('attachment', file);
+    if (replyTo) formData.append('replyTo', replyTo);
 
     return this.request(`/send/${userId}`, {
       method: 'POST',
@@ -90,6 +113,14 @@ class ChatService {
   async deleteMessageForEveryone(messageId) {
     return this.request(`/message/${messageId}/everyone`, {
       method: 'DELETE'
+    });
+  }
+
+  // Toggle emoji reaction on a DM message
+  async toggleReaction(messageId, emoji) {
+    return this.request(`/message/${messageId}/reaction`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji })
     });
   }
 

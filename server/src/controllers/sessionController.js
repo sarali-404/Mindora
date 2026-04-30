@@ -1,6 +1,7 @@
 const Session = require('../models/Session');
 const User = require('../models/User');
 const discordService = require('../services/discordService');
+const notificationService = require('../services/notificationService');
 
 // @desc    Create a new session
 // @route   POST /api/sessions
@@ -299,6 +300,18 @@ exports.cancelSession = async (req, res) => {
     session.status = 'cancelled';
     await session.save();
 
+    // --- Notify all registered participants ---
+    const participantIds = session.participants
+      .filter(p => p.user?.toString() !== session.host.toString())
+      .map(p => p.user);
+    for (const pId of participantIds) {
+      notificationService.notifyIfPreferred(
+        pId, 'session', 'inApp.sessions',
+        'Session Cancelled',
+        `"${session.title}" has been cancelled by the host`
+      ).catch(() => {});
+    }
+
     res.json({
       success: true,
       message: 'Session cancelled successfully'
@@ -372,6 +385,17 @@ exports.joinSession = async (req, res) => {
     await session.save();
     await session.populate('host', 'username profile.firstName profile.lastName profile.avatar');
     await session.populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
+
+    // --- Notify host that someone joined ---
+    const joinerName = req.user.profile?.firstName
+      ? `${req.user.profile.firstName} ${req.user.profile.lastName || ''}`.trim()
+      : req.user.username;
+    notificationService.notifyIfPreferred(
+      session.host._id || session.host,
+      'session', 'inApp.sessions',
+      'New Participant',
+      `${joinerName} joined "${session.title}"`
+    ).catch(() => {});
 
     res.json({
       success: true,
@@ -530,6 +554,18 @@ exports.startSession = async (req, res) => {
     }
 
     await session.populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
+
+    // --- Notify all registered participants that session is live ---
+    const liveParticipantIds = session.participants
+      .filter(p => p.user?._id?.toString() !== req.user._id.toString())
+      .map(p => p.user?._id || p.user);
+    for (const pId of liveParticipantIds) {
+      notificationService.notifyIfPreferred(
+        pId, 'session', 'inApp.sessions',
+        'Session is Live! 🟢',
+        `"${session.title}" has started. Join now!`
+      ).catch(() => {});
+    }
 
     res.json({
       success: true,

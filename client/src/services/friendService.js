@@ -6,7 +6,7 @@ class FriendService {
   }
 
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
   async request(endpoint, options = {}) {
@@ -31,12 +31,20 @@ class FriendService {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('refreshToken');
+          window.location.href = '/';
+        }
         throw new Error(data.message || 'Request failed');
       }
 
       return data;
     } catch (error) {
-      console.error('Friend API error:', error);
+      if (error.message !== 'Invalid token.') console.error('Friend API error:', error);
       throw error;
     }
   }

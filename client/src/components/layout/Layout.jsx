@@ -3,6 +3,7 @@ import AppSidebar from "./Sidebar";
 import TopNavbar from "./TopNavbar";
 import styles from "./Layout.module.css";
 import { Outlet } from "react-router-dom";
+import ToastNotification from "../shared/ToastNotification";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +25,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <ToastNotification />
     </div>
   );
 }

@@ -42,6 +42,19 @@ const messageSchema = new mongoose.Schema({
   },
   readAt: Date,
   
+  // Reply-to reference
+  replyTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message',
+    default: null
+  },
+
+  // Emoji reactions: [{ emoji: '👍', users: [userId, ...] }]
+  reactions: [{
+    emoji: { type: String, required: true },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  }],
+
   // Deletion tracking
   deletedFor: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -82,7 +95,8 @@ messageSchema.statics.getConversation = async function(userId1, userId2, page = 
   .skip(skip)
   .limit(limit)
   .populate('sender', 'username profile.firstName profile.lastName profile.avatar')
-  .populate('receiver', 'username profile.firstName profile.lastName profile.avatar');
+  .populate('receiver', 'username profile.firstName profile.lastName profile.avatar')
+  .populate('replyTo', 'content sender attachment deletedForEveryone');
 
   // Return in chronological order (oldest first)
   return messages.reverse();

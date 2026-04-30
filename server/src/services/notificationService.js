@@ -319,9 +319,21 @@ async function saveUserPreferences(userId, preferences) {
       userPrefs = new UserPreferences({ user: userId });
     }
 
-    // Update preferences
+    // Update preferences — deep merge each sub-object instead of replacing
     if (preferences.notifications) {
-      userPrefs.notifications = preferences.notifications;
+      userPrefs.notifications = {
+        ...(userPrefs.notifications?.toObject ? userPrefs.notifications.toObject() : userPrefs.notifications || {}),
+        ...preferences.notifications,
+        // Merge nested inApp and email objects instead of replacing
+        inApp: {
+          ...(userPrefs.notifications?.inApp?.toObject ? userPrefs.notifications.inApp.toObject() : userPrefs.notifications?.inApp || {}),
+          ...(preferences.notifications.inApp || {})
+        },
+        email: {
+          ...(userPrefs.notifications?.email?.toObject ? userPrefs.notifications.email.toObject() : userPrefs.notifications?.email || {}),
+          ...(preferences.notifications.email || {})
+        }
+      };
     }
     if (preferences.display) {
       userPrefs.display = preferences.display;
@@ -362,11 +374,122 @@ async function getUserPreferences(userId) {
   }
 }
 
+/**
+ * Notify a user only if their preferences allow it.
+ * prefPath: dot-notated path inside notifications prefs, e.g. 'inApp.goalProgress'
+ */
+async function notifyIfPreferred(userId, type, prefPath, title, message, metadata = {}, relatedEntity = null) {
+  try {
+    const prefs = await getUserPreferences(userId);
+    const keys = prefPath.split('.');
+    let val = prefs?.notifications;
+    for (const k of keys) val = val?.[k];
+    if (val === false) return null; // Preference disabled
+    return await createNotification(userId, type, title, message, metadata, relatedEntity);
+  } catch (error) {
+    console.error('notifyIfPreferred error:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Send a friend request email notification
+ */
+async function notifyFriendRequest(recipient, requesterName) {
+  try {
+    await notifyIfPreferred(
+      recipient._id,
+      'social',
+      'inApp.social',
+      'New Friend Request',
+      `${requesterName} sent you a friend request`,
+      { requesterName }
+    );
+
+    const prefs = await getUserPreferences(recipient._id);
+    if (prefs?.notifications?.email?.social !== false && recipient.email) {
+      const emailHtml = `
+        <!DOCTYPE html><html><head><meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body style="margin:0;padding:0;font-family:'Quicksand',Arial,sans-serif;background:#f5f5f5;">
+        <table role="presentation" style="width:100%;border-collapse:collapse;">
+          <tr><td align="center" style="padding:40px 0;">
+            <table role="presentation" style="width:100%;max-width:500px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+              <tr><td style="padding:40px;text-align:center;background:linear-gradient(135deg,#0073a0,#38bdf8);border-radius:16px 16px 0 0;color:white;">
+                <h2 style="margin:0 0 10px 0;font-size:26px;">👋 New Friend Request</h2>
+                <p style="margin:0;font-size:14px;opacity:0.9;">Someone wants to connect with you on Mindora</p>
+              </td></tr>
+              <tr><td style="padding:40px;text-align:center;">
+                <p style="color:#1F2937;font-size:18px;font-weight:600;margin:0 0 16px;">${requesterName}</p>
+                <p style="color:#6B7280;font-size:14px;margin:0 0 24px;">sent you a friend request. Log in to accept or decline.</p>
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/app/community" style="display:inline-block;padding:12px 28px;background:#0073a0;color:#fff;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;">View Request</a>
+              </td></tr>
+              <tr><td style="padding:20px;text-align:center;background:#f9fafb;border-radius:0 0 16px 16px;border-top:1px solid #e5e7eb;">
+                <p style="margin:0;color:#9CA3AF;font-size:12px;">Mindora - Study Smarter, Not Harder</p>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table></body></html>`;
+      sendEmailNotification(recipient.email, `👋 ${requesterName} sent you a friend request`, emailHtml)
+        .catch(e => console.error('Friend request email error:', e.message));
+    }
+  } catch (error) {
+    console.error('notifyFriendRequest error:', error.message);
+  }
+}
+
+/**
+ * Send streak reminder email to a user
+ */
+async function sendStreakReminderEmail(user, streakCount) {
+  try {
+    const prefs = await getUserPreferences(user._id);
+    if (prefs?.notifications?.email?.recommendations === false) return;
+
+    const isNew = streakCount === 0;
+    const subject = isNew
+      ? '📚 Start your study streak today!'
+      : `🔥 Don't break your ${streakCount}-day streak!`;
+
+    const emailHtml = `
+      <!DOCTYPE html><html><head><meta charset="utf-8">
+      <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+      </head>
+      <body style="margin:0;padding:0;font-family:'Quicksand',Arial,sans-serif;background:#f5f5f5;">
+      <table role="presentation" style="width:100%;border-collapse:collapse;">
+        <tr><td align="center" style="padding:40px 0;">
+          <table role="presentation" style="width:100%;max-width:500px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+            <tr><td style="padding:40px;text-align:center;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:16px 16px 0 0;color:white;">
+              <h2 style="margin:0 0 10px 0;font-size:26px;">${isNew ? '📚 Start Studying!' : '🔥 Keep Your Streak!'}</h2>
+              <p style="margin:0;font-size:14px;opacity:0.9;">${isNew ? 'Begin your learning journey today' : `You're on a ${streakCount}-day streak`}</p>
+            </tr></td>
+            <tr><td style="padding:40px;text-align:center;">
+              ${!isNew ? `<div style="font-size:48px;margin-bottom:16px;">🔥 ${streakCount}</div><p style="color:#1F2937;font-weight:700;font-size:18px;margin:0 0 8px;">Day Streak</p>` : ''}
+              <p style="color:#6B7280;font-size:14px;margin:0 0 24px;">${isNew ? 'Log in and start a study session to begin your streak!' : "Log in today to keep your streak alive. Don't let it reset!"}</p>
+              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/app/dashboard" style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#fff;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;">Study Now</a>
+            </td></tr>
+            <tr><td style="padding:20px;text-align:center;background:#f9fafb;border-radius:0 0 16px 16px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">Mindora - Study Smarter, Not Harder</p>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table></body></html>`;
+
+    await sendEmailNotification(user.email, subject, emailHtml);
+  } catch (error) {
+    console.error('Streak reminder email error:', error.message);
+  }
+}
+
 module.exports = {
   createNotification,
+  notifyIfPreferred,
   sendEmailNotification,
   notifyAchievementUnlocked,
   notifyWeakAreasRecommendation,
+  notifyFriendRequest,
+  sendStreakReminderEmail,
   getUserNotifications,
   markNotificationAsRead,
   deleteNotification,

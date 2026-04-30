@@ -66,6 +66,17 @@ async function addXP(userId, source, amount) {
     // Update daily streak
     await updateStreak(userId);
 
+    // Level-up notification (lazy require to avoid circular dependency)
+    if (leveledUp) {
+      const notificationService = require('./notificationService');
+      notificationService.notifyIfPreferred(
+        userId, 'achievement', 'inApp.achievements',
+        `Level Up! \ud83c\udf89`,
+        `You reached ${newLevel} level! Keep up the great work!`,
+        { previousLevel, newLevel }
+      ).catch(() => {});
+    }
+
     // Log for debugging
     console.log(`✅ XP Added: User=${userId}, Source=${source}, Amount=${amount}, Total=${profile.totalXP}, Level=${newLevel}`);
 

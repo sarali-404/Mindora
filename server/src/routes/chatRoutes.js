@@ -12,7 +12,8 @@ const {
   deleteMessageForEveryone,
   markAsRead,
   getUnreadCount,
-  getAttachment
+  getAttachment,
+  toggleReaction
 } = require('../controllers/chatController');
 
 const { authenticate } = require('../middleware/auth');
@@ -95,5 +96,8 @@ router.put('/read/:userId', markAsRead);
 // Delete message
 router.delete('/message/:messageId/self', deleteMessageForSelf);
 router.delete('/message/:messageId/everyone', deleteMessageForEveryone);
+
+// Reactions
+router.post('/message/:messageId/reaction', toggleReaction);
 
 module.exports = router;

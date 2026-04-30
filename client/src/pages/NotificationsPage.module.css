@@ -35,6 +35,35 @@
   cursor: pointer;
 }
 
+.clearAllButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #fecaca;
+  background-color: #fff5f5;
+  color: #ef4444;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.clearAllButton:hover {
+  background-color: #fee2e2;
+}
+
+:global([data-theme="dark"]) .clearAllButton {
+  background-color: #2c0a0a;
+  border-color: #7f1d1d;
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .clearAllButton:hover {
+  background-color: #3f1212;
+}
+
 /* List */
 
 .list {

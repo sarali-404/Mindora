@@ -1,12 +1,13 @@
 import Lottie from "lottie-react";
-import { MdMenu } from "react-icons/md";
+import { MdMenu, MdNotifications } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./TopNavbar.module.css";
 import fireAnim from "../../assets/animations/Fire.json";
 import starAnim from "../../assets/animations/star.json";
 import authService from "../../services/authService";
 import UserAvatar from "../shared/UserAvatar";
+import chatService from "../../services/chatService";
 
 export default function TopNavbar({ onMenuClick }) {
   const navigate = useNavigate();
@@ -14,6 +15,106 @@ export default function TopNavbar({ onMenuClick }) {
   const [xpData, setXpData] = useState({ totalXP: 0, currentLevel: 'Bronze' });
   const [streakDays, setStreakDays] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+  const [unreadMsgSenders, setUnreadMsgSenders] = useState([]); // [{name, count}]
+
+  const totalBadge = unreadCount + unreadMsgCount;
+
+  const fetchUnreadMsgCount = useCallback(async () => {
+    try {
+      const convs = await chatService.getUnreadConversations();
+      const total = convs.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      setUnreadMsgCount(total);
+      setUnreadMsgSenders(
+        convs.slice(0, 3).map(c => ({
+          name: c.otherUser?.profile?.firstName
+            ? `${c.otherUser.profile.firstName} ${c.otherUser.profile.lastName || ''}`.trim()
+            : c.otherUser?.username || 'Someone',
+          count: c.unreadCount
+        }))
+      );
+    } catch (_) {}
+  }, []);
+
+  const fetchUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications/count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newCount = data.count ?? data.unreadCount ?? 0;
+        // If count increased, fetch the latest notification and fire toast
+        setUnreadCount(prev => {
+          if (newCount > prev && prev !== 0) {
+            fetch(`${import.meta.env.VITE_API_URL}/notifications?limit=1&unread=true`, {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+              .then(r => r.json())
+              .then(d => {
+                const latest = d.data?.[0] || d.notifications?.[0];
+                if (latest) {
+                  window.dispatchEvent(new CustomEvent('mindora:newNotification', { detail: latest }));
+                }
+              })
+              .catch(() => {});
+          }
+          return newCount;
+        });
+      }
+    } catch (_) {}
+  }, []);
+
+  // Reset badge when notifications page visited
+  useEffect(() => {
+    const handler = () => setUnreadCount(0);
+    window.addEventListener('mindora:notificationsRead', handler);
+    return () => window.removeEventListener('mindora:notificationsRead', handler);
+  }, []);
+
+  // Reset msg badge when community page visited
+  useEffect(() => {
+    const handler = () => { setUnreadMsgCount(0); setUnreadMsgSenders([]); };
+    window.addEventListener('mindora:messagesRead', handler);
+    return () => window.removeEventListener('mindora:messagesRead', handler);
+  }, []);
+
+  // Increment msg badge on incoming socket message (real-time)
+  useEffect(() => {
+    const handleIncoming = (e) => {
+      const msg = e.detail;
+      if (!msg) return;
+      const me = authService.getUser();
+      if (msg.sender?._id === me?._id) return;
+      setUnreadMsgCount(prev => prev + 1);
+      const senderName = msg.sender?.profile?.firstName
+        ? `${msg.sender.profile.firstName} ${msg.sender.profile.lastName || ''}`.trim()
+        : msg.sender?.username || 'Someone';
+      setUnreadMsgSenders(prev => {
+        const existing = prev.find(s => s.name === senderName);
+        if (existing) return prev.map(s => s.name === senderName ? { ...s, count: s.count + 1 } : s);
+        return [{ name: senderName, count: 1 }, ...prev].slice(0, 3);
+      });
+    };
+    window.addEventListener('mindora:incomingMessage', handleIncoming);
+    return () => window.removeEventListener('mindora:incomingMessage', handleIncoming);
+  }, []);
+
+  // Poll every 60s + on window focus
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchUnreadCount();
+    fetchUnreadMsgCount();
+    const interval = setInterval(() => { fetchUnreadCount(); fetchUnreadMsgCount(); }, 60000);
+    window.addEventListener('focus', () => { fetchUnreadCount(); fetchUnreadMsgCount(); });
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', () => { fetchUnreadCount(); fetchUnreadMsgCount(); });
+    };
+  }, [currentUser, fetchUnreadCount, fetchUnreadMsgCount]);
 
   // Re-read user whenever it's updated (e.g. after profile picture upload)
   useEffect(() => {
@@ -124,6 +225,20 @@ export default function TopNavbar({ onMenuClick }) {
             </div>
           </div>
         </div>
+
+        {/* Notifications bell */}
+        <button
+          className={styles.bellButton}
+          onClick={() => navigate('/app/notifications')}
+          aria-label="Notifications"
+        >
+          <MdNotifications size={22} />
+          {totalBadge > 0 && (
+            <span className={styles.bellBadge}>
+              {totalBadge > 99 ? '99+' : totalBadge}
+            </span>
+          )}
+        </button>
 
         {/* Avatar - clickable to go to profile */}
         <button 

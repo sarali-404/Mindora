@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiCheck,
   FiTrash2,
@@ -8,9 +9,11 @@ import {
   FiStar,
   FiClock,
   FiInfo,
+  FiMessageCircle,
 } from "react-icons/fi";
 import styles from "./NotificationsPage.module.css";
 import notificationService from "../services/notificationService";
+import chatService from "../services/chatService";
 
 const TYPE_ICONS = {
   achievement: <FiAward />,
@@ -43,7 +46,9 @@ function timeAgo(dateString) {
 }
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [unreadConvs, setUnreadConvs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -65,14 +70,26 @@ export default function NotificationsPage() {
     }
   };
 
+  const fetchUnreadConvs = async () => {
+    try {
+      const convs = await chatService.getUnreadConversations();
+      setUnreadConvs(convs);
+    } catch (_) {}
+  };
+
   useEffect(() => {
     fetchNotifications();
+    fetchUnreadConvs();
+    // Reset the unread badge in the navbar
+    window.dispatchEvent(new CustomEvent('mindora:notificationsRead'));
+    window.dispatchEvent(new CustomEvent('mindora:messagesRead'));
   }, []);
 
   const handleMarkAllRead = async () => {
     try {
       await notificationService.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      window.dispatchEvent(new CustomEvent('mindora:notificationsRead'));
     } catch (error) {
       console.error("Error marking all as read:", error);
     }
@@ -98,6 +115,18 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleClearAll = async () => {
+    try {
+      await notificationService.deleteAll();
+      setNotifications([]);
+      setUnreadConvs([]);
+      window.dispatchEvent(new CustomEvent('mindora:notificationsRead'));
+      window.dispatchEvent(new CustomEvent('mindora:messagesRead'));
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -105,12 +134,55 @@ export default function NotificationsPage() {
           <FiCheck />
           <span>Mark All as Read</span>
         </button>
+        <button className={styles.clearAllButton} onClick={handleClearAll}>
+          <FiTrash2 />
+          <span>Clear All</span>
+        </button>
       </header>
 
       <section className={styles.list}>
+        {/* Unread message notifications */}
+        {unreadConvs.map((conv) => {
+          const name = conv.otherUser?.profile?.firstName
+            ? `${conv.otherUser.profile.firstName} ${conv.otherUser.profile.lastName || ''}`.trim()
+            : conv.otherUser?.username || 'Someone';
+          return (
+            <article
+              key={`msg-${conv.conversationId}`}
+              className={`${styles.card} ${styles.cardUnread}`}
+              onClick={() => {
+                setUnreadConvs(prev => prev.filter(c => c.conversationId !== conv.conversationId));
+                navigate('/app/community');
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className={styles.cardLeft}>
+                <span className={`${styles.iconCircle} ${styles.icon_friend}`}>
+                  <FiMessageCircle />
+                </span>
+                <div>
+                  <p className={styles.cardTitle}>
+                    {conv.unreadCount === 1
+                      ? `You have 1 unread message from ${name}`
+                      : `You have ${conv.unreadCount} unread messages from ${name}`}
+                  </p>
+                  <p className={styles.cardMessage}>
+                    {conv.lastMessage?.content || 'Tap to view the conversation'}
+                  </p>
+                  <p className={styles.cardTime}>{timeAgo(conv.lastMessage?.createdAt)}</p>
+                </div>
+              </div>
+              <div className={styles.cardRight}>
+                <span className={styles.unreadDot} />
+              </div>
+            </article>
+          );
+        })}
+
+        {/* System notifications */}
         {loading ? (
           <p className={styles.emptyText}>Loading notifications...</p>
-        ) : notifications.length === 0 ? (
+        ) : notifications.length === 0 && unreadConvs.length === 0 ? (
           <p className={styles.emptyText}>No notifications yet.</p>
         ) : (
           notifications.map((item) => (

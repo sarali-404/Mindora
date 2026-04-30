@@ -1,9 +1,13 @@
 const Session = require('../models/Session');
 const discordService = require('./discordService');
+const UserGameProfile = require('../models/UserGameProfile');
+const User = require('../models/User');
+const notificationService = require('./notificationService');
 
 class SessionScheduler {
   constructor() {
     this.checkInterval = null;
+    this.streakReminderInterval = null;
   }
 
   // Start the scheduler - runs every minute
@@ -13,6 +17,14 @@ class SessionScheduler {
     this.checkInterval = setInterval(() => {
       this.checkExpiredSessions();
     }, 60000); // Check every 60 seconds
+
+    // Streak reminder — runs once per hour; sends emails only in the 8 AM hour
+    this.streakReminderInterval = setInterval(() => {
+      const hour = new Date().getHours();
+      if (hour === 8) {
+        this.sendStreakReminders();
+      }
+    }, 3600000); // Check every hour
   }
 
   // Stop the scheduler
@@ -20,7 +32,35 @@ class SessionScheduler {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
-      console.log('📅 Session scheduler stopped');
+    }
+    if (this.streakReminderInterval) {
+      clearInterval(this.streakReminderInterval);
+      this.streakReminderInterval = null;
+    }
+    console.log('📅 Session scheduler stopped');
+  }
+
+  // Send streak reminder emails to users who haven't studied today
+  async sendStreakReminders() {
+    try {
+      console.log('🔥 Running streak reminder check...');
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      // Find profiles where lastStudyDate is before today (missed at least one day)
+      const profiles = await UserGameProfile.find({
+        lastStudyDate: { $lt: startOfToday }
+      }).populate('user', 'username email profile.firstName');
+
+      console.log(`🔥 Found ${profiles.length} user(s) eligible for streak reminder`);
+
+      for (const profile of profiles) {
+        if (!profile.user?.email) continue;
+        notificationService.sendStreakReminderEmail(profile.user, profile.currentStreak)
+          .catch(e => console.error('Streak reminder error:', e.message));
+      }
+    } catch (error) {
+      console.error('Streak reminder scheduler error:', error);
     }
   }
 

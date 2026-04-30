@@ -29,6 +29,19 @@ const groupMessageSchema = new mongoose.Schema({
       enum: ['image', 'document', 'other']
     }
   },
+  // Reply-to reference
+  replyTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GroupMessage',
+    default: null
+  },
+
+  // Emoji reactions: [{ emoji: '👍', users: [userId, ...] }]
+  reactions: [{
+    emoji: { type: String, required: true },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  }],
+
   deletedForEveryone: {
     type: Boolean,
     default: false

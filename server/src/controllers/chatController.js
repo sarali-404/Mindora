@@ -80,6 +80,11 @@ exports.sendMessage = async (req, res) => {
       content: content || ''
     };
 
+    // Handle reply-to reference
+    if (req.body.replyTo) {
+      messageData.replyTo = req.body.replyTo;
+    }
+
     // Handle file attachment
     if (req.file) {
       const fileType = req.file.mimetype.startsWith('image/') ? 'image' 
@@ -99,6 +104,7 @@ exports.sendMessage = async (req, res) => {
     const message = await Message.create(messageData);
     await message.populate('sender', 'username profile.firstName profile.lastName profile.avatar');
     await message.populate('receiver', 'username profile.firstName profile.lastName profile.avatar');
+    await message.populate('replyTo', 'content sender attachment deletedForEveryone');
 
     // Emit socket event for real-time delivery
     const sent = socketService.sendToUser(userId, 'new_message', message);
@@ -367,5 +373,70 @@ exports.getAttachment = async (req, res) => {
       message: 'Failed to get attachment',
       error: error.message
     });
+  }
+};
+
+// @desc    Toggle emoji reaction on a DM message
+// @route   POST /api/chat/message/:messageId/reaction
+// @access  Private
+exports.toggleReaction = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { emoji } = req.body;
+    const userId = req.user._id;
+
+    if (!emoji) {
+      return res.status(400).json({ success: false, message: 'Emoji is required' });
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+
+    // Check user is sender or receiver
+    const isSender = message.sender.toString() === userId.toString();
+    const isReceiver = message.receiver.toString() === userId.toString();
+    if (!isSender && !isReceiver) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    // Find or create the reaction entry for this emoji
+    let reaction = message.reactions.find(r => r.emoji === emoji);
+    if (!reaction) {
+      message.reactions.push({ emoji, users: [userId] });
+    } else {
+      const idx = reaction.users.findIndex(u => u.toString() === userId.toString());
+      if (idx === -1) {
+        reaction.users.push(userId);
+      } else {
+        reaction.users.splice(idx, 1);
+        // Remove empty reaction entry
+        if (reaction.users.length === 0) {
+          message.reactions = message.reactions.filter(r => r.emoji !== emoji);
+        }
+      }
+    }
+
+    await message.save();
+
+    // Serialize reactions to plain objects so Socket.IO sends clean JSON
+    const plainReactions = message.reactions.map(r => ({
+      _id: r._id.toString(),
+      emoji: r.emoji,
+      users: r.users.map(u => u.toString())
+    }));
+
+    // Use room-based emit (each user joins a room named after their userId)
+    const otherId = isSender ? message.receiver.toString() : message.sender.toString();
+    const io = socketService.getIO();
+    io.to(otherId).emit('message_reaction', { messageId, reactions: plainReactions });
+    // Also update the reactor themselves via socket (consistent with API response)
+    io.to(userId.toString()).emit('message_reaction', { messageId, reactions: plainReactions });
+
+    res.json({ success: true, data: plainReactions });
+  } catch (error) {
+    console.error('Toggle reaction error:', error);
+    res.status(500).json({ success: false, message: 'Failed to toggle reaction', error: error.message });
   }
 };

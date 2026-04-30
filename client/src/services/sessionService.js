@@ -7,7 +7,7 @@ class SessionService {
 
   // Get auth token
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
   // Generic request method
@@ -34,12 +34,20 @@ class SessionService {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('refreshToken');
+          window.location.href = '/';
+        }
         throw new Error(data.message || 'Request failed');
       }
 
       return data;
     } catch (error) {
-      console.error('Session API error:', error);
+      if (error.message !== 'Invalid token.') console.error('Session API error:', error);
       throw error;
     }
   }

@@ -39,6 +39,13 @@ class ApiClient {
       }
 
       if (!response.ok) {
+        // If session expired and we have a token, clear everything and force re-login
+        if (response.status === 401 && this.getToken()) {
+          this.clearToken();
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
+          window.location.href = '/';
+        }
         throw new ApiError(
           data.message || `HTTP error! status: ${response.status}`,
           response.status,

@@ -7,11 +7,12 @@ class SocketService {
     this.socket = null;
     this.isConnecting = false;
     this.eventHandlers = {};
+    this.extraListeners = {}; // supports multiple callbacks per event
   }
 
   // Connect to socket server (singleton pattern)
   connect() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     
     if (!token) {
       console.warn('No auth token, cannot connect to socket');
@@ -86,10 +87,40 @@ class SocketService {
   reattachHandlers() {
     if (!this.socket) return;
     
+    // Re-attach primary handlers (remove only their own previous binding)
     Object.entries(this.eventHandlers).forEach(([event, callback]) => {
-      this.socket.off(event); // Remove any existing
+      this.socket.off(event, callback);
       this.socket.on(event, callback);
     });
+
+    // Re-attach extra (multi) listeners
+    Object.entries(this.extraListeners).forEach(([event, listeners]) => {
+      listeners.forEach(({ callback }) => {
+        this.socket.off(event, callback); // avoid duplicates
+        this.socket.on(event, callback);
+      });
+    });
+  }
+
+  /**
+   * Add an additional listener for an event (supports multiple per event).
+   * Returns an unsubscribe function.
+   */
+  addListener(event, callback) {
+    if (!this.socket) this.connect();
+
+    if (!this.extraListeners[event]) this.extraListeners[event] = [];
+    this.extraListeners[event].push({ callback });
+    if (this.socket) this.socket.on(event, callback);
+
+    return () => this.removeListener(event, callback);
+  }
+
+  removeListener(event, callback) {
+    if (this.extraListeners[event]) {
+      this.extraListeners[event] = this.extraListeners[event].filter(l => l.callback !== callback);
+    }
+    if (this.socket) this.socket.off(event, callback);
   }
 
   // Register an event handler (stores for re-attachment)
@@ -97,11 +128,18 @@ class SocketService {
     if (!this.socket) {
       this.connect();
     }
-    
-    this.eventHandlers[event] = callback;
-    
+
     if (this.socket) {
-      this.socket.off(event); // Prevent duplicate listeners
+      // Remove only the previous primary handler for this event,
+      // NOT all listeners (extraListeners like toast must be preserved)
+      if (this.eventHandlers[event]) {
+        this.socket.off(event, this.eventHandlers[event]);
+      }
+    }
+
+    this.eventHandlers[event] = callback;
+
+    if (this.socket) {
       this.socket.on(event, callback);
     }
   }
@@ -178,17 +216,10 @@ class SocketService {
 
   removeAllListeners() {
     if (this.socket) {
-      this.socket.off('new_message');
-      this.socket.off('message_deleted');
-      this.socket.off('messages_read');
-      this.socket.off('user_typing');
-      this.socket.off('user_stop_typing');
-      this.socket.off('presence_update');
-      this.socket.off('friend_removed');
-      this.socket.off('new_group_message');
-      this.socket.off('group_joined');
-      this.socket.off('group_left');
-      this.socket.off('group_updated');
+      // Only remove the specific primary handlers — leave extraListeners (e.g. toast) intact
+      Object.entries(this.eventHandlers).forEach(([event, callback]) => {
+        this.socket.off(event, callback);
+      });
     }
     this.eventHandlers = {};
   }

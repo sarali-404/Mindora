@@ -85,10 +85,15 @@ exports.createGoal = async (req, res) => {
       .then(() => gamificationService.evaluateAchievements(userId))
       .catch(e => console.error('Gamification error:', e.message));
 
+    // --- Fire-and-forget: Notification ---
+    notificationService.notifyIfPreferred(
+      userId, 'goal_progress', 'inApp.goalProgress',
+      'Goal Created',
+      `"${goalTitle}" has been created. Start studying!`,
+      { goalId: goal._id }
+    ).catch(e => console.error('Notification error:', e.message));
+
     res.status(201).json({
-      success: true,
-      message: 'Goal created successfully',
-      data: goal
     });
   } catch (error) {
     console.error('Create goal error:', error);
@@ -180,6 +185,14 @@ exports.createGoalWithMaterials = async (req, res) => {
         console.error('Background processing error:', err);
       });
     }
+
+    // --- Fire-and-forget: Notification ---
+    notificationService.notifyIfPreferred(
+      userId, 'goal_progress', 'inApp.goalProgress',
+      'Goal Created',
+      `"${goalTitle}" has been created. Materials are being processed!`,
+      { goalId: goal._id }
+    ).catch(e => console.error('Notification error:', e.message));
 
     res.status(201).json({
       success: true,
@@ -309,6 +322,14 @@ exports.updateGoal = async (req, res) => {
         .then(() => gamificationService.updateActivityStats(userId, { goalsCompleted: 1 }))
         .then(() => gamificationService.evaluateAchievements(userId))
         .catch(e => console.error('Gamification error:', e.message));
+
+      // Completion notification
+      notificationService.notifyIfPreferred(
+        userId, 'goal_progress', 'inApp.goalProgress',
+        'Goal Completed! 🎉',
+        `You completed "${goal.title}". Great work! +100 XP`,
+        { goalId: goal._id }
+      ).catch(e => console.error('Notification error:', e.message));
     }
 
     res.json({

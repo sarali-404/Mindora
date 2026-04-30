@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { 
   MdSearch, 
   MdPersonAdd, 
@@ -17,7 +17,16 @@ import {
   MdGroupAdd,
   MdGroup,
   MdExitToApp,
-  MdArrowBack
+  MdArrowBack,
+  MdSettings,
+  MdArrowDownward,
+  MdPersonRemove,
+  MdEdit,
+  MdCameraAlt,
+  MdWarning,
+  MdReply,
+  MdPerson,
+  MdCalendarToday
 } from "react-icons/md";
 import { FaCircle } from "react-icons/fa";
 import styles from "./CommunityPage.module.css";
@@ -26,6 +35,9 @@ import chatService, { formatMessageTime, formatConversationTime, isImageFile, ge
 import socketService from "../services/socketService";
 import authService from "../services/authService";
 import groupService from "../services/groupService";
+
+const SERVER_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const avatarUrl = (src) => !src ? null : src.startsWith('http') ? src : `${SERVER_BASE}${src}`;
 
 export default function CommunityPage() {
   const currentUser = authService.getUser();
@@ -42,6 +54,7 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [chatSearch, setChatSearch] = useState('');
 
   // Chat states
   const [selectedChat, setSelectedChat] = useState(null);
@@ -59,9 +72,29 @@ export default function CommunityPage() {
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedMembersForGroup, setSelectedMembersForGroup] = useState([]);
+
+  // Group settings states
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [settingsGroupName, setSettingsGroupName] = useState('');
+  const [settingsIconFile, setSettingsIconFile] = useState(null);
+  const [settingsIconPreview, setSettingsIconPreview] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsAddMemberQuery, setSettingsAddMemberQuery] = useState('');
+
+  // Confirm modal state (replaces browser confirm())
+  const [confirmModal, setConfirmModal] = useState(null); // { title, message, onConfirm }
+
+  // Reply and reactions
+  const [replyingTo, setReplyingTo] = useState(null); // { _id, content, sender }
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState(null); // which msg has picker open
+
+  // Scroll-to-bottom button
+  const [showScrollDown, setShowScrollDown] = useState(false);
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const groupIconInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const selectedChatRef = useRef(null);
   const selectedGroupChatRef = useRef(null);
@@ -75,10 +108,63 @@ export default function CommunityPage() {
     selectedGroupChatRef.current = selectedGroupChat;
   }, [selectedGroupChat]);
 
+  // Scroll-to-bottom detection
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      setShowScrollDown(scrollHeight - scrollTop - clientHeight > 120);
+    };
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [selectedChat, selectedGroupChat]);
+
+  // Helper: dispatch a toast notification
+  const dispatchToast = useCallback((message, type = 'default') => {
+    window.dispatchEvent(new CustomEvent('mindora:newNotification', {
+      detail: { title: message, type }
+    }));
+  }, []);
+
+  // Helper: open confirm modal
+  const openConfirm = useCallback((title, message, onConfirm) => {
+    setConfirmModal({ title, message, onConfirm });
+  }, []);
+
+  // Helper: get date label for message date separators
+  const getDateLabel = (date) => {
+    const d = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return 'Today';
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+  };
+
+  // Helper: inject date separators into messages array
+  const withDateSeparators = (msgs) => {
+    const result = [];
+    let lastLabel = null;
+    msgs.forEach(msg => {
+      const label = getDateLabel(msg.createdAt);
+      if (label !== lastLabel) {
+        result.push({ _id: `sep-${msg._id}`, type: 'separator', label });
+        lastLabel = label;
+      }
+      result.push(msg);
+    });
+    return result;
+  };
+
   // Initialize socket and fetch initial data
   useEffect(() => {
     const socket = socketService.connect();
     fetchInitialData();
+
+    // Clear message unread badge when user opens community page
+    window.dispatchEvent(new CustomEvent('mindora:messagesRead'));
 
     // Socket listeners with refs to get latest state
     socketService.onNewMessage((message) => {
@@ -87,7 +173,10 @@ export default function CommunityPage() {
       
       if (currentChat && 
           (message.sender._id === currentChat._id || message.receiver._id === currentChat._id)) {
-        setMessages(prev => [...prev, message]);
+        setMessages(prev => {
+          if (prev.some(m => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
         chatService.markAsRead(currentChat._id);
       } else {
         setUnreadCount(prev => prev + 1);
@@ -140,10 +229,13 @@ export default function CommunityPage() {
       if (currentChat?._id === userId) {
         setSelectedChat(null);
         setMessages([]);
-        alert(`${displayName} has removed you from their friends list. You can no longer chat with them.`);
+        window.dispatchEvent(new CustomEvent('mindora:newNotification', {
+          detail: { title: `${displayName} has removed you from their friends list.`, type: 'social' }
+        }));
       } else {
-        // Show notification
-        alert(`${displayName} has removed you from their friends list.`);
+        window.dispatchEvent(new CustomEvent('mindora:newNotification', {
+          detail: { title: `${displayName} has removed you from their friends list.`, type: 'social' }
+        }));
       }
       
       // Refresh conversations to remove this chat
@@ -154,7 +246,10 @@ export default function CommunityPage() {
     socketService.onNewGroupMessage(({ groupId, message }) => {
       const currentGroup = selectedGroupChatRef.current;
       if (currentGroup?._id === groupId) {
-        setGroupMessages(prev => [...prev, message]);
+        setGroupMessages(prev => {
+          if (prev.some(m => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
       }
       fetchGroups();
     });
@@ -178,6 +273,19 @@ export default function CommunityPage() {
       if (currentGroup?._id === group._id) {
         setSelectedGroupChat(group);
       }
+    });
+
+    // Reaction socket listeners
+    socketService.on('message_reaction', ({ messageId, reactions }) => {
+      setMessages(prev => prev.map(m =>
+        m._id === messageId ? { ...m, reactions } : m
+      ));
+    });
+
+    socketService.on('group_message_reaction', ({ messageId, reactions }) => {
+      setGroupMessages(prev => prev.map(m =>
+        m._id === messageId ? { ...m, reactions } : m
+      ));
     });
 
     return () => {
@@ -272,7 +380,7 @@ export default function CommunityPage() {
       fetchDiscoverUsers(searchQuery);
       fetchPendingRequests();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
@@ -282,7 +390,7 @@ export default function CommunityPage() {
       fetchFriends();
       fetchPendingRequests();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
@@ -291,7 +399,7 @@ export default function CommunityPage() {
       await friendService.declineFriendRequest(friendshipId);
       fetchPendingRequests();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
@@ -301,18 +409,19 @@ export default function CommunityPage() {
       fetchPendingRequests();
       fetchDiscoverUsers(searchQuery);
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
   const handleUnfriend = async (userId) => {
-    if (!confirm('Are you sure you want to unfriend this user?')) return;
-    try {
-      await friendService.unfriend(userId);
-      fetchFriends();
-    } catch (error) {
-      alert(error.message);
-    }
+    openConfirm('Unfriend', 'Are you sure you want to unfriend this user?', async () => {
+      try {
+        await friendService.unfriend(userId);
+        fetchFriends();
+      } catch (error) {
+        dispatchToast(error.message, 'default');
+      }
+    });
   };
 
   // Group actions
@@ -335,21 +444,26 @@ export default function CommunityPage() {
   const handleSendGroupMessage = async (e) => {
     e.preventDefault();
     if ((!messageInput.trim() && !attachmentFile) || !selectedGroupChat) return;
+    const replyId = replyingTo?._id || null;
+    setReplyingTo(null);
     try {
       let response;
       if (attachmentFile) {
         response = await groupService.sendGroupMessageWithAttachment(
-          selectedGroupChat._id, messageInput, attachmentFile
+          selectedGroupChat._id, messageInput, attachmentFile, replyId
         );
         setAttachmentFile(null);
       } else {
-        response = await groupService.sendGroupMessage(selectedGroupChat._id, messageInput);
+        response = await groupService.sendGroupMessage(selectedGroupChat._id, messageInput, replyId);
       }
-      setGroupMessages(prev => [...prev, response.data]);
+      setGroupMessages(prev => {
+        if (prev.some(m => m._id === response.data._id)) return prev;
+        return [...prev, response.data];
+      });
       setMessageInput('');
       fetchGroups();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
@@ -363,20 +477,78 @@ export default function CommunityPage() {
       setSelectedMembersForGroup([]);
       fetchGroups();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
   const handleLeaveGroup = async (groupId) => {
-    if (!confirm('Are you sure you want to leave this group?')) return;
+    openConfirm('Leave Group', 'Are you sure you want to leave this group?', async () => {
+      try {
+        await groupService.leaveGroup(groupId);
+        setSelectedGroupChat(null);
+        setGroupMessages([]);
+        fetchGroups();
+      } catch (error) {
+        dispatchToast(error.message, 'default');
+      }
+    });
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!settingsGroupName.trim() && !settingsIconFile) return;
+    setSettingsLoading(true);
     try {
-      await groupService.leaveGroup(groupId);
-      setSelectedGroupChat(null);
-      setGroupMessages([]);
+      const response = await groupService.updateGroupWithIcon(
+        selectedGroupChat._id,
+        settingsGroupName.trim() || selectedGroupChat.name,
+        settingsIconFile
+      );
+      setSelectedGroupChat(response.data);
+      setGroups(prev => prev.map(g => g._id === response.data._id ? response.data : g));
+      setShowGroupSettings(false);
+      setSettingsIconFile(null);
+      setSettingsIconPreview(null);
+    } catch (error) {
+      dispatchToast(error.message, 'default');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId, displayName) => {
+    openConfirm('Remove Member', `Remove ${displayName} from the group?`, async () => {
+      try {
+        await groupService.removeMember(selectedGroupChat._id, userId);
+      } catch (error) {
+        dispatchToast(error.message, 'default');
+      }
+    });
+  };
+
+  const handleAddMember = async (userId) => {
+    try {
+      await groupService.addMember(selectedGroupChat._id, userId);
       fetchGroups();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
+  };
+
+  const openGroupSettings = () => {
+    setSettingsGroupName(selectedGroupChat.name);
+    setSettingsIconFile(null);
+    setSettingsIconPreview(selectedGroupChat.icon ? `http://localhost:5000${selectedGroupChat.icon}` : null);
+    setSettingsAddMemberQuery('');
+    setShowGroupSettings(true);
+  };
+
+  const handleSettingsIconChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSettingsIconFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setSettingsIconPreview(ev.target.result);
+    reader.readAsDataURL(file);
   };
 
   const toggleMemberForGroup = (userId) => {
@@ -413,18 +585,23 @@ export default function CommunityPage() {
         response = await chatService.sendMessageWithAttachment(
           selectedChat._id, 
           messageInput, 
-          attachmentFile
+          attachmentFile,
+          replyingTo?._id || null
         );
         setAttachmentFile(null);
       } else {
-        response = await chatService.sendMessage(selectedChat._id, messageInput);
+        response = await chatService.sendMessage(selectedChat._id, messageInput, replyingTo?._id || null);
       }
+      setReplyingTo(null);
       
-      setMessages(prev => [...prev, response.data]);
+      setMessages(prev => {
+        if (prev.some(m => m._id === response.data._id)) return prev;
+        return [...prev, response.data];
+      });
       setMessageInput('');
       fetchConversations();
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
   };
 
@@ -451,8 +628,32 @@ export default function CommunityPage() {
         setMessages(prev => prev.filter(m => m._id !== messageId));
       }
     } catch (error) {
-      alert(error.message);
+      dispatchToast(error.message, 'default');
     }
+  };
+
+  const handleToggleDmReaction = async (messageId, emoji) => {
+    try {
+      const res = await chatService.toggleReaction(messageId, emoji);
+      setMessages(prev => prev.map(m =>
+        m._id === messageId ? { ...m, reactions: res.data } : m
+      ));
+    } catch (error) {
+      dispatchToast(error.message, 'default');
+    }
+    setReactionPickerMsgId(null);
+  };
+
+  const handleToggleGroupReaction = async (messageId, emoji) => {
+    try {
+      const res = await groupService.toggleGroupReaction(messageId, emoji);
+      setGroupMessages(prev => prev.map(m =>
+        m._id === messageId ? { ...m, reactions: res.data } : m
+      ));
+    } catch (error) {
+      dispatchToast(error.message, 'default');
+    }
+    setReactionPickerMsgId(null);
   };
 
   const handleSearch = (e) => {
@@ -464,8 +665,10 @@ export default function CommunityPage() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    setSearchQuery('');
+    setChatSearch('');
     if (tab === 'discover') {
-      fetchDiscoverUsers(searchQuery);
+      fetchDiscoverUsers('');
     }
     if (tab !== 'chat') {
       setSelectedChat(null);
@@ -484,9 +687,17 @@ export default function CommunityPage() {
           <MdSearch className={styles.searchIcon} />
           <input
             className={styles.searchInput}
-            placeholder={activeTab === 'discover' ? "Search users by name or university..." : "Search..."}
+            placeholder={
+              activeTab === 'discover' ? "Search users by name or university..." :
+              activeTab === 'friends' ? "Search friends..." :
+              activeTab === 'requests' ? "Search requests..." :
+              "Search..."
+            }
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (activeTab === 'discover') fetchDiscoverUsers(e.target.value);
+            }}
           />
         </form>
       </header>
@@ -555,14 +766,16 @@ export default function CommunityPage() {
                     </button>
                   </div>
                 ) : (
-                  friends.map(({ user }) => (
-                    <FriendCard
-                      key={user._id}
-                      user={user}
-                      onMessage={() => openChat(user)}
-                      onUnfriend={() => handleUnfriend(user._id)}
-                    />
-                  ))
+                  friends
+                    .filter(({ user }) => !searchQuery || getDisplayName(user).toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(({ user }) => (
+                      <FriendCard
+                        key={user._id}
+                        user={user}
+                        onMessage={() => openChat(user)}
+                        onUnfriend={() => handleUnfriend(user._id)}
+                      />
+                    ))
                 )}
               </div>
             )}
@@ -603,15 +816,17 @@ export default function CommunityPage() {
                     <p className={styles.emptyText}>No pending requests</p>
                   ) : (
                     <div className={styles.requestsList}>
-                      {pendingRequests.map((request) => (
-                        <RequestCard
-                          key={request._id}
-                          user={request.requester}
-                          type="received"
-                          onAccept={() => handleAcceptRequest(request._id)}
-                          onDecline={() => handleDeclineRequest(request._id)}
-                        />
-                      ))}
+                      {pendingRequests
+                        .filter(r => !searchQuery || getDisplayName(r.requester).toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map((request) => (
+                          <RequestCard
+                            key={request._id}
+                            user={request.requester}
+                            type="received"
+                            onAccept={() => handleAcceptRequest(request._id)}
+                            onDecline={() => handleDeclineRequest(request._id)}
+                          />
+                        ))}
                     </div>
                   )}
                 </section>
@@ -627,14 +842,16 @@ export default function CommunityPage() {
                     <p className={styles.emptyText}>No sent requests</p>
                   ) : (
                     <div className={styles.requestsList}>
-                      {sentRequests.map((request) => (
-                        <RequestCard
-                          key={request._id}
-                          user={request.recipient}
-                          type="sent"
-                          onCancel={() => handleCancelRequest(request._id)}
-                        />
-                      ))}
+                      {sentRequests
+                        .filter(r => !searchQuery || getDisplayName(r.recipient).toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map((request) => (
+                          <RequestCard
+                            key={request._id}
+                            user={request.recipient}
+                            type="sent"
+                            onCancel={() => handleCancelRequest(request._id)}
+                          />
+                        ))}
                     </div>
                   )}
                 </section>
@@ -649,15 +866,16 @@ export default function CommunityPage() {
                   <div className={styles.chatSubTabs}>
                     <button
                       className={`${styles.chatSubTab} ${chatSubTab === 'dms' ? styles.chatSubTabActive : ''}`}
-                      onClick={() => setChatSubTab('dms')}
+                      onClick={() => { setChatSubTab('dms'); setChatSearch(''); }}
                     >
-                      <MdChat size={15} /> DMs
+                      DMs
                     </button>
+                    <div className={styles.chatSubTabDivider} />
                     <button
                       className={`${styles.chatSubTab} ${chatSubTab === 'groups' ? styles.chatSubTabActive : ''}`}
-                      onClick={() => setChatSubTab('groups')}
+                      onClick={() => { setChatSubTab('groups'); setChatSearch(''); }}
                     >
-                      <MdGroup size={15} /> Groups
+                      Groups
                     </button>
                   </div>
 
@@ -669,13 +887,29 @@ export default function CommunityPage() {
                           <MdRefresh size={18} />
                         </button>
                       </div>
+                      <div className={styles.sidebarSearchWrap}>
+                        <MdSearch className={styles.sidebarSearchIcon} />
+                        <input
+                          className={styles.sidebarSearchInput}
+                          placeholder="Search conversations..."
+                          value={chatSearch}
+                          onChange={e => setChatSearch(e.target.value)}
+                        />
+                        {chatSearch && (
+                          <button className={styles.sidebarSearchClear} onClick={() => setChatSearch('')}>
+                            <MdClose size={14} />
+                          </button>
+                        )}
+                      </div>
                       {conversations.length === 0 ? (
                         <div className={styles.emptyConversations}>
                           <p>No conversations yet</p>
                           <small>Message a friend to start chatting</small>
                         </div>
                       ) : (
-                        conversations.map((conv) => (
+                        conversations
+                          .filter(conv => !chatSearch || getDisplayName(conv.otherUser).toLowerCase().includes(chatSearch.toLowerCase()))
+                          .map((conv) => (
                           <div
                             key={conv.conversationId}
                             className={`${styles.conversationItem} ${
@@ -685,7 +919,7 @@ export default function CommunityPage() {
                           >
                             <div className={styles.conversationAvatar}>
                               {conv.otherUser.profile?.avatar ? (
-                                <img src={conv.otherUser.profile.avatar} alt="" />
+                                <img src={avatarUrl(conv.otherUser.profile.avatar)} alt="" />
                               ) : (
                                 <span>{getInitials(conv.otherUser)}</span>
                               )}
@@ -719,6 +953,20 @@ export default function CommunityPage() {
                           <MdGroupAdd size={18} />
                         </button>
                       </div>
+                      <div className={styles.sidebarSearchWrap}>
+                        <MdSearch className={styles.sidebarSearchIcon} />
+                        <input
+                          className={styles.sidebarSearchInput}
+                          placeholder="Search groups..."
+                          value={chatSearch}
+                          onChange={e => setChatSearch(e.target.value)}
+                        />
+                        {chatSearch && (
+                          <button className={styles.sidebarSearchClear} onClick={() => setChatSearch('')}>
+                            <MdClose size={14} />
+                          </button>
+                        )}
+                      </div>
                       {groups.length === 0 ? (
                         <div className={styles.emptyConversations}>
                           <p>No groups yet</p>
@@ -727,7 +975,9 @@ export default function CommunityPage() {
                           </button>
                         </div>
                       ) : (
-                        groups.map((group) => (
+                        groups
+                          .filter(g => !chatSearch || g.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                          .map((group) => (
                           <div
                             key={group._id}
                             className={`${styles.conversationItem} ${
@@ -736,7 +986,11 @@ export default function CommunityPage() {
                             onClick={() => { openGroupChat(group); setSelectedChat(null); }}
                           >
                             <div className={`${styles.conversationAvatar} ${styles.groupAvatarThumb}`}>
-                              <MdGroup size={18} />
+                              {group.icon ? (
+                                <img src={`http://localhost:5000${group.icon}`} alt={group.name} />
+                              ) : (
+                                <MdGroup size={18} />
+                              )}
                             </div>
                             <div className={styles.conversationInfo}>
                               <div className={styles.conversationTop}>
@@ -778,7 +1032,7 @@ export default function CommunityPage() {
                         <div className={styles.chatHeaderInfo}>
                           <div className={styles.chatAvatar}>
                             {selectedChat.profile?.avatar ? (
-                              <img src={selectedChat.profile.avatar} alt="" />
+                              <img src={avatarUrl(selectedChat.profile.avatar)} alt="" />
                             ) : (
                               <span>{getInitials(selectedChat)}</span>
                             )}
@@ -796,32 +1050,68 @@ export default function CommunityPage() {
                         </div>
                       </div>
 
-                      <div className={styles.messagesContainer}>
-                        {chatLoading ? (
-                          <div className={styles.loadingMessages}>
-                            <div className={styles.spinner}></div>
-                          </div>
-                        ) : (
-                          <>
-                            {messages.map((message) => (
-                              <MessageBubble
-                                key={message._id}
-                                message={message}
-                                isOwn={message.sender._id === currentUser?.id || message.sender._id === currentUser?._id}
-                                onDelete={handleDeleteMessage}
-                              />
-                            ))}
-                            {typingUsers[selectedChat._id] && (
-                              <div className={styles.typingIndicator}>
-                                {typingUsers[selectedChat._id]} is typing...
-                              </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                          </>
+                      <div className={styles.messagesWrapper}>
+                        <div className={styles.messagesContainer} ref={messagesContainerRef}>
+                          {chatLoading ? (
+                            <div className={styles.loadingMessages}>
+                              <div className={styles.spinner}></div>
+                            </div>
+                          ) : (
+                            <>
+                              {withDateSeparators(messages).map((item) =>
+                                item.type === 'separator' ? (
+                                  <div key={item._id} className={styles.dateSeparator}>
+                                    <span>{item.label}</span>
+                                  </div>
+                                ) : (
+                                  <MessageBubble
+                                    key={item._id}
+                                    message={item}
+                                    isOwn={item.sender._id === currentUser?.id || item.sender._id === currentUser?._id}
+                                    onDelete={handleDeleteMessage}
+                                    onReply={setReplyingTo}
+                                    onReact={handleToggleDmReaction}
+                                    showPicker={reactionPickerMsgId === item._id}
+                                    onShowPicker={setReactionPickerMsgId}
+                                    onHidePicker={() => setReactionPickerMsgId(null)}
+                                  />
+                                )
+                              )}
+                              {typingUsers[selectedChat._id] && (
+                                <div className={styles.typingIndicator}>
+                                  {typingUsers[selectedChat._id]} is typing...
+                                </div>
+                              )}
+                              <div ref={messagesEndRef} />
+                            </>
+                          )}
+                        </div>
+                        {showScrollDown && (
+                          <button
+                            className={styles.scrollDownBtn}
+                            onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                            aria-label="Scroll to bottom"
+                          >
+                            <MdArrowDownward size={18} />
+                          </button>
                         )}
                       </div>
 
                       <form className={styles.messageForm} onSubmit={handleSendMessage}>
+                        {replyingTo && (
+                          <div className={styles.replyPreview}>
+                            <div className={styles.replyPreviewBar} />
+                            <div className={styles.replyPreviewContent}>
+                              <span className={styles.replyPreviewLabel}>Replying to {replyingTo.sender?.profile?.firstName || replyingTo.sender?.username || 'message'}</span>
+                              <span className={styles.replyPreviewText}>
+                                {replyingTo.attachment && !replyingTo.content ? '📎 Attachment' : replyingTo.content}
+                              </span>
+                            </div>
+                            <button type="button" className={styles.replyPreviewClose} onClick={() => setReplyingTo(null)}>
+                              <MdClose size={16} />
+                            </button>
+                          </div>
+                        )}
                         {attachmentFile && (
                           <div className={styles.attachmentPreview}>
                             <span>{attachmentFile.name}</span>
@@ -876,9 +1166,17 @@ export default function CommunityPage() {
                         >
                           <MdArrowBack size={20} />
                         </button>
-                        <div className={styles.chatHeaderInfo}>
+                        <div
+                          className={`${styles.chatHeaderInfo} ${styles.chatHeaderInfoClickable}`}
+                          onClick={openGroupSettings}
+                          title="View group info"
+                        >
                           <div className={`${styles.chatAvatar} ${styles.groupAvatar}`}>
-                            <MdGroup size={22} />
+                            {selectedGroupChat.icon ? (
+                              <img src={`http://localhost:5000${selectedGroupChat.icon}`} alt={selectedGroupChat.name} />
+                            ) : (
+                              <MdGroup size={22} />
+                            )}
                           </div>
                           <div>
                             <h4>{selectedGroupChat.name}</h4>
@@ -887,35 +1185,73 @@ export default function CommunityPage() {
                             </p>
                           </div>
                         </div>
-                        <button
-                          className={styles.leaveGroupBtn}
-                          onClick={() => handleLeaveGroup(selectedGroupChat._id)}
-                          title="Leave group"
-                        >
-                          <MdExitToApp size={20} />
-                        </button>
+                        <div className={styles.groupHeaderActions}>
+                          <button
+                            className={styles.leaveGroupBtn}
+                            onClick={() => handleLeaveGroup(selectedGroupChat._id)}
+                            title="Leave group"
+                          >
+                            <MdExitToApp size={20} />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className={styles.messagesContainer}>
-                        {chatLoading ? (
-                          <div className={styles.loadingMessages}>
-                            <div className={styles.spinner}></div>
-                          </div>
-                        ) : (
-                          <>
-                            {groupMessages.map((message) => (
-                              <GroupMessageBubble
-                                key={message._id}
-                                message={message}
-                                isOwn={message.sender._id === currentUser?.id || message.sender._id === currentUser?._id}
-                              />
-                            ))}
-                            <div ref={messagesEndRef} />
-                          </>
+                      <div className={styles.messagesWrapper}>
+                        <div className={styles.messagesContainer} ref={messagesContainerRef}>
+                          {chatLoading ? (
+                            <div className={styles.loadingMessages}>
+                              <div className={styles.spinner}></div>
+                            </div>
+                          ) : (
+                            <>
+                              {withDateSeparators(groupMessages).map((item) =>
+                                item.type === 'separator' ? (
+                                  <div key={item._id} className={styles.dateSeparator}>
+                                    <span>{item.label}</span>
+                                  </div>
+                                ) : (
+                                  <GroupMessageBubble
+                                    key={item._id}
+                                    message={item}
+                                    isOwn={item.sender._id === currentUser?.id || item.sender._id === currentUser?._id}
+                                    onReply={setReplyingTo}
+                                    onReact={handleToggleGroupReaction}
+                                    showPicker={reactionPickerMsgId === item._id}
+                                    onShowPicker={setReactionPickerMsgId}
+                                    onHidePicker={() => setReactionPickerMsgId(null)}
+                                  />
+                                )
+                              )}
+                              <div ref={messagesEndRef} />
+                            </>
+                          )}
+                        </div>
+                        {showScrollDown && (
+                          <button
+                            className={styles.scrollDownBtn}
+                            onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                            aria-label="Scroll to bottom"
+                          >
+                            <MdArrowDownward size={18} />
+                          </button>
                         )}
                       </div>
 
                       <form className={styles.messageForm} onSubmit={handleSendGroupMessage}>
+                        {replyingTo && (
+                          <div className={styles.replyPreview}>
+                            <div className={styles.replyPreviewBar} />
+                            <div className={styles.replyPreviewContent}>
+                              <span className={styles.replyPreviewLabel}>Replying to {replyingTo.sender?.profile?.firstName || replyingTo.sender?.username || 'message'}</span>
+                              <span className={styles.replyPreviewText}>
+                                {replyingTo.attachment && !replyingTo.content ? '📎 Attachment' : replyingTo.content}
+                              </span>
+                            </div>
+                            <button type="button" className={styles.replyPreviewClose} onClick={() => setReplyingTo(null)}>
+                              <MdClose size={16} />
+                            </button>
+                          </div>
+                        )}
                         {attachmentFile && (
                           <div className={styles.attachmentPreview}>
                             <span>{attachmentFile.name}</span>
@@ -1000,7 +1336,7 @@ export default function CommunityPage() {
                         />
                         <div className={styles.memberAvatar}>
                           {user.profile?.avatar ? (
-                            <img src={user.profile.avatar} alt="" />
+                            <img src={avatarUrl(user.profile.avatar)} alt="" />
                           ) : (
                             <span>{getInitials(user)}</span>
                           )}
@@ -1031,6 +1367,202 @@ export default function CommunityPage() {
           </div>
         </div>
       )}
+
+      {/* Group Settings Modal */}
+      {showGroupSettings && selectedGroupChat && (
+        <div className={styles.modalOverlay} onClick={() => setShowGroupSettings(false)}>
+          <div className={`${styles.modal} ${styles.groupInfoModal}`} onClick={e => e.stopPropagation()}>
+            {/* Group Info Header */}
+            {(() => {
+              const isAdmin = selectedGroupChat.creator?._id === currentUser?.id
+                || selectedGroupChat.creator?._id === currentUser?._id
+                || selectedGroupChat.creator === currentUser?.id
+                || selectedGroupChat.creator === currentUser?._id;
+              const creatorName = selectedGroupChat.creator?.profile?.firstName
+                ? `${selectedGroupChat.creator.profile.firstName} ${selectedGroupChat.creator.profile.lastName || ''}`.trim()
+                : selectedGroupChat.creator?.username || 'Unknown';
+              const createdDate = selectedGroupChat.createdAt
+                ? new Date(selectedGroupChat.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                : '';
+              return (
+                <>
+                  {/* Top close */}
+                  <button className={styles.groupInfoClose} onClick={() => setShowGroupSettings(false)}><MdClose /></button>
+
+                  {/* Group avatar */}
+                  <div className={styles.groupInfoAvatar}>
+                    <div
+                      className={styles.groupInfoAvatarCircle}
+                      onClick={isAdmin ? () => groupIconInputRef.current?.click() : undefined}
+                      style={isAdmin ? { cursor: 'pointer' } : {}}
+                      title={isAdmin ? 'Change group icon' : ''}
+                    >
+                      {settingsIconPreview ? (
+                        <img src={settingsIconPreview} alt="Group icon" />
+                      ) : selectedGroupChat.icon ? (
+                        <img src={`http://localhost:5000${selectedGroupChat.icon}`} alt={selectedGroupChat.name} />
+                      ) : (
+                        <MdGroup size={44} />
+                      )}
+                      {isAdmin && (
+                        <div className={styles.groupIconOverlay}><MdCameraAlt size={18} /></div>
+                      )}
+                    </div>
+                    <input type="file" ref={groupIconInputRef} hidden accept="image/*" onChange={handleSettingsIconChange} />
+                    {isAdmin ? (
+                      <input
+                        className={styles.groupInfoNameInput}
+                        value={settingsGroupName}
+                        onChange={e => setSettingsGroupName(e.target.value)}
+                        maxLength={100}
+                        placeholder="Group name..."
+                      />
+                    ) : (
+                      <h3 className={styles.groupInfoName}>{selectedGroupChat.name}</h3>
+                    )}
+                    <p className={styles.groupInfoMeta}>
+                      {selectedGroupChat.members.length} members
+                    </p>
+                  </div>
+
+                  {/* Created info */}
+                  <div className={styles.groupInfoDetails}>
+                    <div className={styles.groupInfoDetailRow}>
+                      <MdPerson size={16} />
+                      <span>Created by <strong>{creatorName}</strong></span>
+                    </div>
+                    {createdDate && (
+                      <div className={styles.groupInfoDetailRow}>
+                        <MdCalendarToday size={16} />
+                        <span>{createdDate}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.groupInfoDivider} />
+
+                  {/* Members */}
+                  <div className={styles.groupInfoSection}>
+                    <h4 className={styles.groupInfoSectionTitle}>Members</h4>
+                    <div className={styles.membersList}>
+                      {selectedGroupChat.members.map(member => {
+                        const memberId = member._id || member;
+                        const isCreator = selectedGroupChat.creator?._id === memberId || selectedGroupChat.creator === memberId;
+                        const isSelf = memberId === currentUser?.id || memberId === currentUser?._id;
+                        const name = member.profile?.firstName
+                          ? `${member.profile.firstName} ${member.profile.lastName || ''}`.trim()
+                          : member.username || memberId;
+                        return (
+                          <div key={memberId} className={styles.memberItem}>
+                            <div className={styles.memberAvatar}>
+                              {member.profile?.avatar ? (
+                                <img src={avatarUrl(member.profile.avatar)} alt="" />
+                              ) : (
+                                <span>{name[0]?.toUpperCase()}</span>
+                              )}
+                            </div>
+                            <span className={styles.memberName}>
+                              {name}
+                              {isCreator && <span className={styles.creatorBadge}>Admin</span>}
+                              {isSelf && <span className={styles.selfBadge}>You</span>}
+                            </span>
+                            {isAdmin && !isCreator && !isSelf && (
+                              <button
+                                className={styles.removeMemberBtn}
+                                onClick={() => handleRemoveMember(memberId, name)}
+                                title="Remove member"
+                              >
+                                <MdPersonRemove size={16} />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Add members (admin only) */}
+                  {isAdmin && (() => {
+                    const memberIds = selectedGroupChat.members.map(m => m._id || m);
+                    const addableFriends = friends.filter(({ user }) => !memberIds.includes(user._id));
+                    if (addableFriends.length === 0) return null;
+                    return (
+                      <div className={styles.groupInfoSection}>
+                        <h4 className={styles.groupInfoSectionTitle}>Add Members</h4>
+                        <input
+                          className={styles.modalInput}
+                          placeholder="Search friends..."
+                          value={settingsAddMemberQuery}
+                          onChange={e => setSettingsAddMemberQuery(e.target.value)}
+                        />
+                        <div className={styles.membersList}>
+                          {addableFriends
+                            .filter(({ user }) => getDisplayName(user).toLowerCase().includes(settingsAddMemberQuery.toLowerCase()))
+                            .map(({ user }) => (
+                              <div key={user._id} className={styles.memberItem}>
+                                <div className={styles.memberAvatar}>
+                                  {user.profile?.avatar ? (
+                                    <img src={avatarUrl(user.profile.avatar)} alt="" />
+                                  ) : (
+                                    <span>{getInitials(user)}</span>
+                                  )}
+                                </div>
+                                <span className={styles.memberName}>{getDisplayName(user)}</span>
+                                <button className={styles.addMemberBtn} onClick={() => handleAddMember(user._id)}>
+                                  <MdPersonAdd size={16} />
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Footer */}
+                  <div className={styles.groupInfoFooter}>
+                    {isAdmin && (
+                      <button className={styles.createGroupBtn} onClick={handleUpdateGroup} disabled={settingsLoading}>
+                        {settingsLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    )}
+                    <button className={styles.leaveGroupBtnModal} onClick={() => { setShowGroupSettings(false); handleLeaveGroup(selectedGroupChat._id); }}>
+                      <MdExitToApp size={16} /> Leave Group
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal (replaces browser confirm()) */}
+      {confirmModal && (
+        <div className={styles.modalOverlay} onClick={() => setConfirmModal(null)}>
+          <div className={`${styles.modal} ${styles.confirmModal}`} onClick={e => e.stopPropagation()}>
+            <div className={styles.confirmIcon}><MdWarning size={32} /></div>
+            <h3 className={styles.confirmTitle}>{confirmModal.title}</h3>
+            <p className={styles.confirmMessage}>{confirmModal.message}</p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.cancelModalBtn}
+                onClick={() => setConfirmModal(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.confirmDangerBtn}
+                onClick={() => {
+                  setConfirmModal(null);
+                  confirmModal.onConfirm();
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -1045,7 +1577,7 @@ function FriendCard({ user, onMessage, onUnfriend }) {
       <div className={styles.friendTop}>
         <div className={styles.avatarContainer}>
           {user.profile?.avatar ? (
-            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+            <img src={avatarUrl(user.profile.avatar)} alt="" className={styles.avatarImg} />
           ) : (
             <div className={styles.avatarCircle}>{getInitials(user)}</div>
           )}
@@ -1101,7 +1633,7 @@ function DiscoverCard({ user, onSendRequest, onCancelRequest }) {
       <div className={styles.friendTop}>
         <div className={styles.avatarContainer}>
           {user.profile?.avatar ? (
-            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+            <img src={avatarUrl(user.profile.avatar)} alt="" className={styles.avatarImg} />
           ) : (
             <div className={styles.avatarCircle}>{getInitials(user)}</div>
           )}
@@ -1147,7 +1679,7 @@ function RequestCard({ user, type, onAccept, onDecline, onCancel }) {
       <div className={styles.requestInfo}>
         <div className={styles.avatarContainer}>
           {user.profile?.avatar ? (
-            <img src={user.profile.avatar} alt="" className={styles.avatarImg} />
+            <img src={avatarUrl(user.profile.avatar)} alt="" className={styles.avatarImg} />
           ) : (
             <div className={styles.avatarCircle}>{getInitials(user)}</div>
           )}
@@ -1185,7 +1717,49 @@ function RequestCard({ user, type, onAccept, onDecline, onCancel }) {
   );
 }
 
-function MessageBubble({ message, isOwn, onDelete }) {
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+
+function ReactionPicker({ onSelect, onClose, isOwn }) {
+  return (
+    <div className={`${styles.reactionPicker} ${isOwn ? styles.reactionPickerOwn : ''}`} onMouseLeave={onClose}>
+      {REACTION_EMOJIS.map(e => (
+        <button key={e} className={styles.reactionPickerEmoji} onClick={() => onSelect(e)}>{e}</button>
+      ))}
+    </div>
+  );
+}
+
+function ReplyQuote({ replyTo, isOwn }) {
+  if (!replyTo) return null;
+  const name = replyTo.sender?.profile?.firstName || replyTo.sender?.username || 'Someone';
+  const preview = replyTo.deletedForEveryone
+    ? 'This message was deleted'
+    : replyTo.attachment && !replyTo.content ? '📎 Attachment' : replyTo.content;
+  return (
+    <div className={`${styles.replyQuote} ${isOwn ? styles.replyQuoteOwn : ''}`}>
+      <div className={styles.replyQuoteBar} />
+      <div className={styles.replyQuoteBody}>
+        <span className={styles.replyQuoteName}>{name}</span>
+        <span className={styles.replyQuoteText}>{preview}</span>
+      </div>
+    </div>
+  );
+}
+
+function ReactionsRow({ reactions, isOwn, onToggle }) {
+  if (!reactions?.length) return null;
+  return (
+    <div className={`${styles.reactionsRow} ${isOwn ? styles.reactionsRowOwn : ''}`}>
+      {reactions.map(r => (
+        <button key={r.emoji} className={styles.reactionPill} onClick={() => onToggle(r.emoji)}>
+          {r.emoji} <span>{r.users.length}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MessageBubble({ message, isOwn, onDelete, onReply, onReact, showPicker, onShowPicker, onHidePicker }) {
   const [showMenu, setShowMenu] = useState(false);
 
   if (message.deletedForEveryone) {
@@ -1197,61 +1771,71 @@ function MessageBubble({ message, isOwn, onDelete }) {
   }
 
   return (
-    <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}>
-      {message.attachment && (
-        <div className={styles.messageAttachment}>
-          {isImageFile(message.attachment.mimeType) ? (
-            <img 
-              src={chatService.getAttachmentUrl(message.attachment.filename)} 
-              alt="attachment" 
-              className={styles.attachmentImage}
-            />
-          ) : (
-            <a 
-              href={chatService.getAttachmentUrl(message.attachment.filename)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.attachmentFile}
-            >
-              <span>{getFileIcon(message.attachment.mimeType)}</span>
-              <div>
-                <p>{message.attachment.originalName}</p>
-                <small>{formatFileSize(message.attachment.size)}</small>
-              </div>
-            </a>
+    <div className={styles.messageWrapper}>
+      <div
+        className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}
+      >
+        <ReplyQuote replyTo={message.replyTo} isOwn={isOwn} />
+        {message.attachment && (
+          <div className={styles.messageAttachment}>
+            {isImageFile(message.attachment.mimeType) ? (
+              <img 
+                src={chatService.getAttachmentUrl(message.attachment.filename)} 
+                alt="attachment" 
+                className={styles.attachmentImage}
+              />
+            ) : (
+              <a 
+                href={chatService.getAttachmentUrl(message.attachment.filename)}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={message.attachment.originalName}
+                className={styles.attachmentFile}
+              >
+                <span>{getFileIcon(message.attachment.mimeType)}</span>
+                <div>
+                  <p>{message.attachment.originalName}</p>
+                  <small>{formatFileSize(message.attachment.size)}</small>
+                </div>
+              </a>
+            )}
+          </div>
+        )}
+        
+        {message.content && <p className={styles.messageContent}>{message.content}</p>}
+        
+        <div className={styles.messageFooter}>
+          <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
+          {isOwn && message.read && <span className={styles.readReceipt}>✓✓</span>}
+        </div>
+
+        {/* Hover actions: react + reply + (owner) delete */}
+        <div className={`${styles.msgHoverActions} ${isOwn ? styles.msgHoverActionsOwn : ''}`}>
+          <button className={styles.msgHoverBtn} onClick={() => onShowPicker(message._id)} title="React">😊</button>
+          <button className={styles.msgHoverBtn} onClick={() => onReply(message)} title="Reply"><MdReply size={15} /></button>
+          {isOwn && (
+            <button className={styles.msgHoverBtn} onClick={() => setShowMenu(!showMenu)} title="More"><MdMoreVert size={15} /></button>
           )}
         </div>
-      )}
-      
-      {message.content && <p className={styles.messageContent}>{message.content}</p>}
-      
-      <div className={styles.messageFooter}>
-        <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
-        {isOwn && message.read && <span className={styles.readReceipt}>✓✓</span>}
+
+        {showMenu && (
+          <div className={styles.messageMenuDropdown}>
+            <button onClick={() => { onDelete(message._id, false); setShowMenu(false); }}>Delete for me</button>
+            <button onClick={() => { onDelete(message._id, true); setShowMenu(false); }}>Delete for everyone</button>
+          </div>
+        )}
       </div>
 
-      {isOwn && (
-        <div className={styles.messageMenu}>
-          <button onClick={() => setShowMenu(!showMenu)}>
-            <MdMoreVert size={14} />
-          </button>
-          {showMenu && (
-            <div className={styles.messageMenuDropdown}>
-              <button onClick={() => { onDelete(message._id, false); setShowMenu(false); }}>
-                Delete for me
-              </button>
-              <button onClick={() => { onDelete(message._id, true); setShowMenu(false); }}>
-                Delete for everyone
-              </button>
-            </div>
-          )}
-        </div>
+      {showPicker && (
+        <ReactionPicker isOwn={isOwn} onSelect={(emoji) => onReact(message._id, emoji)} onClose={onHidePicker} />
       )}
+
+      <ReactionsRow reactions={message.reactions} isOwn={isOwn} onToggle={(emoji) => onReact(message._id, emoji)} />
     </div>
   );
 }
 
-function GroupMessageBubble({ message, isOwn }) {
+function GroupMessageBubble({ message, isOwn, onReply, onReact, showPicker, onShowPicker, onHidePicker }) {
   if (message.deletedForEveryone) {
     return (
       <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''} ${styles.messageDeleted}`}>
@@ -1261,40 +1845,58 @@ function GroupMessageBubble({ message, isOwn }) {
   }
 
   return (
-    <div className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}>
-      {!isOwn && (
-        <span className={styles.groupSenderName}>
-          {message.sender?.profile?.firstName || message.sender?.username}
-        </span>
-      )}
-      {message.attachment && (
-        <div className={styles.messageAttachment}>
-          {isImageFile(message.attachment.mimeType) ? (
-            <img
-              src={chatService.getAttachmentUrl(message.attachment.filename)}
-              alt="attachment"
-              className={styles.attachmentImage}
-            />
-          ) : (
-            <a
-              href={chatService.getAttachmentUrl(message.attachment.filename)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.attachmentFile}
-            >
-              <span>{getFileIcon(message.attachment.mimeType)}</span>
-              <div>
-                <p>{message.attachment.originalName}</p>
-                <small>{formatFileSize(message.attachment.size)}</small>
-              </div>
-            </a>
-          )}
+    <div className={styles.messageWrapper}>
+      <div
+        className={`${styles.messageBubble} ${isOwn ? styles.messageOwn : ''}`}
+      >
+        {!isOwn && (
+          <span className={styles.groupSenderName}>
+            {message.sender?.profile?.firstName || message.sender?.username}
+          </span>
+        )}
+        <ReplyQuote replyTo={message.replyTo} isOwn={isOwn} />
+        {message.attachment && (
+          <div className={styles.messageAttachment}>
+            {isImageFile(message.attachment.mimeType) ? (
+              <img
+                src={groupService.getGroupAttachmentUrl(message.attachment.filename)}
+                alt="attachment"
+                className={styles.attachmentImage}
+              />
+            ) : (
+              <a
+                href={groupService.getGroupAttachmentUrl(message.attachment.filename)}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={message.attachment.originalName}
+                className={styles.attachmentFile}
+              >
+                <span>{getFileIcon(message.attachment.mimeType)}</span>
+                <div>
+                  <p>{message.attachment.originalName}</p>
+                  <small>{formatFileSize(message.attachment.size)}</small>
+                </div>
+              </a>
+            )}
+          </div>
+        )}
+        {message.content && <p className={styles.messageContent}>{message.content}</p>}
+        <div className={styles.messageFooter}>
+          <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
         </div>
-      )}
-      {message.content && <p className={styles.messageContent}>{message.content}</p>}
-      <div className={styles.messageFooter}>
-        <span className={styles.messageTime}>{formatMessageTime(message.createdAt)}</span>
+
+        {/* Hover actions: react + reply */}
+        <div className={`${styles.msgHoverActions} ${isOwn ? styles.msgHoverActionsOwn : ''}`}>
+          <button className={styles.msgHoverBtn} onClick={() => onShowPicker(message._id)} title="React">😊</button>
+          <button className={styles.msgHoverBtn} onClick={() => onReply(message)} title="Reply"><MdReply size={15} /></button>
+        </div>
       </div>
+
+      {showPicker && (
+        <ReactionPicker isOwn={isOwn} onSelect={(emoji) => onReact(message._id, emoji)} onClose={onHidePicker} />
+      )}
+
+      <ReactionsRow reactions={message.reactions} isOwn={isOwn} onToggle={(emoji) => onReact(message._id, emoji)} />
     </div>
   );
 }

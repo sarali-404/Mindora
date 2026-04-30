@@ -25,6 +25,10 @@ const groupConversationSchema = new mongoose.Schema({
     type: String,
     maxlength: 100,
     default: ''
+  },
+  icon: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

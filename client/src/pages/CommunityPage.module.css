@@ -751,6 +751,18 @@
   gap: 0.75rem;
 }
 
+.chatHeaderInfoClickable {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background 0.15s;
+}
+
+.chatHeaderInfoClickable:hover {
+  background: rgba(0,0,0,0.05);
+}
+
 .chatAvatar {
   width: 40px;
   height: 40px;
@@ -795,6 +807,7 @@
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -818,7 +831,7 @@
 
 /* Message Bubble */
 .messageBubble {
-  max-width: 70%;
+  max-width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 16px;
   background: white;
@@ -826,8 +839,16 @@
   position: relative;
 }
 
-.messageOwn {
+/* .messageWrapper controls alignment; own messages align right */
+.messageWrapper {
+  align-self: flex-start;
+}
+
+.messageWrapper:has(.messageOwn) {
   align-self: flex-end;
+}
+
+.messageOwn {
   background: #0073a0;
   color: white;
 }
@@ -914,7 +935,7 @@
 .messageMenu {
   position: absolute;
   top: 0.25rem;
-  right: -24px;
+  right: 0.3rem;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -1296,40 +1317,50 @@
 /* Sub-tab toggle (DMs / Groups) */
 .chatSubTabs {
   display: flex;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem 0;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem 0;
+  gap: 0;
 }
 
 .chatSubTab {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.85rem;
+  justify-content: center;
+  padding: 0.45rem 0.5rem;
   border: none;
   background: none;
-  border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.01em;
 }
 
 .chatSubTab:hover {
-  background: #f1f5f9;
   color: #334155;
 }
 
 .chatSubTabActive {
-  background: #6c63ff;
-  color: #fff;
+  color: #6c63ff;
+  border-bottom-color: #6c63ff;
+  font-weight: 600;
 }
 
 .chatSubTabActive:hover {
-  background: #5a52e0;
-  color: #fff;
+  color: #6c63ff;
+}
+
+.chatSubTabDivider {
+  width: 1px;
+  height: 18px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+  margin: 0 0.1rem;
+  align-self: center;
 }
 
 /* Group avatar in conversation list */
@@ -1633,3 +1664,864 @@
 :global([data-theme="dark"]) .cancelButton { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-secondary); }
 :global([data-theme="dark"]) .messageMenu button { background: var(--bg-card); color: var(--text-secondary); }
 :global([data-theme="dark"]) .page { background-color: var(--bg-page); }
+
+/* ==================== DATE SEPARATORS ==================== */
+.dateSeparator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dateSeparator::before,
+.dateSeparator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+:global([data-theme="dark"]) .dateSeparator {
+  color: var(--text-muted);
+}
+
+:global([data-theme="dark"]) .dateSeparator::before,
+:global([data-theme="dark"]) .dateSeparator::after {
+  background: var(--border-color);
+}
+
+/* ==================== MESSAGES WRAPPER + SCROLL BTN ==================== */
+.messagesWrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.messagesWrapper .messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.scrollDownBtn {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(108, 99, 255, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 10;
+}
+
+.scrollDownBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(108, 99, 255, 0.5);
+}
+
+/* ==================== GROUP HEADER ACTIONS ==================== */
+.groupHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.groupSettingsBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.4rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.groupSettingsBtn:hover {
+  background: #f1f5f9;
+  color: #6c63ff;
+}
+
+:global([data-theme="dark"]) .groupSettingsBtn {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .groupSettingsBtn:hover {
+  background: var(--bg-hover);
+  color: #a78bfa;
+}
+
+/* ==================== GROUP ICON UPLOAD ==================== */
+.groupIconUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.groupIconUpload small {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.groupIconPreviewCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #ede9fe;
+  color: #6c63ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  transition: border-color 0.15s;
+}
+
+.groupIconPreviewCircle:hover {
+  border-color: #6c63ff;
+}
+
+.groupIconPreviewCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.groupIconOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.groupIconPreviewCircle:hover .groupIconOverlay {
+  opacity: 1;
+}
+
+:global([data-theme="dark"]) .groupIconPreviewCircle {
+  background: var(--bg-subtle);
+  border-color: var(--border-color);
+}
+
+/* ==================== MEMBER ITEM (settings modal) ==================== */
+.memberName {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+:global([data-theme="dark"]) .memberName {
+  color: var(--text-primary);
+}
+
+.creatorBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #d97706;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+}
+
+.selfBadge {
+  font-size: 0.65rem;
+  background: #ede9fe;
+  color: #6c63ff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+}
+
+.removeMemberBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.removeMemberBtn:hover {
+  background: #fee2e2;
+}
+
+.addMemberBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c63ff;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.addMemberBtn:hover {
+  background: #ede9fe;
+}
+
+/* ==================== CONFIRM MODAL ==================== */
+.confirmModal {
+  max-width: 340px;
+  text-align: center;
+  padding: 1.75rem 1.5rem;
+  gap: 0;
+}
+
+.confirmIcon {
+  color: #f59e0b;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.confirmTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: #1e293b;
+}
+
+.confirmMessage {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.confirmDangerBtn {
+  flex: 1;
+  padding: 0.6rem;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.confirmDangerBtn:hover {
+  background: #dc2626;
+}
+
+:global([data-theme="dark"]) .confirmTitle {
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .confirmMessage {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .confirmModal {
+  background: var(--bg-card);
+}
+
+/* ==================== GROUP ICON IN SIDEBAR/HEADER ==================== */
+.groupAvatarThumb img,
+.groupAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ==================== SIDEBAR SEARCH ==================== */
+.sidebarSearchWrap {
+  position: relative;
+  padding: 0.5rem 0.75rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.sidebarSearchIcon {
+  position: absolute;
+  left: 1.2rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.sidebarSearchInput {
+  width: 100%;
+  padding: 0.42rem 2rem 0.42rem 1.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: #f8fafc;
+  color: #334155;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.sidebarSearchInput:focus {
+  border-color: #6c63ff;
+  background: #fff;
+}
+
+.sidebarSearchClear {
+  position: absolute;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.sidebarSearchClear:hover {
+  color: #6c63ff;
+}
+
+:global([data-theme="dark"]) .sidebarSearchInput {
+  background: var(--bg-subtle);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .sidebarSearchInput:focus {
+  background: var(--bg-hover);
+  border-color: #7c73ff;
+}
+
+:global([data-theme="dark"]) .sidebarSearchIcon {
+  color: var(--text-muted);
+}
+
+:global([data-theme="dark"]) .chatSubTab {
+  color: var(--text-muted);
+}
+
+:global([data-theme="dark"]) .chatSubTab:hover {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .chatSubTabActive {
+  color: #a78bfa;
+  border-bottom-color: #a78bfa;
+}
+
+:global([data-theme="dark"]) .chatSubTabDivider {
+  background: var(--border-color);
+}
+
+/* ==================== MESSAGE WRAPPER (for reactions outside bubble) ==================== */
+.messageWrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.messagesContainer .messageWrapper:last-child {
+  margin-bottom: 0.25rem;
+}
+
+/* ==================== HOVER ACTIONS (react / reply / delete) ==================== */
+.msgHoverActions {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 2px 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.msgHoverActionsOwn {
+  right: auto;
+  left: 4px;
+}
+
+.messageBubble:hover .msgHoverActions {
+  display: flex;
+}
+
+.msgHoverBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.msgHoverBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* ==================== REACTION PICKER ==================== */
+.reactionPicker {
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 4px 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  z-index: 20;
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+.reactionPickerOwn {
+  align-self: flex-end;
+}
+
+.reactionPickerEmoji {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  padding: 2px 3px;
+  border-radius: 4px;
+  transition: transform 0.1s;
+  line-height: 1;
+}
+
+.reactionPickerEmoji:hover {
+  transform: scale(1.3);
+}
+
+/* ==================== REACTIONS ROW ==================== */
+.reactionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+  align-self: flex-start;
+}
+
+.reactionsRowOwn {
+  align-self: flex-end;
+}
+
+.reactionPill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background 0.15s;
+}
+
+.reactionPill:hover {
+  background: #e5e7eb;
+}
+
+.reactionPill span {
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* ==================== REPLY QUOTE (inside bubble) ==================== */
+.replyQuote {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  cursor: default;
+  overflow: hidden;
+}
+
+.replyQuoteOwn {
+  background: rgba(255,255,255,0.15);
+}
+
+.replyQuoteBar {
+  width: 3px;
+  border-radius: 3px;
+  background: #6c63ff;
+  flex-shrink: 0;
+}
+
+.replyQuoteOwn .replyQuoteBar {
+  background: rgba(255,255,255,0.7);
+}
+
+.replyQuoteBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.replyQuoteName {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6c63ff;
+}
+
+.replyQuoteOwn .replyQuoteName {
+  color: rgba(255,255,255,0.85);
+}
+
+.replyQuoteText {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.replyQuoteOwn .replyQuoteText {
+  color: rgba(255,255,255,0.7);
+}
+
+/* ==================== REPLY PREVIEW BAR (above input) ==================== */
+.replyPreview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  border-left: 3px solid #6c63ff;
+}
+
+.replyPreviewBar {
+  display: none; /* bar is the border-left above */
+}
+
+.replyPreviewContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.replyPreviewLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6c63ff;
+}
+
+.replyPreviewText {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.replyPreviewClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.replyPreviewClose:hover {
+  color: #374151;
+  background: #e5e7eb;
+}
+
+/* ==================== DARK MODE ==================== */
+:global([data-theme="dark"]) .msgHoverActions,
+:global([data-theme="dark"]) .reactionPicker {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+:global([data-theme="dark"]) .msgHoverBtn {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .msgHoverBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .reactionPill {
+  background: var(--bg-subtle);
+  border-color: var(--border-color);
+}
+
+:global([data-theme="dark"]) .reactionPill:hover {
+  background: var(--bg-hover);
+}
+
+:global([data-theme="dark"]) .reactionPill span {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .replyPreview {
+  background: var(--bg-subtle);
+}
+
+:global([data-theme="dark"]) .replyPreviewText,
+:global([data-theme="dark"]) .replyQuoteText {
+  color: var(--text-secondary);
+}
+
+/* ==================== GROUP INFO MODAL ==================== */
+.groupInfoModal {
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 0;
+  border-radius: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.groupInfoClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  z-index: 1;
+  transition: background 0.15s;
+}
+
+.groupInfoClose:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.groupInfoAvatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem 1rem;
+  gap: 0.5rem;
+}
+
+.groupInfoAvatarCircle {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0073a0, #005985);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,115,160,0.25);
+}
+
+.groupInfoAvatarCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.groupInfoName {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  text-align: center;
+}
+
+.groupInfoNameInput {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  border-bottom: 2px solid #0073a0;
+  background: transparent;
+  color: #111827;
+  padding: 4px 8px;
+  outline: none;
+  width: 100%;
+  max-width: 240px;
+}
+
+.groupInfoMeta {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.groupInfoDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0.5rem 1.5rem;
+  background: #f9fafb;
+}
+
+.groupInfoDetailRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.groupInfoDetailRow svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.groupInfoDivider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 0.5rem 0;
+}
+
+.groupInfoSection {
+  padding: 0.25rem 1.5rem 0.75rem;
+}
+
+.groupInfoSectionTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin: 0 0 0.5rem 0;
+}
+
+.groupInfoFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0.75rem 1.5rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  margin-top: auto;
+}
+
+.leaveGroupBtnModal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.leaveGroupBtnModal:hover {
+  background: #fee2e2;
+}
+
+/* Dark mode for group info modal */
+:global([data-theme="dark"]) .groupInfoModal {
+  background: var(--bg-card);
+}
+
+:global([data-theme="dark"]) .groupInfoClose:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .groupInfoName {
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .groupInfoNameInput {
+  color: var(--text-primary);
+  border-bottom-color: #a78bfa;
+}
+
+:global([data-theme="dark"]) .groupInfoDetails {
+  background: var(--bg-subtle);
+}
+
+:global([data-theme="dark"]) .groupInfoDetailRow {
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .groupInfoDivider {
+  background: var(--border-color);
+}
+
+:global([data-theme="dark"]) .groupInfoFooter {
+  border-top-color: var(--border-color);
+}
+
+:global([data-theme="dark"]) .leaveGroupBtnModal {
+  border-color: rgba(239,68,68,0.3);
+}
+
+:global([data-theme="dark"]) .chatHeaderInfoClickable:hover {
+  background: var(--bg-hover);
+}
+

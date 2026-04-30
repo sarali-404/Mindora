@@ -6,7 +6,7 @@ class GroupService {
   }
 
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
   async request(endpoint, options = {}) {
@@ -29,6 +29,14 @@ class GroupService {
     const data = await response.json();
 
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('refreshToken');
+        window.location.href = '/';
+      }
       throw new Error(data.message || 'Request failed');
     }
 
@@ -54,23 +62,56 @@ class GroupService {
   }
 
   // Send a plain text message
-  sendGroupMessage(groupId, content) {
+  sendGroupMessage(groupId, content, replyTo = null) {
     return this.request(`/${groupId}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, ...(replyTo && { replyTo }) })
     });
   }
 
   // Send a message with a file attachment
-  sendGroupMessageWithAttachment(groupId, content, file) {
+  sendGroupMessageWithAttachment(groupId, content, file, replyTo = null) {
     const formData = new FormData();
     if (content) formData.append('content', content);
     if (file) formData.append('attachment', file);
+    if (replyTo) formData.append('replyTo', replyTo);
 
     return this.request(`/${groupId}/messages`, {
       method: 'POST',
       body: formData
     });
+  }
+
+  // Toggle emoji reaction on a group message
+  toggleGroupReaction(messageId, emoji) {
+    return this.request(`/message/${messageId}/reaction`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji })
+    });
+  }
+
+  // Update group name and/or icon (creator only)
+  updateGroupWithIcon(groupId, name, iconFile) {
+    const formData = new FormData();
+    if (name) formData.append('name', name);
+    if (iconFile) formData.append('icon', iconFile);
+    return this.request(`/${groupId}`, {
+      method: 'PATCH',
+      body: formData
+    });
+  }
+
+  // Update group name (creator only)
+  updateGroup(groupId, name) {
+    return this.request(`/${groupId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name })
+    });
+  }
+
+  // Remove a member from a group (creator only)
+  removeMember(groupId, userId) {
+    return this.request(`/${groupId}/members/${userId}`, { method: 'DELETE' });
   }
 
   // Add a member to a group (creator only)
@@ -86,12 +127,9 @@ class GroupService {
     return this.request(`/${groupId}/leave`, { method: 'DELETE' });
   }
 
-  // Update group name (creator only)
-  updateGroup(groupId, name) {
-    return this.request(`/${groupId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ name })
-    });
+  // Get URL for a group message attachment (for display and download)
+  getGroupAttachmentUrl(filename) {
+    return `${this.baseURL}/attachment/${filename}`;
   }
 }
 
