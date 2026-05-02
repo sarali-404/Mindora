@@ -152,31 +152,18 @@ const getLevelInfo = async (req, res) => {
 };
 
 /**
- * Get activity stats
+ * Get activity stats — also counts as a daily check-in to update streak
  * @route GET /api/gamification/activity-stats
  */
 const getActivityStats = async (req, res) => {
   try {
     const userId = req.user._id;
+
+    // Opening the website counts as a study day — update streak (increments or resets as needed)
+    await gamificationService.updateStreak(userId);
+
+    // Re-fetch profile after streak update so the response reflects the new value
     const profile = await gamificationService.getUserGameProfile(userId);
-
-    // Check if streak needs to be reset (missed a day) on every app open
-    const lastStudy = profile.currentStreak?.lastStudyDate
-      ? new Date(profile.currentStreak.lastStudyDate)
-      : null;
-
-    if (lastStudy) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const lastStudyDay = new Date(lastStudy.getFullYear(), lastStudy.getMonth(), lastStudy.getDate());
-      const diffDays = Math.round((today - lastStudyDay) / (1000 * 60 * 60 * 24));
-
-      if (diffDays > 1 && profile.currentStreak.count > 0) {
-        // User missed at least one day — reset streak
-        profile.currentStreak.count = 0;
-        await profile.save();
-      }
-    }
 
     res.json({
       activityStats: profile.activityStats,

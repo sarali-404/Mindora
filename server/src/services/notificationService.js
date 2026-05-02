@@ -186,7 +186,7 @@ async function notifyWeakAreasRecommendation(user, weakAreas) {
 
     // Check email preference
     const prefs = await getUserPreferences(user._id);
-    const shouldEmailRecommendations = prefs?.notifications?.email?.recommendation !== false;
+    const shouldEmailRecommendations = prefs?.notifications?.email?.recommendations !== false;
 
     if (shouldEmailRecommendations && user.email) {
       const areasHtml = weakAreas.slice(0, 3).map(area => `<li style="margin: 8px 0; color: #4B5563;">${area}</li>`).join('');
@@ -440,17 +440,16 @@ async function notifyFriendRequest(recipient, requesterName) {
 }
 
 /**
- * Send streak reminder email to a user
+ * Send streak reminder email to a user whose streak is at risk today
  */
 async function sendStreakReminderEmail(user, streakCount) {
   try {
     const prefs = await getUserPreferences(user._id);
     if (prefs?.notifications?.email?.recommendations === false) return;
 
-    const isNew = streakCount === 0;
-    const subject = isNew
-      ? '📚 Start your study streak today!'
-      : `🔥 Don't break your ${streakCount}-day streak!`;
+    const firstName = user.profile?.firstName || user.username || 'there';
+    const subject = `🔥 ${firstName}, don't lose your ${streakCount}-day streak today!`;
+    const dashboardUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/app/dashboard`;
 
     const emailHtml = `
       <!DOCTYPE html><html><head><meta charset="utf-8">
@@ -459,18 +458,37 @@ async function sendStreakReminderEmail(user, streakCount) {
       <body style="margin:0;padding:0;font-family:'Quicksand',Arial,sans-serif;background:#f5f5f5;">
       <table role="presentation" style="width:100%;border-collapse:collapse;">
         <tr><td align="center" style="padding:40px 0;">
-          <table role="presentation" style="width:100%;max-width:500px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
-            <tr><td style="padding:40px;text-align:center;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:16px 16px 0 0;color:white;">
-              <h2 style="margin:0 0 10px 0;font-size:26px;">${isNew ? '📚 Start Studying!' : '🔥 Keep Your Streak!'}</h2>
-              <p style="margin:0;font-size:14px;opacity:0.9;">${isNew ? 'Begin your learning journey today' : `You're on a ${streakCount}-day streak`}</p>
-            </tr></td>
-            <tr><td style="padding:40px;text-align:center;">
-              ${!isNew ? `<div style="font-size:48px;margin-bottom:16px;">🔥 ${streakCount}</div><p style="color:#1F2937;font-weight:700;font-size:18px;margin:0 0 8px;">Day Streak</p>` : ''}
-              <p style="color:#6B7280;font-size:14px;margin:0 0 24px;">${isNew ? 'Log in and start a study session to begin your streak!' : "Log in today to keep your streak alive. Don't let it reset!"}</p>
-              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/app/dashboard" style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#fff;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;">Study Now</a>
+          <table role="presentation" style="width:100%;max-width:520px;background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+            <!-- Header -->
+            <tr><td style="padding:36px 40px 28px;text-align:center;background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);border-radius:16px 16px 0 0;color:#fff;">
+              <div style="font-size:52px;line-height:1;margin-bottom:12px;">🔥</div>
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;">Your streak is at risk!</h1>
+              <p style="margin:0;font-size:14px;opacity:0.9;">Log in before midnight to keep it alive</p>
             </td></tr>
-            <tr><td style="padding:20px;text-align:center;background:#f9fafb;border-radius:0 0 16px 16px;border-top:1px solid #e5e7eb;">
-              <p style="margin:0;color:#9CA3AF;font-size:12px;">Mindora - Study Smarter, Not Harder</p>
+            <!-- Body -->
+            <tr><td style="padding:36px 40px;text-align:center;">
+              <p style="color:#374151;font-size:16px;margin:0 0 24px;">Hey <strong>${firstName}</strong> 👋</p>
+              <p style="color:#6B7280;font-size:14px;line-height:1.6;margin:0 0 28px;">
+                You've built an impressive <strong style="color:#f59e0b;">${streakCount}-day study streak</strong>
+                on Mindora — don't let it slip away! You haven't studied today yet, and your streak
+                resets at midnight. Just open the app to keep it going.
+              </p>
+              <!-- Streak badge -->
+              <div style="display:inline-block;background:#fff7ed;border:2px solid #f59e0b;border-radius:12px;padding:16px 32px;margin-bottom:28px;">
+                <div style="font-size:40px;line-height:1;">🔥 ${streakCount}</div>
+                <div style="color:#92400e;font-weight:700;font-size:13px;margin-top:4px;">Day Streak</div>
+              </div>
+              <br>
+              <a href="${dashboardUrl}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-radius:999px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.3px;">
+                Study Now — Keep My Streak 🔥
+              </a>
+            </td></tr>
+            <!-- Footer -->
+            <tr><td style="padding:20px 40px;text-align:center;background:#f9fafb;border-radius:0 0 16px 16px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">
+                Mindora · Study Smarter, Not Harder<br>
+                <span style="font-size:11px;">You're receiving this because you have an active study streak.</span>
+              </p>
             </td></tr>
           </table>
         </td></tr>

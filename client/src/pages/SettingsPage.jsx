@@ -53,9 +53,17 @@ export default function SettingsPage() {
   const toggleEmail = () => {
     const newVal = !emailNoti;
     setEmailNoti(newVal);
-    savePreferences({
-      notifications: { email: { achievements: newVal, goalProgress: newVal, social: newVal, recommendations: newVal, sessions: newVal } }
-    });
+    if (newVal) {
+      // Re-enable email master but respect current sub-toggle states
+      savePreferences({
+        notifications: { email: { achievements: true, goalProgress: goalUpdates, social: true, recommendations: reminders, sessions: true } }
+      });
+    } else {
+      // Disable all email channels
+      savePreferences({
+        notifications: { email: { achievements: false, goalProgress: false, social: false, recommendations: false, sessions: false } }
+      });
+    }
   };
 
   const togglePush = () => {
@@ -69,16 +77,18 @@ export default function SettingsPage() {
   const toggleReminders = () => {
     const newVal = !reminders;
     setReminders(newVal);
+    // Controls both in-app and email study reminders (streak emails etc.)
     savePreferences({
-      notifications: { inApp: { recommendations: newVal } }
+      notifications: { inApp: { recommendations: newVal }, email: { recommendations: newVal } }
     });
   };
 
   const toggleGoalUpdates = () => {
     const newVal = !goalUpdates;
     setGoalUpdates(newVal);
+    // Controls both in-app and email goal progress notifications
     savePreferences({
-      notifications: { inApp: { goalProgress: newVal } }
+      notifications: { inApp: { goalProgress: newVal }, email: { goalProgress: newVal } }
     });
   };
 

@@ -18,11 +18,16 @@ class SessionScheduler {
       this.checkExpiredSessions();
     }, 60000); // Check every 60 seconds
 
-    // Streak reminder — runs once per hour; sends emails only in the 8 AM hour
+    // Runs once per hour:
+    //   - At noon (12:00): send streak reminder emails to at-risk users
+    //   - At midnight (00:00): batch-reset expired streaks in DB
     this.streakReminderInterval = setInterval(() => {
       const hour = new Date().getHours();
-      if (hour === 8) {
+      if (hour === 12) {
         this.sendStreakReminders();
+      }
+      if (hour === 0) {
+        this.resetExpiredStreaks();
       }
     }, 3600000); // Check every hour
   }
@@ -40,27 +45,57 @@ class SessionScheduler {
     console.log('📅 Session scheduler stopped');
   }
 
-  // Send streak reminder emails to users who haven't studied today
+  // Send streak reminder emails to users whose streak is at risk today
+  // (they studied yesterday but haven't studied yet today — streak expires at midnight)
   async sendStreakReminders() {
     try {
       console.log('🔥 Running streak reminder check...');
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
 
-      // Find profiles where lastStudyDate is before today (missed at least one day)
+      // Find users whose last study was exactly yesterday (streak active but at risk today)
       const profiles = await UserGameProfile.find({
-        lastStudyDate: { $lt: startOfToday }
+        'currentStreak.lastStudyDate': { $gte: startOfYesterday, $lt: startOfToday },
+        'currentStreak.count': { $gt: 0 }
       }).populate('user', 'username email profile.firstName');
 
       console.log(`🔥 Found ${profiles.length} user(s) eligible for streak reminder`);
 
       for (const profile of profiles) {
         if (!profile.user?.email) continue;
-        notificationService.sendStreakReminderEmail(profile.user, profile.currentStreak)
+        // Pass the streak count (number), not the whole subdocument
+        notificationService.sendStreakReminderEmail(profile.user, profile.currentStreak.count)
           .catch(e => console.error('Streak reminder error:', e.message));
       }
     } catch (error) {
       console.error('Streak reminder scheduler error:', error);
+    }
+  }
+
+  // Batch-reset streaks for users who missed yesterday entirely.
+  // Runs at midnight so the DB is accurate even for users who never re-visit.
+  async resetExpiredStreaks() {
+    try {
+      console.log('🔄 Running midnight streak expiry reset...');
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+      // Users whose lastStudyDate is before yesterday — they missed yesterday entirely
+      const result = await UserGameProfile.updateMany(
+        {
+          'currentStreak.lastStudyDate': { $lt: startOfYesterday },
+          'currentStreak.count': { $gt: 0 }
+        },
+        { $set: { 'currentStreak.count': 0 } }
+      );
+
+      console.log(`🔄 Reset streaks for ${result.modifiedCount} user(s)`);
+    } catch (error) {
+      console.error('Streak expiry reset error:', error);
     }
   }
 
