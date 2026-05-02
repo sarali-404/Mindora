@@ -11,6 +11,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const googleButtonRef = useRef(null);
   const rememberMeRef = useRef(false);
+  // Stable ref so Google GSI always calls the latest callback
+  const googleCallbackRef = useRef(null);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -138,14 +140,20 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
     }
   };
 
+  // Keep the ref always pointing to the latest callback
+  googleCallbackRef.current = handleGoogleCallback;
+
   // Load Google Identity Services script
   useEffect(() => {
+    // Stable wrapper so GSI always invokes the latest handleGoogleCallback
+    const stableCallback = (response) => googleCallbackRef.current(response);
+
     const initializeGoogle = () => {
       if (window.google && googleButtonRef.current) {
         try {
           window.google.accounts.id.initialize({
             client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            callback: handleGoogleCallback,
+            callback: stableCallback,
           });
 
           // Render the Google Sign-In button with fixed pixel width

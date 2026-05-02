@@ -1,12 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppSidebar from "./Sidebar";
 import TopNavbar from "./TopNavbar";
 import styles from "./Layout.module.css";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import ToastNotification from "../shared/ToastNotification";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (!token) {
+      navigate('/', { replace: true });
+    }
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

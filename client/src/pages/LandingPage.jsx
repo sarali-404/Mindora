@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./LandingPage.module.css";
 import LoginModal from "../components/auth/LoginModal";
 import RegisterModal from "../components/auth/RegisterModal";
@@ -63,6 +64,15 @@ export default function LandingPage() {
   const [animationStarted, setAnimationStarted] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const navigate = useNavigate();
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (token) {
+      navigate('/app/dashboard', { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (animationStarted) return;
