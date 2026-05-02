@@ -279,6 +279,35 @@ const getUserStats = async (req, res) => {
   }
 };
 
+/**
+ * Get user storage usage — sum of all uploaded material file sizes
+ * @route GET /api/users/storage
+ * @access Private
+ */
+const getUserStorage = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Sum sizes of all material files uploaded by this user via goals
+    const result = await Goal.aggregate([
+      { $match: { user: userId } },
+      { $unwind: '$materials' },
+      { $group: { _id: null, totalBytes: { $sum: '$materials.size' } } }
+    ]);
+
+    const totalBytes = result[0]?.totalBytes || 0;
+    const limitBytes = 500 * 1024 * 1024; // 500 MB per-user cap
+    const usedMB = +(totalBytes / (1024 * 1024)).toFixed(1);
+    const limitMB = limitBytes / (1024 * 1024);
+    const pct = Math.min(Math.round((totalBytes / limitBytes) * 100), 100);
+
+    res.json({ success: true, data: { totalBytes, usedMB, limitMB, pct } });
+  } catch (error) {
+    console.error('Get user storage error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get storage info' });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
@@ -286,5 +315,6 @@ module.exports = {
   getAllUsers,
   deleteUser,
   uploadProfilePicture,
-  getUserStats
+  getUserStats,
+  getUserStorage
 };

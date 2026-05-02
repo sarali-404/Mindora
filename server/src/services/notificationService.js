@@ -342,7 +342,10 @@ async function saveUserPreferences(userId, preferences) {
       userPrefs.timezone = preferences.timezone;
     }
     if (preferences.privacy) {
-      userPrefs.privacy = preferences.privacy;
+      userPrefs.privacy = {
+        ...(userPrefs.privacy?.toObject ? userPrefs.privacy.toObject() : userPrefs.privacy || {}),
+        ...preferences.privacy
+      };
     }
 
     userPrefs.updatedAt = Date.now();

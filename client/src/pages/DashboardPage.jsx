@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [streakData, setStreakData] = useState({ current: 0, longest: 0 });
   const [userStats, setUserStats] = useState({ goalsAchieved: 0, hoursStudied: 0, materialsUploaded: 0, activeGoals: 0 });
   const [rank, setRank] = useState(null);
+  const [rankHidden, setRankHidden] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
   const [activeGoals, setActiveGoals] = useState([]);
@@ -90,7 +91,11 @@ export default function DashboardPage() {
         if (levelRes.status === 'fulfilled') setLevelInfo(levelRes.value);
         if (statsRes.status === 'fulfilled' && statsRes.value.success) setUserStats(statsRes.value.data);
         if (activityRes.status === 'fulfilled') setStreakData(activityRes.value.streaks || { current: 0, longest: 0 });
-        if (rankRes.status === 'fulfilled') setRank(rankRes.value.rank?.rank ?? rankRes.value.rank);
+        if (rankRes.status === 'fulfilled') {
+          const rankData = rankRes.value.rank;
+          setRankHidden(rankData?.hidden === true);
+          setRank(rankData?.rank ?? rankData);
+        }
         if (leaderboardRes.status === 'fulfilled') {
           const lb = leaderboardRes.value.leaderboard || [];
           setLeaderboard(lb.map((entry, idx) => ({
@@ -185,7 +190,7 @@ export default function DashboardPage() {
                   <FaTrophy style={{ color: "#fbbf24" }} />
                 </span>
                 <div>
-                  <p className={styles.statValue}>{rank ? `#${rank}` : '—'}</p>
+                  <p className={styles.statValue}>{rankHidden ? 'Hidden' : rank ? `#${rank}` : '—'}</p>
                   <p className={styles.statLabel}>Global Rank</p>
                 </div>
               </div>

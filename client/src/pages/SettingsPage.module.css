@@ -171,6 +171,146 @@
   font-size: 0.86rem;
   font-weight: 500;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.clearButtonDone {
+  background-color: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #059669;
+}
+
+/* Saving badge */
+.savingBadge {
+  position: fixed;
+  bottom: 1.4rem;
+  right: 1.6rem;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  z-index: 9999;
+  animation: fadeInUp 0.2s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Change Password */
+.pwHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.65rem 0;
+  user-select: none;
+}
+
+.pwChevron {
+  font-size: 1.3rem;
+  color: #9ca3af;
+  transition: transform 0.2s;
+  line-height: 1;
+}
+
+.pwChevronOpen {
+  transform: rotate(90deg);
+}
+
+.pwForm {
+  padding: 0.8rem 0 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pwField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pwLabel {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.pwInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pwInput {
+  width: 100%;
+  padding: 0.5rem 2.4rem 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.88rem;
+  background: #fff;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.pwInput:focus {
+  border-color: #0073a0;
+}
+
+.pwEye {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.pwError {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+.pwSuccessMsg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #059669;
+  font-weight: 500;
+  padding: 0.5rem 0;
+}
+
+.pwSaveBtn {
+  align-self: flex-start;
+  padding: 0.5rem 1.3rem;
+  background: #0073a0;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.pwSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pwSaveBtn:hover:not(:disabled) {
+  background: #005985;
 }
 
 /* Responsive */
@@ -204,5 +344,22 @@
   border-color: var(--border-color);
   color: var(--text-primary);
 }
+:global([data-theme="dark"]) .clearButtonDone {
+  background-color: #052e16;
+  border-color: #166534;
+  color: #86efac;
+}
 :global([data-theme="dark"]) .toggleButton { color: var(--text-muted); }
 :global([data-theme="dark"]) .cardIcon { background-color: var(--bg-hover); }
+:global([data-theme="dark"]) .savingBadge { background: var(--bg-subtle); color: var(--text-primary); }
+:global([data-theme="dark"]) .pwHeader { border-bottom-color: var(--border-color); }
+:global([data-theme="dark"]) .pwChevron { color: var(--text-muted); }
+:global([data-theme="dark"]) .pwLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .pwInput {
+  background: var(--bg-subtle);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+:global([data-theme="dark"]) .pwInput:focus { border-color: #0073a0; }
+:global([data-theme="dark"]) .pwEye { color: var(--text-muted); }
+

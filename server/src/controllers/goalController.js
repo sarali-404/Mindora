@@ -1,6 +1,7 @@
 const Goal = require('../models/Goal');
 const GeneratedContent = require('../models/GeneratedContent');
 const Comment = require('../models/Comment');
+const UserPreferences = require('../models/UserPreferences');
 const ActivityLog = require('../models/ActivityLog');
 const { extractText, isSupportedFileType } = require('../utils/textExtractor');
 const aiService = require('../services/aiService');
@@ -2238,10 +2239,23 @@ exports.getPublicNotes = async (req, res) => {
     const { page = 1, limit = 12, search = '', sortBy = 'publishedAt', sortOrder = 'desc' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    // Find users who have opted out of public profile
+    const privatePrefs = await UserPreferences.find(
+      { 'privacy.profilePublic': false },
+      { user: 1 }
+    ).lean();
+    const privateUserIds = privatePrefs.map((p) => p.user);
+
+    // Find goals belonging to private users so we can exclude their notes
+    const privateGoalIds = privateUserIds.length
+      ? await Goal.find({ user: { $in: privateUserIds } }, { _id: 1 }).lean().then((g) => g.map((x) => x._id))
+      : [];
+
     const query = {
       isPublic: true,
       contentType: 'notes',
-      status: 'active'
+      status: 'active',
+      ...(privateGoalIds.length && { goal: { $nin: privateGoalIds } }),
     };
 
     if (search) {

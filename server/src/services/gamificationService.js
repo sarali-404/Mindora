@@ -2,6 +2,7 @@ const UserGameProfile = require('../models/UserGameProfile');
 const Achievement = require('../models/Achievement');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const UserPreferences = require('../models/UserPreferences');
 
 // XP Thresholds
 const XP_THRESHOLDS = {
@@ -367,13 +368,22 @@ async function getLeaderboard(limit = 100, page = 1) {
   try {
     const skip = (page - 1) * limit;
 
-    const leaderboard = await UserGameProfile.find()
+    // Exclude users who opted out of the leaderboard
+    const hiddenPrefs = await UserPreferences.find(
+      { 'privacy.showXPOnLeaderboard': false },
+      { user: 1 }
+    ).lean();
+    const hiddenUserIds = hiddenPrefs.map((p) => p.user);
+
+    const filter = hiddenUserIds.length ? { user: { $nin: hiddenUserIds } } : {};
+
+    const leaderboard = await UserGameProfile.find(filter)
       .populate('user', 'username profile.firstName profile.lastName profile.avatar')
       .sort({ totalXP: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await UserGameProfile.countDocuments();
+    const total = await UserGameProfile.countDocuments(filter);
 
     return {
       leaderboard,
@@ -446,21 +456,45 @@ async function updateStreak(userId) {
 }
 
 /**
- * Get user's rank on leaderboard
+ * Get user's rank on leaderboard.
+ * Only counts users who have showXPOnLeaderboard enabled (or default true).
+ * Returns null rank if the requesting user has opted out.
  */
 async function getUserRank(userId) {
   try {
     const profile = await UserGameProfile.findOne({ user: userId });
     if (!profile) return null;
 
+    // Check if this user is opted out
+    const ownPrefs = await UserPreferences.findOne({ user: userId }, { 'privacy.showXPOnLeaderboard': 1 }).lean();
+    const isHidden = ownPrefs?.privacy?.showXPOnLeaderboard === false;
+
+    if (isHidden) {
+      return {
+        rank: null,
+        totalXP: profile.totalXP,
+        currentLevel: profile.currentLevel,
+        hidden: true
+      };
+    }
+
+    // Exclude all opted-out users from the count
+    const hiddenPrefs = await UserPreferences.find(
+      { 'privacy.showXPOnLeaderboard': false },
+      { user: 1 }
+    ).lean();
+    const hiddenUserIds = hiddenPrefs.map((p) => p.user);
+
     const rank = await UserGameProfile.countDocuments({
-      totalXP: { $gt: profile.totalXP }
+      totalXP: { $gt: profile.totalXP },
+      ...(hiddenUserIds.length && { user: { $nin: hiddenUserIds } })
     }) + 1;
 
     return {
       rank,
       totalXP: profile.totalXP,
-      currentLevel: profile.currentLevel
+      currentLevel: profile.currentLevel,
+      hidden: false
     };
   } catch (error) {
     console.error('Get user rank error:', error);

@@ -9,7 +9,8 @@ const {
   getAllUsers,
   deleteUser,
   uploadProfilePicture,
-  getUserStats
+  getUserStats,
+  getUserStorage
 } = require('../controllers/userController');
 
 const { authenticate, authorize, authorizeOwnerOrAdmin } = require('../middleware/auth');
@@ -57,6 +58,7 @@ router.use(authenticate);
 // User routes
 router.get('/profile', getUserProfile);
 router.get('/stats', getUserStats);
+router.get('/storage', getUserStorage);
 router.put('/profile', [
   validateProfileUpdate,
   handleValidationErrors
