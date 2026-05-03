@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import AppLayout from "./components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
@@ -16,6 +16,11 @@ import NotificationsPage from "./pages/NotificationsPage";
 import NotePage from "./pages/NotePage";
 import AiNotePage from "./pages/AiNotePage";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminLoginPage from "./pages/admin/AdminLoginPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminVerificationsPage from "./pages/admin/AdminVerificationsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 
 function App() {
@@ -47,6 +52,15 @@ function App() {
 
         {/* Fallback: unknown paths show a 404 page (avoid rendering Dashboard for undefined routes) */}
         <Route path="*" element={<NotFound />} />
+
+        {/* Admin panel — own layout, no main app sidebar */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="verifications" element={<AdminVerificationsPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
     </ThemeProvider>

@@ -73,7 +73,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
         
         console.log('Login successful:', response);
         onClose(); // Close modal after successful login
-        window.location.href = '/app/dashboard';
+        const user = response.data?.user;
+        window.location.href = user?.role === 'admin' ? '/admin/dashboard' : '/app/dashboard';
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -125,7 +126,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
         } else {
           // Verified user - logged in
           onClose();
-          window.location.href = '/app/dashboard';
+          const gUser = result.data?.user;
+          window.location.href = gUser?.role === 'admin' ? '/admin/dashboard' : '/app/dashboard';
         }
       }
     } catch (error) {
