@@ -4,6 +4,7 @@ import styles from './NotePage.module.css';
 import aiStyles from './AiNotePage.module.css';
 import goalService from '../services/goalService';
 import authService from '../services/authService';
+import AuthorModal from '../components/shared/AuthorModal';
 import {
   MdArrowBack,
   MdAutoAwesome,
@@ -317,18 +318,10 @@ export default function AiNotePage() {
         {/* Right: Author & Meta */}
         <div className={styles.materialInfo}>
           {/* Author */}
-          <div className={styles.authorSection}>
-            <div className={styles.authorAvatar}>
-              {authorName.charAt(0).toUpperCase()}
-            </div>
-            <div className={styles.authorInfo}>
-              <span className={styles.authorName}>{authorName}</span>
-              <span className={styles.authorMeta}>
-                {authorUniversity ? `${authorUniversity} • ` : ''}
-                {formatDate(note.publishedAt || note.createdAt)}
-              </span>
-            </div>
-          </div>
+          <AuthorModal
+            author={note.goal?.user}
+            date={formatDate(note.publishedAt || note.createdAt)}
+          />
 
           {/* Stats */}
           <div className={styles.statsRow}>

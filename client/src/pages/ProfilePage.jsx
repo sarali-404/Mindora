@@ -58,12 +58,36 @@ export default function ProfilePage() {
   // Get current user from authService
   const [currentUser, setCurrentUser] = useState(authService.getUser());
   const [uploadingPicture, setUploadingPicture] = useState(false);
+
+  // Inline name edit
+  const [nameEditing, setNameEditing] = useState(false);
+  const [nameFirst, setNameFirst] = useState(currentUser?.profile?.firstName || '');
+  const [nameLast, setNameLast] = useState(currentUser?.profile?.lastName || '');
+  const [nameSaving, setNameSaving] = useState(false);
+
+  const handleSaveName = async () => {
+    if (!nameFirst.trim()) return;
+    setNameSaving(true);
+    try {
+      const res = await api.put('/users/profile', { firstName: nameFirst.trim(), lastName: nameLast.trim() });
+      if (res.success && res.data?.user) {
+        const updated = { ...currentUser, profile: { ...currentUser.profile, firstName: nameFirst.trim(), lastName: nameLast.trim() } };
+        authService.setUser(updated);
+        setCurrentUser(updated);
+      }
+      setNameEditing(false);
+    } catch (e) {
+      console.error('Name update error:', e);
+    } finally {
+      setNameSaving(false);
+    }
+  };
   
   // Dynamic user data
   const user = {
     name: currentUser?.profile?.firstName && currentUser?.profile?.lastName 
       ? `${currentUser.profile.firstName} ${currentUser.profile.lastName}`
-      : currentUser?.username || "User",
+      : currentUser?.profile?.firstName || currentUser?.username || "User",
     university: currentUser?.profile?.university || "University not set",
     major: currentUser?.profile?.degreeProgram || "Major not set",
     memberSince: currentUser?.createdAt 
@@ -389,8 +413,42 @@ export default function ProfilePage() {
             />
           </div>
           <div className={styles.headerInfo}>
-            <h1 className={styles.name}>{user.name}</h1>
-            {/* email removed as requested */}
+            {nameEditing ? (
+              <div className={styles.nameEditRow}>
+                <input
+                  className={styles.nameEditInput}
+                  value={nameFirst}
+                  onChange={(e) => setNameFirst(e.target.value)}
+                  placeholder="First name"
+                  autoFocus
+                />
+                <input
+                  className={styles.nameEditInput}
+                  value={nameLast}
+                  onChange={(e) => setNameLast(e.target.value)}
+                  placeholder="Last name"
+                />
+                <button
+                  className={styles.nameEditSave}
+                  onClick={handleSaveName}
+                  disabled={nameSaving || !nameFirst.trim()}
+                >
+                  {nameSaving ? '…' : 'Save'}
+                </button>
+                <button className={styles.nameEditCancel} onClick={() => {
+                  setNameEditing(false);
+                  setNameFirst(currentUser?.profile?.firstName || '');
+                  setNameLast(currentUser?.profile?.lastName || '');
+                }}>✕</button>
+              </div>
+            ) : (
+              <div className={styles.nameRow}>
+                <h1 className={styles.name}>{user.name}</h1>
+                <button className={styles.namePencil} onClick={() => setNameEditing(true)} title="Edit name">
+                  <MdEdit size={15} />
+                </button>
+              </div>
+            )}
             <div className={styles.tagsRow}>
               <span className={styles.tag}>{user.university}</span>
               <span className={styles.tag}>{user.major}</span>

@@ -54,7 +54,7 @@ exports.uploadMaterial = async (req, res) => {
     });
 
     await material.save();
-    await material.populate('author', 'username email profilePicture university');
+    await material.populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
 
     // --- Fire-and-forget: Update gamification ---
     gamificationService.addXP(req.user._id, 'material_shared', 25)
@@ -135,7 +135,7 @@ exports.getMaterials = async (req, res) => {
     
     const [materials, total] = await Promise.all([
       Material.find(query)
-        .populate('author', 'username email profilePicture university')
+        .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt')
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -175,7 +175,7 @@ exports.getMaterials = async (req, res) => {
 exports.getMaterial = async (req, res) => {
   try {
     const material = await Material.findById(req.params.id)
-      .populate('author', 'username email profilePicture university');
+      .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
 
     if (!material || material.status === 'deleted') {
       return res.status(404).json({
@@ -241,7 +241,7 @@ exports.updateMaterial = async (req, res) => {
     }
 
     await material.save();
-    await material.populate('author', 'username email profilePicture university');
+    await material.populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
 
     res.json({
       success: true,
@@ -456,7 +456,7 @@ exports.getSavedMaterials = async (req, res) => {
 
     const [materials, total] = await Promise.all([
       Material.find({ saves: req.user._id, status: 'active' })
-        .populate('author', 'username email profilePicture university')
+        .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))

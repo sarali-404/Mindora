@@ -324,7 +324,15 @@ export default function LibraryPage() {
                 title={material.title}
                 tag={material.subject || material.tag}
                 description={material.description}
-                author={material._isAiNote ? (material.author?.username || material.author?.profile?.firstName || 'Unknown') : (material.author?.username || 'Unknown')}
+                author={(() => {
+                  const u = material.author;
+                  if (!u) return 'Unknown';
+                  const fn = u.profile?.firstName;
+                  const ln = u.profile?.lastName;
+                  if (fn && ln) return `${fn} ${ln}`.trim();
+                  if (fn) return fn;
+                  return u.username || 'Unknown';
+                })()}
                 uni={material._isAiNote ? (material.author?.profile?.university || '') : (material.author?.university || '')}
                 date={formatDate(material.createdAt)}
                 type={material.materialType}

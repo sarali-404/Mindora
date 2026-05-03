@@ -2274,7 +2274,7 @@ exports.getPublicNotes = async (req, res) => {
           select: 'title subject user',
           populate: {
             path: 'user',
-            select: 'username profile.firstName profile.lastName profile.avatar profile.university'
+            select: 'username profile.firstName profile.lastName profile.avatar profile.university createdAt'
           }
         })
         .sort(sortObj)
@@ -2318,7 +2318,7 @@ exports.getPublicNote = async (req, res) => {
       select: 'title subject user',
       populate: {
         path: 'user',
-        select: 'username profile.firstName profile.lastName profile.avatar profile.university'
+        select: 'username profile.firstName profile.lastName profile.avatar profile.university createdAt'
       }
     });
 

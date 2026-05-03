@@ -1,0 +1,267 @@
+/* ── Clickable author row ─────────────────────────────── */
+.authorSection {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.authorTrigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.authorTrigger:hover { background: rgba(0,0,0,0.04); margin: -4px; padding: 4px; }
+
+/* Small avatar */
+.authorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0073a0, #005f85);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  inset: 0;
+}
+
+.avatarInitial {
+  position: relative;
+  z-index: 1;
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.authorName {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.92rem;
+}
+
+.authorMeta {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 1px;
+}
+
+/* ── Modal backdrop + card ────────────────────────────── */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 1.75rem 1.5rem;
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  animation: slideUp 0.18s ease;
+  text-align: center;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.closeBtn:hover { color: #374151; background: #f3f4f6; }
+
+/* Large avatar in modal */
+.modalAvatarWrap { display: flex; justify-content: center; margin-bottom: 0.9rem; }
+
+.modalAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0073a0, #005f85);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  overflow: hidden;
+  position: relative;
+  border: 3px solid #e5e7eb;
+}
+
+.modalAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  inset: 0;
+}
+
+.modalAvatarInitial {
+  position: relative;
+  z-index: 1;
+}
+
+.modalName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.15rem;
+}
+
+.modalUsername {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0 0 1rem;
+}
+
+/* Detail rows */
+.modalDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.modalDetail {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.detailIcon { color: #9ca3af; flex-shrink: 0; }
+
+.detailLabel {
+  color: #6b7280;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  color: #111827;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Friend button */
+.modalActions { display: flex; justify-content: center; }
+
+.friendBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: #0073a0;
+  color: #fff;
+  transition: background 0.15s, opacity 0.15s;
+}
+.friendBtn:hover:not(:disabled) { background: #005f82; }
+.friendBtn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.friendBtnAlready {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.friendBtnPending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.friendsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.friendStatus {
+  font-size: 0.82rem;
+  color: #9ca3af;
+}
+
+/* ── Dark mode ────────────────────────────────────────── */
+:global([data-theme="dark"]) .authorSection { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .authorTrigger:hover { background: rgba(255,255,255,0.05); }
+:global([data-theme="dark"]) .authorName { color: var(--text-primary); }
+:global([data-theme="dark"]) .authorMeta { color: var(--text-secondary); }
+
+:global([data-theme="dark"]) .modal { background: var(--bg-card); border: 1px solid var(--border-color); }
+:global([data-theme="dark"]) .closeBtn { color: var(--text-secondary); }
+:global([data-theme="dark"]) .closeBtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+:global([data-theme="dark"]) .modalName { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalUsername { color: var(--text-muted); }
+:global([data-theme="dark"]) .modalDetails { background: var(--bg-subtle); }
+:global([data-theme="dark"]) .detailLabel { color: var(--text-secondary); }
+:global([data-theme="dark"]) .detailValue { color: var(--text-primary); }
+:global([data-theme="dark"]) .modalAvatar { border-color: var(--border-color); }
+:global([data-theme="dark"]) .friendsBadge { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+:global([data-theme="dark"]) .friendStatus { color: var(--text-muted); }

@@ -100,6 +100,67 @@
   font-weight: 700;
 }
 
+/* Inline name edit */
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.namePencil {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.namePencil:hover { color: #0073a0; }
+
+.nameEditRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.nameEditInput {
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  width: 110px;
+  outline: none;
+}
+.nameEditInput:focus { border-color: #0073a0; }
+
+.nameEditSave {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #0073a0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.nameEditSave:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.nameEditCancel {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
 .email {
   font-size: 0.86rem;
   color: #6b7280;
@@ -1383,6 +1444,11 @@
 :global([data-theme="dark"]) .achievementProgressContainer { background-color: var(--bg-hover); }
 :global([data-theme="dark"]) .achievementProgressText { color: var(--text-secondary); }
 :global([data-theme="dark"]) .name { color: #ffffff; }
+:global([data-theme="dark"]) .namePencil { color: #6b7280; }
+:global([data-theme="dark"]) .namePencil:hover { color: #38bdf8; }
+:global([data-theme="dark"]) .nameEditInput { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .nameEditInput:focus { border-color: #38bdf8; }
+:global([data-theme="dark"]) .nameEditCancel { border-color: var(--border-color); color: var(--text-secondary); background: var(--bg-subtle); }
 :global([data-theme="dark"]) .email { color: rgba(255,255,255,0.75); }
 :global([data-theme="dark"]) .memberSince { color: rgba(255,255,255,0.65); }
 :global([data-theme="dark"]) .filterTab { color: var(--text-secondary); border-color: var(--border-color); background: var(--bg-subtle); }

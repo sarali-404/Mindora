@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './NotePage.module.css';
 import materialService from '../services/materialService';
 import authService from '../services/authService';
+import AuthorModal from '../components/shared/AuthorModal';
 import { 
   MdArrowBack,
   MdVisibility,
@@ -656,20 +657,10 @@ const NotePage = () => {
         {/* Right side - Material Details */}
         <div className={styles.materialInfo}>
           {/* Author info */}
-          <div className={styles.authorSection}>
-            <div className={styles.authorAvatar}>
-              {material.author?.username?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            <div className={styles.authorInfo}>
-              <span className={styles.authorName}>
-                {material.author?.username || 'Unknown'}
-              </span>
-              <span className={styles.authorMeta}>
-                {material.author?.university && `${material.author.university} • `}
-                {formatDate(material.createdAt)}
-              </span>
-            </div>
-          </div>
+          <AuthorModal
+            author={material.author}
+            date={formatDate(material.createdAt)}
+          />
 
           {/* Stats + Action buttons combined */}
           <div className={styles.actionButtons}>
