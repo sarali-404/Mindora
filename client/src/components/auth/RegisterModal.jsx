@@ -68,6 +68,17 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
   const googleButtonRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
 
+  // Step 4: Multi-document verification
+  const [verificationDocs, setVerificationDocs] = useState([
+    { docType: 'student_id', file: null, preview: null },
+    { docType: '', file: null, preview: null }
+  ]);
+  const [showThirdDoc, setShowThirdDoc] = useState(false);
+  const docRef0 = useRef(null);
+  const docRef1 = useRef(null);
+  const docRef2 = useRef(null);
+  const docRefs = [docRef0, docRef1, docRef2];
+
   // Check for existing registration data on mount
   useEffect(() => {
     if (isOpen) {
@@ -382,7 +393,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
     
     try {
       let profileData = {};
-      let idPhoto = null;
+      let verificationDocuments = null;
       
       switch (currentStep) {
         case 2:
@@ -404,21 +415,26 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
           };
           break;
           
-        case 4:
-          idPhoto = formData.idPhoto;
-          if (!idPhoto) {
-            setError('Please upload or capture your ID photo.');
+        case 4: {
+          const hasStudentId = verificationDocs[0]?.preview && verificationDocs[0]?.docType === 'student_id';
+          const hasSecondDoc = verificationDocs[1]?.preview && verificationDocs[1]?.docType;
+          if (!hasStudentId || !hasSecondDoc) {
+            setError('Please upload your Student ID and at least one university document.');
             setIsLoading(false);
             return;
           }
+          verificationDocuments = verificationDocs
+            .filter(d => d.preview && d.docType)
+            .map(d => ({ docType: d.docType, data: d.preview }));
           break;
+        }
       }
       
       const response = await authService.updateProfile({
         userId: currentUserId,
         step: currentStep,
         profileData,
-        idPhoto
+        verificationDocuments
       });
       
       if (response.success) {
@@ -537,6 +553,41 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
       }
       setCameraActive(false);
     }
+  };
+
+  const handleDocFileChange = (slotIdx, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setVerificationDocs(prev => {
+        const updated = [...prev];
+        updated[slotIdx] = { ...updated[slotIdx], file, preview: reader.result };
+        return updated;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDocTypeChange = (slotIdx, value) => {
+    setVerificationDocs(prev => {
+      const updated = [...prev];
+      updated[slotIdx] = { ...updated[slotIdx], docType: value };
+      return updated;
+    });
+  };
+
+  const handleRemoveDoc = (slotIdx) => {
+    setVerificationDocs(prev => {
+      const updated = [...prev];
+      updated[slotIdx] = { ...updated[slotIdx], file: null, preview: null };
+      return updated;
+    });
+    if (docRefs[slotIdx]?.current) docRefs[slotIdx].current.value = '';
   };
 
   const handleClose = () => {
@@ -876,6 +927,10 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
                     </div>
                   </div>
                   
+                  <p className={styles.nameHint}>
+                    Enter your name exactly as it appears on your student ID
+                  </p>
+                  
                   <div className={styles.inputRow}>
                     <div className={styles.inputGroup}>
                       <label className={styles.label}>Birthday</label>
@@ -929,77 +984,130 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
                 <div className={styles.stepContent}>
                   <h3>Verify Your Student ID</h3>
                   <p className={styles.stepDescription}>
-                    Upload your student ID or government ID to unlock all features
+                    Upload your student ID and one university document to unlock all features. Both are required.
                   </p>
-                  
-                  <div className={styles.idUploadSection}>
-                    {!capturedImage ? (
-                      <>
-                        {!cameraActive ? (
-                          <div className={styles.uploadOptions}>
-                            <button
-                              type="button"
-                              className={styles.uploadOption}
-                              onClick={startCamera}
-                            >
-                              <span className={styles.optionIcon}><HiOutlineCamera size={28} /></span>
-                              <span>Take Photo</span>
-                            </button>
-                            
-                            <button
-                              type="button"
-                              className={styles.uploadOption}
-                              onClick={() => fileInputRef.current?.click()}
-                            >
-                              <span className={styles.optionIcon}><HiOutlineUpload size={28} /></span>
-                              <span>Upload File</span>
-                            </button>
-                            
-                            <input
-                              ref={fileInputRef}
-                              type="file"
-                              accept="image/*"
-                              onChange={handleFileUpload}
-                              style={{ display: 'none' }}
-                            />
-                          </div>
-                        ) : (
-                          <div className={styles.cameraContainer}>
-                            <video
-                              ref={videoRef}
-                              autoPlay
-                              playsInline
-                              className={styles.cameraPreview}
-                            />
-                            <button
-                              type="button"
-                              className={styles.captureButton}
-                              onClick={capturePhoto}
-                            >
-                              <HiOutlineCamera /> Capture
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className={styles.previewContainer}>
-                        <img
-                          src={capturedImage}
-                          alt="ID Preview"
-                          className={styles.idPreview}
-                        />
-                        <button
-                          type="button"
-                          className={styles.retakeButton}
-                          onClick={retakePhoto}
-                        >
-                          Retake Photo
+                  <p className={styles.verifyHint}>
+                    Accurate documents speed up the review process.
+                  </p>
+
+                  {/* Slot 1: Student ID (fixed) */}
+                  <div className={styles.docCard}>
+                    <div className={styles.docCardHeader}>
+                      <span className={styles.docCardLabel}>Student ID Card</span>
+                      <span className={styles.requiredBadge}>Required</span>
+                    </div>
+                    {verificationDocs[0].preview ? (
+                      <div className={styles.docPreview}>
+                        <img src={verificationDocs[0].preview} alt="Student ID" className={styles.docThumb} />
+                        <button type="button" className={styles.removeDocBtn} onClick={() => handleRemoveDoc(0)}>
+                          ✕ Remove
                         </button>
                       </div>
+                    ) : (
+                      <button type="button" className={styles.docUploadBtn} onClick={() => docRefs[0].current?.click()}>
+                        <HiOutlineUpload size={16} /> Upload Photo
+                      </button>
                     )}
+                    <input ref={docRefs[0]} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleDocFileChange(0, e)} />
                   </div>
-                  
-                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+                  {/* Slot 2: University document (required) */}
+                  <div className={styles.docCard}>
+                    <div className={styles.docCardHeader}>
+                      <span className={styles.docCardLabel}>University Document</span>
+                      <span className={styles.requiredBadge}>Required</span>
+                    </div>
+                    <select
+                      className={styles.docTypeSelect}
+                      value={verificationDocs[1].docType}
+                      onChange={(e) => handleDocTypeChange(1, e.target.value)}
+                    >
+                      <option value="">Select document type…</option>
+                      <option value="enrollment_letter">Enrollment Letter</option>
+                      <option value="university_timetable">University Timetable</option>
+                      <option value="fee_receipt">Fee Receipt</option>
+                      <option value="library_card">Library Card</option>
+                    </select>
+                    {verificationDocs[1].preview ? (
+                      <div className={styles.docPreview}>
+                        <img src={verificationDocs[1].preview} alt="University Document" className={styles.docThumb} />
+                        <button type="button" className={styles.removeDocBtn} onClick={() => handleRemoveDoc(1)}>
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.docUploadBtn}
+                        disabled={!verificationDocs[1].docType}
+                        onClick={() => docRefs[1].current?.click()}
+                      >
+                        <HiOutlineUpload size={16} /> Upload Photo
+                      </button>
+                    )}
+                    <input ref={docRefs[1]} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleDocFileChange(1, e)} />
+                  </div>
+
+                  {/* Optional Slot 3 */}
+                  {showThirdDoc ? (
+                    <div className={styles.docCard}>
+                      <div className={styles.docCardHeader}>
+                        <span className={styles.docCardLabel}>Additional Document</span>
+                        <span className={styles.optionalBadge}>Optional</span>
+                        <button
+                          type="button"
+                          className={styles.removeCardBtn}
+                          onClick={() => {
+                            setShowThirdDoc(false);
+                            setVerificationDocs(prev => prev.slice(0, 2));
+                            if (docRefs[2]?.current) docRefs[2].current.value = '';
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <select
+                        className={styles.docTypeSelect}
+                        value={verificationDocs[2]?.docType || ''}
+                        onChange={(e) => handleDocTypeChange(2, e.target.value)}
+                      >
+                        <option value="">Select document type…</option>
+                        <option value="enrollment_letter">Enrollment Letter</option>
+                        <option value="university_timetable">University Timetable</option>
+                        <option value="fee_receipt">Fee Receipt</option>
+                        <option value="library_card">Library Card</option>
+                      </select>
+                      {verificationDocs[2]?.preview ? (
+                        <div className={styles.docPreview}>
+                          <img src={verificationDocs[2].preview} alt="Additional Document" className={styles.docThumb} />
+                          <button type="button" className={styles.removeDocBtn} onClick={() => handleRemoveDoc(2)}>
+                            ✕ Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.docUploadBtn}
+                          disabled={!verificationDocs[2]?.docType}
+                          onClick={() => docRefs[2].current?.click()}
+                        >
+                          <HiOutlineUpload size={16} /> Upload Photo
+                        </button>
+                      )}
+                      <input ref={docRefs[2]} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleDocFileChange(2, e)} />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.addDocBtn}
+                      onClick={() => {
+                        setVerificationDocs(prev => [...prev, { docType: '', file: null, preview: null }]);
+                        setShowThirdDoc(true);
+                      }}
+                    >
+                      + Add another document <span className={styles.optionalTag}>(optional)</span>
+                    </button>
+                  )}
                 </div>
               )}
               
@@ -1028,7 +1136,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, initialData }) => {
                     <button
                       type="submit"
                       className={styles.submitButton}
-                      disabled={isLoading || !formData.idPhoto}
+                      disabled={isLoading || !(verificationDocs[0]?.preview && verificationDocs[1]?.preview && verificationDocs[1]?.docType)}
                     >
                       {isLoading ? 'Submitting...' : 'Complete'}
                     </button>

@@ -18,7 +18,8 @@ export default function AdminVerificationsPage() {
   const [loading, setLoading] = useState(true);
 
   // Lightbox state
-  const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [lightboxDocs, setLightboxDocs] = useState([]);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
   const [lightboxUser, setLightboxUser] = useState(null);
 
   // Reject modal state
@@ -77,8 +78,26 @@ export default function AdminVerificationsPage() {
 
   const getIdPhotoUrl = (url) => {
     if (!url) return null;
+    if (url.startsWith('data:')) return url; // base64 data URL — use directly as <img src>
     if (url.startsWith('http')) return url;
     return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  const buildDocList = (user) => {
+    const docs = [];
+    if (user.profile?.idPhoto?.url) {
+      docs.push({ docType: 'Student ID Card', url: getIdPhotoUrl(user.profile.idPhoto.url) });
+    }
+    (user.profile?.verificationDocs || []).forEach((d) => {
+      const labelMap = {
+        enrollment_letter: 'Enrollment Letter',
+        university_timetable: 'University Timetable',
+        fee_receipt: 'Fee Receipt',
+        library_card: 'Library Card',
+      };
+      docs.push({ docType: labelMap[d.docType] || d.docType, url: getIdPhotoUrl(d.url) });
+    });
+    return docs;
   };
 
   return (
@@ -127,8 +146,12 @@ export default function AdminVerificationsPage() {
                           <button
                             className={`${styles.btn} ${styles.btnView} ${styles.btnSm}`}
                             onClick={() => {
-                              setLightboxUrl(getIdPhotoUrl(u.profile?.idPhoto?.url));
-                              setLightboxUser(u);
+                              const docs = buildDocList(u);
+                              if (docs.length > 0) {
+                                setLightboxDocs(docs);
+                                setLightboxIdx(0);
+                                setLightboxUser(u);
+                              }
                             }}
                           >
                             View ID
@@ -156,31 +179,59 @@ export default function AdminVerificationsPage() {
         )}
       </div>
 
-      {/* ID Photo Lightbox */}
-      {lightboxUrl && (
-        <div className={styles.backdrop} onClick={() => setLightboxUrl(null)}>
+      {/* ID Documents Lightbox */}
+      {lightboxDocs.length > 0 && (
+        <div className={styles.backdrop} onClick={() => setLightboxDocs([])}>
           <div
             className={`${styles.modal} ${styles.lightbox}`}
             onClick={(e) => e.stopPropagation()}
           >
             <p className={styles.modalTitle}>
-              ID Photo —{' '}
+              Documents —{' '}
               {[lightboxUser?.profile?.firstName, lightboxUser?.profile?.lastName]
                 .filter(Boolean)
                 .join(' ') || lightboxUser?.username}
             </p>
+            {lightboxDocs.length > 1 && (
+              <p style={{ textAlign: 'center', fontSize: '0.82rem', color: '#6B7280', marginBottom: '0.5rem' }}>
+                {lightboxDocs[lightboxIdx].docType} &nbsp;·&nbsp; {lightboxIdx + 1} of {lightboxDocs.length}
+              </p>
+            )}
+            {lightboxDocs.length === 1 && (
+              <p style={{ textAlign: 'center', fontSize: '0.82rem', color: '#6B7280', marginBottom: '0.5rem' }}>
+                {lightboxDocs[0].docType}
+              </p>
+            )}
             <img
-              src={lightboxUrl}
-              alt="ID Photo"
+              src={lightboxDocs[lightboxIdx]?.url}
+              alt={lightboxDocs[lightboxIdx]?.docType}
               className={styles.lightboxImg}
               onError={(e) => { e.target.alt = 'Image failed to load'; }}
             />
+            {lightboxDocs.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
+                <button
+                  className={`${styles.btn} ${styles.btnCancel}`}
+                  disabled={lightboxIdx === 0}
+                  onClick={() => setLightboxIdx((i) => i - 1)}
+                >
+                  ← Prev
+                </button>
+                <button
+                  className={`${styles.btn} ${styles.btnCancel}`}
+                  disabled={lightboxIdx === lightboxDocs.length - 1}
+                  onClick={() => setLightboxIdx((i) => i + 1)}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
             <div className={styles.modalActions}>
               <button
                 className={`${styles.btn} ${styles.btnApprove}`}
                 onClick={() => {
                   handleApprove(lightboxUser._id, lightboxUser.username);
-                  setLightboxUrl(null);
+                  setLightboxDocs([]);
                 }}
               >
                 Approve
@@ -189,14 +240,14 @@ export default function AdminVerificationsPage() {
                 className={`${styles.btn} ${styles.btnReject}`}
                 onClick={() => {
                   openReject(lightboxUser);
-                  setLightboxUrl(null);
+                  setLightboxDocs([]);
                 }}
               >
                 Reject
               </button>
               <button
                 className={`${styles.btn} ${styles.btnCancel}`}
-                onClick={() => setLightboxUrl(null)}
+                onClick={() => setLightboxDocs([])}
               >
                 Close
               </button>

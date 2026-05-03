@@ -107,7 +107,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
       }
-    }
+    },
+    verificationDocs: [
+      {
+        docType: { type: String },
+        url: { type: String },
+        uploadedAt: { type: Date }
+      }
+    ]
   },
   isActive: {
     type: Boolean,

@@ -484,6 +484,183 @@
   background: #FEF2F2;
 }
 
+/* Multi-document verification (Step 4) */
+.nameHint {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin: -0.5rem 0 1rem 0;
+  font-style: italic;
+}
+
+.verifyHint {
+  font-size: 0.85rem;
+  color: #0073a0;
+  background: #E6F4F8;
+  border-left: 3px solid #0073a0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 1rem;
+}
+
+.docCard {
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: #FAFAFA;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.docCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.docCardLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.requiredBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0073a0;
+  background: #E6F4F8;
+  border: 1px solid #b3d9e8;
+  border-radius: 4px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.optionalBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6B7280;
+  background: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.docTypeSelect {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: "Quicksand", sans-serif;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+}
+
+.docTypeSelect:focus {
+  outline: none;
+  border-color: #0073a0;
+}
+
+.docUploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1.5px dashed #0073a0;
+  border-radius: 8px;
+  color: #0073a0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: "Quicksand", sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+
+.docUploadBtn:hover:not(:disabled) {
+  background: #E6F4F8;
+}
+
+.docUploadBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.docPreview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.docThumb {
+  width: 72px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1.5px solid #E5E7EB;
+}
+
+.removeDocBtn {
+  font-size: 0.8rem;
+  color: #EF4444;
+  background: none;
+  border: 1px solid #EF4444;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+}
+
+.removeDocBtn:hover {
+  background: #FEF2F2;
+}
+
+.removeCardBtn {
+  font-size: 0.78rem;
+  color: #9CA3AF;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  text-decoration: underline;
+  margin-left: auto;
+}
+
+.addDocBtn {
+  width: 100%;
+  padding: 0.65rem;
+  background: #fff;
+  border: 1.5px dashed #D1D5DB;
+  border-radius: 10px;
+  color: #6B7280;
+  font-size: 0.875rem;
+  font-family: "Quicksand", sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.addDocBtn:hover {
+  border-color: #0073a0;
+  color: #0073a0;
+}
+
+.optionalTag {
+  font-weight: 400;
+  font-size: 0.82em;
+  color: #9CA3AF;
+}
+
 /* Success Screen */
 .successScreen {
   text-align: center;

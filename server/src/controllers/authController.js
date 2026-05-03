@@ -346,7 +346,7 @@ const googleAuth = async (req, res) => {
 // @access  Public (requires userId)
 const updateProfile = async (req, res) => {
   try {
-    const { userId, step, profileData, idPhoto } = req.body;
+    const { userId, step, profileData, idPhoto, verificationDocuments } = req.body;
     
     console.log('Update profile request:', { userId, step, profileData });
     
@@ -396,12 +396,31 @@ const updateProfile = async (req, res) => {
         break;
         
       case 4:
-        // ID Verification - Final Step
+        // ID Verification - Final Step (multi-document)
+        if (!verificationDocuments || !Array.isArray(verificationDocuments) || verificationDocuments.length < 2) {
+          return res.status(400).json({
+            success: false,
+            message: 'Please upload your Student ID and at least one university document.'
+          });
+        }
+        if (verificationDocuments[0].docType !== 'student_id' || !verificationDocuments[0].data) {
+          return res.status(400).json({
+            success: false,
+            message: 'A Student ID photo is required as the first document.'
+          });
+        }
+        // Primary doc → profile.idPhoto (keeps all existing .verified checks working)
         user.profile.idPhoto = {
-          url: idPhoto,
+          url: verificationDocuments[0].data,
           uploadedAt: new Date(),
           verified: false
         };
+        // Additional docs → profile.verificationDocs
+        user.profile.verificationDocs = verificationDocuments.slice(1).map(d => ({
+          docType: d.docType,
+          url: d.data,
+          uploadedAt: new Date()
+        }));
         user.registrationStep = 4;
         user.verificationStatus = 'verified'; // ID submitted, waiting for admin approval
         break;

@@ -53,7 +53,7 @@ const getPendingVerifications = async (req, res) => {
       'profile.idPhoto.verified': false,
       'profile.idPhoto.url': { $exists: true, $ne: null },
     })
-      .select('username email profile.firstName profile.lastName profile.idPhoto profile.university createdAt')
+      .select('username email profile.firstName profile.lastName profile.idPhoto profile.verificationDocs profile.university createdAt')
       .sort({ 'profile.idPhoto.uploadedAt': 1 }) // oldest first
       .lean();
 
@@ -153,7 +153,7 @@ const getAllUsersAdmin = async (req, res) => {
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
       User.find(filters)
-        .select('username email role verificationStatus isActive profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt lastLogin')
+        .select('username email role verificationStatus isActive profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto profile.verificationDocs createdAt lastLogin')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
