@@ -7,8 +7,8 @@ const fs = require('fs');
 // Upload a new material
 exports.uploadMaterial = async (req, res) => {
   try {
-    // Check if user is verified
-    if (req.user.verificationStatus !== 'verified') {
+    // Check if user is admin-verified
+    if (!req.user.profile?.idPhoto?.verified) {
       // Clean up uploaded file if user is not verified
       if (req.file) {
         fs.unlink(req.file.path, (err) => {
@@ -17,7 +17,8 @@ exports.uploadMaterial = async (req, res) => {
       }
       return res.status(403).json({
         success: false,
-        message: 'You must be verified to upload materials. Please complete ID verification in your profile.'
+        message: 'Verify your account to upload materials.',
+        requiresVerification: true
       });
     }
 
@@ -54,7 +55,7 @@ exports.uploadMaterial = async (req, res) => {
     });
 
     await material.save();
-    await material.populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
+    await material.populate('author', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt');
 
     // --- Fire-and-forget: Update gamification ---
     gamificationService.addXP(req.user._id, 'material_shared', 25)
@@ -135,7 +136,7 @@ exports.getMaterials = async (req, res) => {
     
     const [materials, total] = await Promise.all([
       Material.find(query)
-        .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt')
+        .populate('author', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt')
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -175,7 +176,7 @@ exports.getMaterials = async (req, res) => {
 exports.getMaterial = async (req, res) => {
   try {
     const material = await Material.findById(req.params.id)
-      .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
+      .populate('author', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt');
 
     if (!material || material.status === 'deleted') {
       return res.status(404).json({
@@ -241,7 +242,7 @@ exports.updateMaterial = async (req, res) => {
     }
 
     await material.save();
-    await material.populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt');
+    await material.populate('author', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt');
 
     res.json({
       success: true,
@@ -456,7 +457,7 @@ exports.getSavedMaterials = async (req, res) => {
 
     const [materials, total] = await Promise.all([
       Material.find({ saves: req.user._id, status: 'active' })
-        .populate('author', 'username email profile.firstName profile.lastName profile.avatar profile.university createdAt')
+        .populate('author', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
@@ -498,7 +499,7 @@ exports.getComments = async (req, res) => {
         status: 'active',
         parentComment: null // Only top-level comments
       })
-        .populate('author', 'username profilePicture')
+        .populate('author', 'username profile.firstName profile.lastName profile.idPhoto')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
@@ -516,7 +517,7 @@ exports.getComments = async (req, res) => {
         parentComment: comment._id,
         status: 'active'
       })
-        .populate('author', 'username profilePicture')
+        .populate('author', 'username profile.firstName profile.lastName profile.idPhoto')
         .sort({ createdAt: 1 })
         .lean();
       
@@ -571,7 +572,7 @@ exports.addComment = async (req, res) => {
     });
 
     await comment.save();
-    await comment.populate('author', 'username profilePicture');
+    await comment.populate('author', 'username profile.firstName profile.lastName profile.idPhoto');
 
     res.status(201).json({
       success: true,
@@ -611,7 +612,7 @@ exports.updateComment = async (req, res) => {
     comment.isEdited = true;
     comment.editedAt = new Date();
     await comment.save();
-    await comment.populate('author', 'username profilePicture');
+    await comment.populate('author', 'username profile.firstName profile.lastName profile.idPhoto');
 
     res.json({
       success: true,

@@ -1,3 +1,58 @@
+/* ── Verification Banner ── */
+.verifyBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, #0073a0 0%, #005f85 100%);
+  color: #fff;
+  font-size: 0.875rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.verifyBannerIcon {
+  flex-shrink: 0;
+  color: #93ddff;
+}
+
+.verifyBanner span {
+  flex: 1;
+}
+
+.verifyBannerLink {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.verifyBannerLink:hover {
+  color: #c7eeff;
+}
+
+.verifyBannerClose {
+  background: none;
+  border: none;
+  color: #c7eeff;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.verifyBannerClose:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+}
+
+:global([data-theme="dark"]) .verifyBanner {
+  background: linear-gradient(90deg, #004d6e 0%, #003a52 100%);
+}
+
 .layout {
   display: flex;
   min-height: 100vh;

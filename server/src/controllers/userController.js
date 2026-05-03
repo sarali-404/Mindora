@@ -308,10 +308,53 @@ const getUserStorage = async (req, res) => {
   }
 };
 
+// @desc    Upload ID photo as a file (for profile verification)
+// @route   POST /api/users/upload-id-photo
+// @access  Private
+const uploadIDPhotoFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Block re-upload if already admin-approved
+    if (user.profile?.idPhoto?.verified === true) {
+      return res.status(400).json({ success: false, message: 'Your ID has already been verified.' });
+    }
+
+    const idPhotoPath = `/uploads/id-photos/${req.file.filename}`;
+
+    user.profile.idPhoto = { url: idPhotoPath, uploadedAt: new Date(), verified: false };
+    user.verificationStatus = 'verified'; // queue for admin review
+    user.verificationMessage = undefined;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'ID photo submitted for review.',
+      data: { idPhoto: user.profile.idPhoto, verificationStatus: user.verificationStatus }
+    });
+  } catch (error) {
+    console.error('Upload ID photo file error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading ID photo.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
   uploadIDPhoto,
+  uploadIDPhotoFile,
   getAllUsers,
   deleteUser,
   uploadProfilePicture,

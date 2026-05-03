@@ -3,6 +3,33 @@
   min-height: calc(100vh - 72px);
 }
 
+/* Goal limit wall (non-verified users) */
+.goalLimitWall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+.goalLimitIcon { font-size: 3rem; }
+.goalLimitTitle { font-size: 1.5rem; font-weight: 700; color: #111827; }
+.goalLimitText  { font-size: 0.95rem; color: #6b7280; max-width: 400px; line-height: 1.6; }
+.goalLimitBtns  { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+.goalLimitVerifyBtn {
+  background: #0073a0; color: #fff; border: none; border-radius: 0.5rem;
+  padding: 0.6rem 1.4rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.goalLimitVerifyBtn:hover { background: #005f85; }
+.goalLimitBackBtn {
+  background: transparent; color: #6b7280; border: 1px solid #d1d5db;
+  border-radius: 0.5rem; padding: 0.6rem 1.4rem; font-size: 0.9rem; cursor: pointer;
+}
+.goalLimitBackBtn:hover { background: #f3f4f6; }
+:global([data-theme="dark"]) .goalLimitTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .goalLimitText  { color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalLimitBackBtn { color: var(--text-secondary); border-color: var(--border); }
+
 .backLink {
   border: none;
   background: transparent;

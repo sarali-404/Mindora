@@ -21,7 +21,7 @@ import authService from "../services/authService";
 export default function SessionsPage() {
   const navigate = useNavigate();
   const currentUser = authService.getUser();
-  const isVerified = currentUser?.verificationStatus === 'verified';
+  const isVerified = currentUser?.profile?.idPhoto?.verified === true;
 
   const [sessions, setSessions] = useState([]);
   const [mySessions, setMySessions] = useState([]);
@@ -417,6 +417,9 @@ function SessionCard({
         <div>
           <p className={styles.hostName}>
             {hostName}
+            {session.host?.profile?.idPhoto?.verified === true && (
+              <MdVerified style={{ color: '#0073a0', fontSize: '0.95rem', marginLeft: '3px', verticalAlign: 'middle' }} />
+            )}
             {isHost && <span className={styles.hostBadge}>Host</span>}
           </p>
           {hostUni && <p className={styles.hostMeta}>{hostUni}</p>}

@@ -17,6 +17,15 @@ exports.sendMessage = async (req, res) => {
     const senderId = req.user._id;
     const { content } = req.body;
 
+    // Must be admin-verified to send messages
+    if (!req.user.profile?.idPhoto?.verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Verify your account to send messages.',
+        requiresVerification: true
+      });
+    }
+
     // Can't message yourself
     if (userId === senderId.toString()) {
       return res.status(400).json({
@@ -41,17 +50,6 @@ exports.sendMessage = async (req, res) => {
         success: false,
         message: 'Cannot send message to this user'
       });
-    }
-
-    // Check message limit for unverified users
-    if (req.user.verificationStatus !== 'verified') {
-      const todayCount = await Message.countTodayMessages(senderId);
-      if (todayCount >= UNVERIFIED_DAILY_LIMIT) {
-        return res.status(429).json({
-          success: false,
-          message: `You have reached your daily message limit (${UNVERIFIED_DAILY_LIMIT}). Verify your account for unlimited messaging.`
-        });
-      }
     }
 
     // Validate content
@@ -102,8 +100,8 @@ exports.sendMessage = async (req, res) => {
     }
 
     const message = await Message.create(messageData);
-    await message.populate('sender', 'username profile.firstName profile.lastName profile.avatar');
-    await message.populate('receiver', 'username profile.firstName profile.lastName profile.avatar');
+    await message.populate('sender', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto');
+    await message.populate('receiver', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto');
     await message.populate('replyTo', 'content sender attachment deletedForEveryone');
 
     // Emit socket event for real-time delivery

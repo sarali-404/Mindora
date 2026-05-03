@@ -375,6 +375,10 @@ export default function CommunityPage() {
 
   // Friend actions
   const handleSendFriendRequest = async (userId) => {
+    if (!authService.isFullyVerified()) {
+      dispatchToast('Verify your account to add friends.', 'default');
+      return;
+    }
     try {
       await friendService.sendFriendRequest(userId);
       fetchDiscoverUsers(searchQuery);
@@ -929,6 +933,9 @@ export default function CommunityPage() {
                               <div className={styles.conversationTop}>
                                 <span className={styles.conversationName}>
                                   {getDisplayName(conv.otherUser)}
+                                  {conv.otherUser?.profile?.idPhoto?.verified === true && (
+                                    <MdVerified style={{ color: '#0073a0', fontSize: '0.85rem', marginLeft: '3px', verticalAlign: 'middle', flexShrink: 0 }} />
+                                  )}
                                 </span>
                                 <span className={styles.conversationTime}>
                                   {formatConversationTime(conv.lastMessage.createdAt)}
@@ -1038,7 +1045,12 @@ export default function CommunityPage() {
                             )}
                           </div>
                           <div>
-                            <h4>{getDisplayName(selectedChat)}</h4>
+                            <h4 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {getDisplayName(selectedChat)}
+                              {selectedChat?.profile?.idPhoto?.verified === true && (
+                                <MdVerified style={{ color: '#0073a0', fontSize: '1rem', flexShrink: 0 }} />
+                              )}
+                            </h4>
                             <p className={styles.chatStatus}>
                               {selectedChat.isOnline ? (
                                 <><FaCircle className={styles.onlineIndicator} /> Online</>
@@ -1098,6 +1110,12 @@ export default function CommunityPage() {
                       </div>
 
                       <form className={styles.messageForm} onSubmit={handleSendMessage}>
+                        {!authService.isFullyVerified() && (
+                          <div className={styles.msgVerifyBanner}>
+                            <MdVerified size={15} /> Verify your account to send messages.{' '}
+                            <a href="/app/profile">Get verified →</a>
+                          </div>
+                        )}
                         {replyingTo && (
                           <div className={styles.replyPreview}>
                             <div className={styles.replyPreviewBar} />
@@ -1137,18 +1155,19 @@ export default function CommunityPage() {
                           />
                           <input
                             className={styles.messageInput}
-                            placeholder="Type a message..."
+                            placeholder={authService.isFullyVerified() ? "Type a message..." : "Verify account to message"}
                             value={messageInput}
                             onChange={(e) => {
                               setMessageInput(e.target.value);
                               handleTyping();
                             }}
                             maxLength={2000}
+                            disabled={!authService.isFullyVerified()}
                           />
                           <button
                             type="submit"
                             className={styles.sendButton}
-                            disabled={!messageInput.trim() && !attachmentFile}
+                            disabled={!authService.isFullyVerified() || (!messageInput.trim() && !attachmentFile)}
                           >
                             <MdSend size={20} />
                           </button>
@@ -1586,7 +1605,7 @@ function FriendCard({ user, onMessage, onUnfriend }) {
         <div className={styles.friendInfo}>
           <p className={styles.friendName}>
             {getDisplayName(user)}
-            {user.verificationStatus === 'verified' && (
+            {user.profile?.idPhoto?.verified === true && (
               <MdVerified className={styles.verifiedIcon} />
             )}
           </p>
@@ -1641,7 +1660,7 @@ function DiscoverCard({ user, onSendRequest, onCancelRequest }) {
         <div className={styles.friendInfo}>
           <p className={styles.friendName}>
             {getDisplayName(user)}
-            {user.verificationStatus === 'verified' && (
+            {user.profile?.idPhoto?.verified === true && (
               <MdVerified className={styles.verifiedIcon} />
             )}
           </p>
@@ -1687,7 +1706,7 @@ function RequestCard({ user, type, onAccept, onDecline, onCancel }) {
         <div>
           <p className={styles.friendName}>
             {getDisplayName(user)}
-            {user.verificationStatus === 'verified' && (
+            {user.profile?.idPhoto?.verified === true && (
               <MdVerified className={styles.verifiedIcon} />
             )}
           </p>

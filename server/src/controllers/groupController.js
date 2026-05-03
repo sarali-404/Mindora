@@ -13,6 +13,15 @@ exports.createGroup = async (req, res) => {
     const { name, memberIds } = req.body;
     const creatorId = req.user._id;
 
+    // Must be admin-verified to create group chats
+    if (!req.user.profile?.idPhoto?.verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Verify your account to create group chats.',
+        requiresVerification: true
+      });
+    }
+
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Group name is required' });
     }

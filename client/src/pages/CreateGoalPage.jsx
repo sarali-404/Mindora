@@ -6,6 +6,7 @@ import GoalWizardStages from "../features/goals/GoalWizardStages";
 import GoalInfoModal from "../features/goals/GoalInfoModal";
 import birdAnimation from "../assets/animations/bird-thinking.json";
 import goalService from "../services/goalService";
+import authService from "../services/authService";
 import styles from "./CreateGoalPage.module.css";
 
 export default function CreateGoalPage() {
@@ -18,6 +19,8 @@ export default function CreateGoalPage() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionTimeoutRef = useRef(null);
+  const [goalLimitReached, setGoalLimitReached] = useState(false);
+  const isFullyVerified = authService.isFullyVerified();
   const [formData, setFormData] = useState({
     goalTitle: "",
     subject: "",
@@ -30,6 +33,16 @@ export default function CreateGoalPage() {
   useEffect(() => {
     setShowInfoModal(true);
   }, []);
+
+  // For non-verified users: check if they already have a goal
+  useEffect(() => {
+    if (!isFullyVerified) {
+      goalService.getMyGoals({ limit: 5 }).then(res => {
+        const active = (res.data || []).filter(g => g.status !== 'abandoned');
+        if (active.length >= 1) setGoalLimitReached(true);
+      }).catch(() => {});
+    }
+  }, [isFullyVerified]);
 
   // Fetch AI suggestions with debounce
   const fetchSuggestions = useCallback(async (goalTitle, subject) => {
@@ -170,6 +183,25 @@ export default function CreateGoalPage() {
 
   return (
     <div className={styles.page}>
+      {!isFullyVerified && goalLimitReached && (
+        <div className={styles.goalLimitWall}>
+          <div className={styles.goalLimitIcon}>🎯</div>
+          <h2 className={styles.goalLimitTitle}>Goal Limit Reached</h2>
+          <p className={styles.goalLimitText}>
+            Unverified accounts can only have <strong>1 active goal</strong>. Verify your account to create unlimited goals.
+          </p>
+          <div className={styles.goalLimitBtns}>
+            <button className={styles.goalLimitVerifyBtn} onClick={() => navigate('/app/profile')}>
+              Get Verified
+            </button>
+            <button className={styles.goalLimitBackBtn} onClick={() => navigate(-1)}>
+              Go Back
+            </button>
+          </div>
+        </div>
+      )}
+      {(!goalLimitReached || isFullyVerified) && (
+        <>
       <GoalInfoModal 
         isOpen={showInfoModal} 
         onClose={() => setShowInfoModal(false)} 
@@ -243,6 +275,8 @@ export default function CreateGoalPage() {
           />
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -988,6 +988,21 @@
   border-top: 1px solid #e5e7eb;
 }
 
+.msgVerifyBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #0073a0;
+  background: #e6f4fa;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 0.5rem;
+}
+.msgVerifyBanner a { color: #005f85; font-weight: 600; text-decoration: underline; }
+:global([data-theme="dark"]) .msgVerifyBanner { background: #0d3548; color: #7dd3fc; }
+:global([data-theme="dark"]) .msgVerifyBanner a { color: #38bdf8; }
+
 .attachmentPreview {
   display: flex;
   align-items: center;

@@ -29,7 +29,8 @@ import {
   MdSave,
   MdCancel,
   MdLock,
-  MdPublic
+  MdPublic,
+  MdVerified
 } from 'react-icons/md';
 
 const NotePage = () => {
@@ -754,7 +755,9 @@ const NotePage = () => {
         <form className={styles.commentForm} onSubmit={handleAddComment}>
           {replyingTo && (
             <div className={styles.replyingTo}>
-              Replying to {replyingTo.author?.username}
+              Replying to {replyingTo.author?.profile?.firstName
+                ? `${replyingTo.author.profile.firstName} ${replyingTo.author.profile.lastName || ''}`.trim()
+                : replyingTo.author?.username || 'Unknown'}
               <button 
                 type="button"
                 onClick={() => setReplyingTo(null)}
@@ -839,12 +842,17 @@ function CommentItem({ comment, onReply, onDelete, formatTime, parentId = null, 
   return (
     <div className={styles.commentItem}>
       <div className={styles.commentAvatar}>
-        {comment.author?.username?.charAt(0).toUpperCase() || 'U'}
+        {(comment.author?.profile?.firstName || comment.author?.username || 'U').charAt(0).toUpperCase()}
       </div>
       <div className={styles.commentContent}>
         <div className={styles.commentHeader}>
           <span className={styles.commentAuthor}>
-            {comment.author?.username || 'Unknown'}
+            {comment.author?.profile?.firstName
+              ? `${comment.author.profile.firstName} ${comment.author.profile.lastName || ''}`.trim()
+              : comment.author?.username || 'Unknown'}
+            {comment.author?.profile?.idPhoto?.verified === true && (
+              <MdVerified style={{ color: '#0073a0', fontSize: '0.9rem', marginLeft: '3px', verticalAlign: 'middle', flexShrink: 0 }} />
+            )}
           </span>
           <span className={styles.commentTime}>
             {formatTime(comment.createdAt)}

@@ -50,6 +50,15 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.verifiedBadge {
+  color: #0073a0;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .userSubtitle {
@@ -245,6 +254,9 @@
 }
 :global([data-theme="dark"]) .userName {
   color: var(--text-primary);
+}
+:global([data-theme="dark"]) .verifiedBadge {
+  color: #38bdf8;
 }
 :global([data-theme="dark"]) .userSubtitle {
   color: var(--text-secondary);

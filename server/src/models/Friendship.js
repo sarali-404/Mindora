@@ -60,8 +60,8 @@ friendshipSchema.statics.getFriends = async function(userId) {
       { recipient: userId, status: 'accepted' }
     ]
   })
-  .populate('requester', 'username profile.firstName profile.lastName profile.avatar profile.university profile.bio verificationStatus isOnline lastSeen')
-  .populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.university profile.bio verificationStatus isOnline lastSeen');
+  .populate('requester', 'username profile.firstName profile.lastName profile.avatar profile.university profile.bio profile.idPhoto verificationStatus isOnline lastSeen')
+  .populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.university profile.bio profile.idPhoto verificationStatus isOnline lastSeen');
 
   // Return the friend user (not the current user)
   return friendships.map(f => {
@@ -81,7 +81,7 @@ friendshipSchema.statics.getPendingRequests = async function(userId) {
     recipient: userId,
     status: 'pending'
   })
-  .populate('requester', 'username profile.firstName profile.lastName profile.avatar profile.university verificationStatus')
+  .populate('requester', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto verificationStatus')
   .sort({ createdAt: -1 });
 };
 
@@ -91,7 +91,7 @@ friendshipSchema.statics.getSentRequests = async function(userId) {
     requester: userId,
     status: 'pending'
   })
-  .populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.university verificationStatus')
+  .populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto verificationStatus')
   .sort({ createdAt: -1 });
 };
 

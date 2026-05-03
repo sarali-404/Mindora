@@ -17,6 +17,9 @@ import {
   MdCameraAlt,
   MdCheckCircle,
   MdCalendarToday,
+  MdVerified,
+  MdHourglassTop,
+  MdReportProblem,
 } from "react-icons/md";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,10 +57,57 @@ const achievementImageMap = {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const idPhotoInputRef = useRef(null);
   
   // Get current user from authService
   const [currentUser, setCurrentUser] = useState(authService.getUser());
   const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [uploadingIdPhoto, setUploadingIdPhoto] = useState(false);
+  const [idPhotoError, setIdPhotoError] = useState('');
+
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+  const handleIdPhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      setIdPhotoError('Only JPEG, PNG, or WebP images are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setIdPhotoError('File size must be under 10 MB.');
+      return;
+    }
+    setIdPhotoError('');
+    setUploadingIdPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('idPhoto', file);
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      const res = await fetch(`${API_BASE}/api/users/upload-id-photo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updated = {
+          ...currentUser,
+          profile: { ...currentUser.profile, idPhoto: data.data.idPhoto },
+          verificationStatus: data.data.verificationStatus,
+        };
+        authService.setUser(updated);
+        setCurrentUser(updated);
+      } else {
+        setIdPhotoError(data.message || 'Upload failed.');
+      }
+    } catch (err) {
+      setIdPhotoError('Upload failed. Please try again.');
+    } finally {
+      setUploadingIdPhoto(false);
+      if (idPhotoInputRef.current) idPhotoInputRef.current.value = '';
+    }
+  };
 
   // Inline name edit
   const [nameEditing, setNameEditing] = useState(false);
@@ -444,6 +494,9 @@ export default function ProfilePage() {
             ) : (
               <div className={styles.nameRow}>
                 <h1 className={styles.name}>{user.name}</h1>
+                {currentUser?.profile?.idPhoto?.verified && (
+                  <MdVerified className={styles.verifiedBadge} title="ID Verified" />
+                )}
                 <button className={styles.namePencil} onClick={() => setNameEditing(true)} title="Edit name">
                   <MdEdit size={15} />
                 </button>
@@ -769,6 +822,58 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* Verification Section */}
+      <section className={styles.verificationCard}>
+        {currentUser?.profile?.idPhoto?.verified ? (
+          /* ── Fully verified ── */
+          <div className={styles.verifStatusRow}>
+            <MdVerified size={26} className={styles.verifIconVerified} />
+            <div>
+              <p className={styles.verifStatusTitle}>ID Verified</p>
+              <p className={styles.verifStatusSub}>Your identity has been confirmed. Blue tick is visible across the platform.</p>
+            </div>
+          </div>
+        ) : currentUser?.verificationStatus === 'verified' ? (
+          /* ── Pending admin review ── */
+          <div className={styles.verifStatusRow}>
+            <MdHourglassTop size={26} className={styles.verifIconPending} />
+            <div>
+              <p className={styles.verifStatusTitle}>ID Under Review</p>
+              <p className={styles.verifStatusSub}>Your ID photo has been submitted and is awaiting admin approval.</p>
+            </div>
+          </div>
+        ) : currentUser?.verificationStatus === 'rejected' ? (
+          /* ── Rejected — allow resubmit ── */
+          <div className={styles.verifRejected}>
+            <div className={styles.verifStatusRow}>
+              <MdReportProblem size={26} className={styles.verifIconRejected} />
+              <div>
+                <p className={styles.verifStatusTitle}>Verification Rejected</p>
+                {currentUser?.verificationMessage && (
+                  <p className={styles.verifStatusSub}>{currentUser.verificationMessage}</p>
+                )}
+              </div>
+            </div>
+            <p className={styles.verifUploadLabel}>Re-submit your ID photo to try again:</p>
+            <input ref={idPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleIdPhotoChange} style={{ display: 'none' }} />
+            <button className={styles.verifUploadBtn} onClick={() => idPhotoInputRef.current?.click()} disabled={uploadingIdPhoto}>
+              {uploadingIdPhoto ? 'Uploading…' : 'Upload ID Photo'}
+            </button>
+            {idPhotoError && <p className={styles.verifError}>{idPhotoError}</p>}
+          </div>
+        ) : (
+          /* ── Unverified / email_verified ── */
+          <div className={styles.verifUnverified}>
+            <p className={styles.verifStatusSub}>Submit a government-issued ID photo to get verified. Verified users get a blue tick and full access to all features.</p>
+            <input ref={idPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleIdPhotoChange} style={{ display: 'none' }} />
+            <button className={styles.verifUploadBtn} onClick={() => idPhotoInputRef.current?.click()} disabled={uploadingIdPhoto}>
+              {uploadingIdPhoto ? 'Uploading…' : 'Submit ID Photo'}
+            </button>
+            {idPhotoError && <p className={styles.verifError}>{idPhotoError}</p>}
+          </div>
+        )}
       </section>
 
       {/* Extend Deadline Modal (for unachieved goals) */}

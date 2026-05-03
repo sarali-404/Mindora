@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MdClose, MdPersonAdd, MdCheck, MdAccessTime, MdSchool } from 'react-icons/md';
+import { MdClose, MdPersonAdd, MdCheck, MdAccessTime, MdSchool, MdVerified } from 'react-icons/md';
 import friendService from '../../services/friendService';
 import authService from '../../services/authService';
 import styles from './AuthorModal.module.css';
@@ -111,7 +111,12 @@ export default function AuthorModal({ author, date, styleOverrides = '' }) {
           <span className={styles.avatarInitial} style={avatarUrl ? { display: 'none' } : {}}>{initial}</span>
         </div>
         <div className={styles.authorInfo}>
-          <span className={styles.authorName}>{displayName}</span>
+          <span className={styles.authorName}>
+            {displayName}
+            {author?.profile?.idPhoto?.verified === true && (
+              <MdVerified className={styles.verifiedBadge} title="Verified" />
+            )}
+          </span>
           {(university || date) && (
             <span className={styles.authorMeta}>
               {university ? `${university}${date ? ' • ' : ''}` : ''}{date || ''}
@@ -137,7 +142,12 @@ export default function AuthorModal({ author, date, styleOverrides = '' }) {
             </div>
 
             {/* Name */}
-            <h3 className={styles.modalName}>{displayName}</h3>
+            <h3 className={styles.modalName}>
+              {displayName}
+              {author?.profile?.idPhoto?.verified === true && (
+                <MdVerified className={styles.modalVerifiedBadge} title="Verified" />
+              )}
+            </h3>
             {author.username && <p className={styles.modalUsername}>@{author.username}</p>}
 
             {/* Details */}

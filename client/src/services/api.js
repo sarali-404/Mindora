@@ -19,10 +19,12 @@ class ApiClient {
       ...options,
     };
 
-    // Add authorization header if token exists
-    const token = this.getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Add authorization header if token exists (don't overwrite if already set by caller)
+    if (!config.headers.Authorization) {
+      const token = this.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     try {

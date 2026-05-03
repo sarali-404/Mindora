@@ -2,6 +2,35 @@
   padding: 2rem 2.5rem 2.5rem;
 }
 
+/* Verification wall */
+.verifyWall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+  min-height: 400px;
+}
+.verifyWallIcon { color: #0073a0; opacity: 0.7; }
+.verifyWallTitle { font-size: 1.4rem; font-weight: 700; color: #111827; }
+.verifyWallText  { font-size: 0.95rem; color: #6b7280; max-width: 420px; line-height: 1.6; }
+.verifyWallBtn {
+  background: #0073a0;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+.verifyWallBtn:hover { background: #005f85; }
+:global([data-theme="dark"]) .verifyWallTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .verifyWallText  { color: var(--text-secondary); }
+
 .backLink {
   border: none;
   background: transparent;

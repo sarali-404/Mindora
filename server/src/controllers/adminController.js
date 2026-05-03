@@ -76,7 +76,7 @@ const approveVerification = async (req, res) => {
 
     user.profile.idPhoto.verified = true;
     user.verifiedAt = new Date();
-    user.verifiedBy = req.user._id;
+    user.verifiedBy = req.admin._id;
     await user.save();
 
     // Fire-and-forget email
@@ -153,7 +153,7 @@ const getAllUsersAdmin = async (req, res) => {
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
       User.find(filters)
-        .select('username email role verificationStatus isActive profile.firstName profile.lastName profile.avatar profile.university createdAt lastLogin')
+        .select('username email role verificationStatus isActive profile.firstName profile.lastName profile.avatar profile.university profile.idPhoto createdAt lastLogin')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

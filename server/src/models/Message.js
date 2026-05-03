@@ -94,8 +94,8 @@ messageSchema.statics.getConversation = async function(userId1, userId2, page = 
   .sort({ createdAt: -1 })
   .skip(skip)
   .limit(limit)
-  .populate('sender', 'username profile.firstName profile.lastName profile.avatar')
-  .populate('receiver', 'username profile.firstName profile.lastName profile.avatar')
+  .populate('sender', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
+  .populate('receiver', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
   .populate('replyTo', 'content sender attachment deletedForEveryone');
 
   // Return in chronological order (oldest first)
@@ -146,7 +146,7 @@ messageSchema.statics.getConversations = async function(userId) {
         : lastMsg.sender;
       
       const otherUser = await mongoose.model('User').findById(otherUserId)
-        .select('username profile.firstName profile.lastName profile.avatar isOnline lastSeen');
+        .select('username profile.firstName profile.lastName profile.avatar profile.idPhoto isOnline lastSeen');
       
       return {
         conversationId: conv._id,

@@ -6,6 +6,7 @@ const {
   getUserProfile,
   updateUserProfile,
   uploadIDPhoto,
+  uploadIDPhotoFile,
   getAllUsers,
   deleteUser,
   uploadProfilePicture,
@@ -18,10 +19,14 @@ const { validateProfileUpdate, handleValidationErrors } = require('../middleware
 
 const router = express.Router();
 
-// Ensure upload directory exists
+// Ensure upload directories exist
 const uploadDir = path.join(__dirname, '../../uploads/profile-pictures');
+const idPhotoDir = path.join(__dirname, '../../uploads/id-photos');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(idPhotoDir)) {
+  fs.mkdirSync(idPhotoDir, { recursive: true });
 }
 
 // Configure multer for profile picture uploads
@@ -52,6 +57,30 @@ const upload = multer({
   }
 });
 
+// Multer for ID photo uploads (images only, 10 MB)
+const idPhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, idPhotoDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `id-${req.user._id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const idPhotoFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only JPEG, PNG, and WebP images are allowed.'), false);
+  }
+};
+
+const uploadIdPhoto = multer({
+  storage: idPhotoStorage,
+  fileFilter: idPhotoFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
+
 // All routes require authentication
 router.use(authenticate);
 
@@ -64,6 +93,7 @@ router.put('/profile', [
   handleValidationErrors
 ], updateUserProfile);
 router.post('/id-photo', uploadIDPhoto);
+router.post('/upload-id-photo', uploadIdPhoto.single('idPhoto'), uploadIDPhotoFile);
 router.post('/profile-picture', upload.single('profilePicture'), uploadProfilePicture);
 
 // Admin routes

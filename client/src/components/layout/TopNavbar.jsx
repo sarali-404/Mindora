@@ -1,5 +1,5 @@
 import Lottie from "lottie-react";
-import { MdMenu, MdNotifications } from "react-icons/md";
+import { MdMenu, MdNotifications, MdVerified } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import styles from "./TopNavbar.module.css";
@@ -186,7 +186,12 @@ export default function TopNavbar({ onMenuClick }) {
       
       <div className={styles.userBlock}>
         <div>
-          <h1 className={styles.userName}>{userName}</h1>
+          <h1 className={styles.userName}>
+            {userName}
+            {currentUser?.profile?.idPhoto?.verified === true && (
+              <MdVerified className={styles.verifiedBadge} title="ID Verified" />
+            )}
+          </h1>
           <p className={styles.userSubtitle}>{userSubtitle}</p>
         </div>
       </div>

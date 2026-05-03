@@ -250,15 +250,8 @@ const googleAuth = async (req, res) => {
         });
       }
       
-      // If rejected
-      if (user.verificationStatus === 'rejected') {
-        return res.status(403).json({
-          success: false,
-          message: user.verificationMessage || 'Your account verification was rejected. Please contact support.',
-          verificationStatus: 'rejected'
-        });
-      }
-      
+      // Rejected users may still log in — they land on the app with limited access
+
       // If verified - log them in
       if (!user.googleId) {
         user.googleId = googleId;
@@ -531,15 +524,8 @@ const login = async (req, res) => {
       });
     }
     
-    // Check verification status
-    if (user.verificationStatus === 'rejected') {
-      return res.status(403).json({
-        success: false,
-        message: user.verificationMessage || 'Your account verification was rejected. Please contact support.',
-        verificationStatus: 'rejected'
-      });
-    }
-    
+    // Rejected users may still log in — they land on the app with limited access
+
     if (user.isLocked) {
       return res.status(423).json({
         success: false,

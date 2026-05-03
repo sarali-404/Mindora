@@ -9,7 +9,7 @@ import authService from "../services/authService";
 export default function CreateSessionPage() {
   const navigate = useNavigate();
   const currentUser = authService.getUser();
-  const isVerified = currentUser?.verificationStatus === 'verified';
+  const isVerified = currentUser?.profile?.idPhoto?.verified === true;
 
   const [formData, setFormData] = useState({
     title: '',

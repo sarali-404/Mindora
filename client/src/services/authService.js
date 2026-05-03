@@ -327,6 +327,11 @@ class AuthService {
     return user?.role || null;
   }
 
+  // Check if user is admin-approved (ID verified by an admin)
+  isFullyVerified() {
+    return !!this.getUser()?.profile?.idPhoto?.verified;
+  }
+
   // Check if user is admin
   isAdmin() {
     return this.getUserRole() === 'admin';

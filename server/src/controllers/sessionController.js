@@ -19,11 +19,12 @@ exports.createSession = async (req, res) => {
       isImmediate
     } = req.body;
 
-    // Check if user is verified
-    if (req.user.verificationStatus !== 'verified') {
+    // Check if user is admin-verified
+    if (!req.user.profile?.idPhoto?.verified) {
       return res.status(403).json({
         success: false,
-        message: 'You must be verified to create sessions. Please complete ID verification.'
+        message: 'Verify your account to create sessions.',
+        requiresVerification: true
       });
     }
 
@@ -79,7 +80,7 @@ exports.createSession = async (req, res) => {
 
     // Fetch the saved session with full population
     const savedSession = await Session.findById(session._id)
-      .populate('host', 'username profile.firstName profile.lastName profile.avatar')
+      .populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
       .populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     res.status(201).json({
@@ -154,7 +155,7 @@ exports.getSessions = async (req, res) => {
       .sort({ scheduledAt: 1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('host', 'username profile.firstName profile.lastName profile.avatar')
+      .populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
       .populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     res.json({
@@ -183,7 +184,7 @@ exports.getSessions = async (req, res) => {
 exports.getSession = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id)
-      .populate('host', 'username profile.firstName profile.lastName profile.avatar')
+      .populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
       .populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     if (!session) {
@@ -246,7 +247,7 @@ exports.updateSession = async (req, res) => {
     });
 
     await session.save();
-    await session.populate('host', 'username profile.firstName profile.lastName profile.avatar');
+    await session.populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto');
     await session.populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     res.json({
@@ -331,11 +332,12 @@ exports.cancelSession = async (req, res) => {
 // @access  Private (verified users only)
 exports.joinSession = async (req, res) => {
   try {
-    // Check if user is verified
-    if (req.user.verificationStatus !== 'verified') {
+    // Check if user is admin-verified
+    if (!req.user.profile?.idPhoto?.verified) {
       return res.status(403).json({
         success: false,
-        message: 'You must be verified to join sessions. Please complete ID verification.'
+        message: 'Verify your account to join sessions.',
+        requiresVerification: true
       });
     }
 
@@ -383,7 +385,7 @@ exports.joinSession = async (req, res) => {
     });
 
     await session.save();
-    await session.populate('host', 'username profile.firstName profile.lastName profile.avatar');
+    await session.populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto');
     await session.populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     // --- Notify host that someone joined ---
@@ -488,7 +490,7 @@ exports.getMySessions = async (req, res) => {
 
     const sessions = await Session.find(query)
       .sort({ scheduledAt: -1 })
-      .populate('host', 'username profile.firstName profile.lastName profile.avatar')
+      .populate('host', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto')
       .populate('participants.user', 'username profile.firstName profile.lastName profile.avatar');
 
     res.json({

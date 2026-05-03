@@ -18,7 +18,8 @@ import {
   MdVideoLibrary,
   MdArticle,
   MdAutoAwesome,
-  MdAdd
+  MdAdd,
+  MdVerified
 } from "react-icons/md";
 
 export default function LibraryPage() {
@@ -341,6 +342,7 @@ export default function LibraryPage() {
                 saves={material.savesCount || 0}
                 isAiNote={material._isAiNote}
                 goalId={material._goalId}
+                isVerifiedAuthor={material.author?.profile?.idPhoto?.verified === true}
               />
             ))}
           </section>
@@ -409,6 +411,7 @@ function ResourceCard({
   saves,
   isAiNote,
   goalId,
+  isVerifiedAuthor,
 }) {
   const getTypeIcon = () => {
     switch (type) {
@@ -438,8 +441,9 @@ function ResourceCard({
       </p>
 
       <div className={styles.cardMetaRow}>
-        <span className={styles.cardMetaText}>
+        <span className={styles.cardMetaText} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
           {author}{uni ? ` · ${uni}` : ''}
+          {isVerifiedAuthor && <MdVerified style={{ color: '#0073a0', fontSize: '0.9rem', flexShrink: 0 }} />}
         </span>
       </div>
 

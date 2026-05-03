@@ -2,11 +2,13 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UploadMaterialPage.module.css";
 import materialService from "../services/materialService";
-import { MdCloudUpload, MdInsertDriveFile, MdClose, MdCheckCircle } from "react-icons/md";
+import authService from "../services/authService";
+import { MdCloudUpload, MdInsertDriveFile, MdClose, MdCheckCircle, MdVerified } from "react-icons/md";
 
 export default function UploadMaterialPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const isVerified = authService.isFullyVerified();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -232,12 +234,29 @@ export default function UploadMaterialPage() {
     );
   }
 
+  if (!isVerified) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.verifyWall}>
+          <MdVerified size={48} className={styles.verifyWallIcon} />
+          <h2 className={styles.verifyWallTitle}>Verification Required</h2>
+          <p className={styles.verifyWallText}>
+            Only verified users can upload materials. Submit your ID on your profile to get verified.
+          </p>
+          <button className={styles.verifyWallBtn} onClick={() => navigate('/app/profile')}>
+            Go to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <button
         type="button"
         className={styles.backLink}
-        onClick={() => navigate("/app/library")}
+        onClick={() => navigate("/app/library")}>
       >
         ← Back to Library
       </button>

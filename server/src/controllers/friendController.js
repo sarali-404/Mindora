@@ -11,7 +11,14 @@ exports.sendFriendRequest = async (req, res) => {
     const { userId } = req.params;
     const requesterId = req.user._id;
 
-    // Can't send request to yourself
+    // Must be admin-verified to add friends
+    if (!req.user.profile?.idPhoto?.verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Verify your account to add friends.',
+        requiresVerification: true
+      });
+    }
     if (userId === requesterId.toString()) {
       return res.status(400).json({
         success: false,
@@ -79,7 +86,7 @@ exports.sendFriendRequest = async (req, res) => {
       status: 'pending'
     });
 
-    await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar');
+    await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto');
 
     // --- Notify recipient ---
     const requesterName = req.user.profile?.firstName
@@ -147,8 +154,8 @@ exports.acceptFriendRequest = async (req, res) => {
     friendship.status = 'accepted';
     await friendship.save();
 
-    await friendship.populate('requester', 'username profile.firstName profile.lastName profile.avatar isOnline lastSeen');
-    await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar isOnline lastSeen');
+    await friendship.populate('requester', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto isOnline lastSeen');
+    await friendship.populate('recipient', 'username profile.firstName profile.lastName profile.avatar profile.idPhoto isOnline lastSeen');
 
     // --- Notify the original requester that their request was accepted ---
     const accepterName = req.user.profile?.firstName
@@ -534,7 +541,7 @@ exports.discoverUsers = async (req, res) => {
     const total = await User.countDocuments(query);
 
     const users = await User.find(query)
-      .select('username profile.firstName profile.lastName profile.avatar profile.university profile.bio isOnline lastSeen verificationStatus')
+      .select('username profile.firstName profile.lastName profile.avatar profile.university profile.bio profile.idPhoto isOnline lastSeen verificationStatus')
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ lastSeen: -1 });

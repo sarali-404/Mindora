@@ -67,6 +67,18 @@ exports.createGoal = async (req, res) => {
       });
     }
 
+    // Non-verified users can only have 1 goal
+    if (!req.user.profile?.idPhoto?.verified) {
+      const existingCount = await Goal.countDocuments({ user: userId, status: { $ne: 'abandoned' } });
+      if (existingCount >= 1) {
+        return res.status(403).json({
+          success: false,
+          message: 'Verify your account to create more goals.',
+          requiresVerification: true
+        });
+      }
+    }
+
     // Create goal
     const goal = new Goal({
       user: userId,
@@ -127,6 +139,19 @@ exports.createGoalWithMaterials = async (req, res) => {
         success: false,
         message: 'Please provide goal title, subject, and deadline'
       });
+    }
+
+    // Non-verified users can only have 1 goal
+    if (!req.user.profile?.idPhoto?.verified) {
+      const existingCount = await Goal.countDocuments({ user: userId, status: { $ne: 'abandoned' } });
+      if (existingCount >= 1) {
+        files.forEach(file => fs.unlink(file.path, err => { if (err) console.error(err); }));
+        return res.status(403).json({
+          success: false,
+          message: 'Verify your account to create more goals.',
+          requiresVerification: true
+        });
+      }
     }
 
     // Validate file count
