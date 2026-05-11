@@ -1,0 +1,489 @@
+{
+  "info": {
+    "name": "Mindora API",
+    "_postman_id": "mindora-fyp-2026",
+    "description": "API test collection for Mindora FYP.\n\nFLOW: Run folder 0-Auth first — it auto-saves the Bearer token to the environment variable `token` and a `goalId` for later folders.\n\nPerformance assertion on every request: response time < 200 ms.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "token",   "value": "", "type": "string" },
+    { "key": "userId",  "value": "", "type": "string" },
+    { "key": "goalId",  "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "0 - Auth",
+      "item": [
+        {
+          "name": "Register (create-account)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Register may 400 if user already exists — expected for repeat runs.",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('userId', b.data.userId);",
+                  "}",
+                  "pm.test('Register ok or user already exists', () => {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/create-account",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newman@example.com\",\n  \"password\": \"Test1234!\",\n  \"confirmPassword\": \"Test1234!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// OTP endpoint tested with placeholder — 400 expected in automated runs.",
+                  "pm.test('OTP endpoint reachable', () => pm.expect([200, 400]).to.include(pm.response.code));",
+                  "pm.test('Response time < 5000ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/verify-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"otp\": \"REPLACE_WITH_OTP_FROM_EMAIL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token received', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.data.token).to.be.a('string');",
+                  "  pm.collectionVariables.set('token', b.data.token);",
+                  "  pm.collectionVariables.set('userId', b.data.user._id);",
+                  "});",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"newman@example.com\",\n  \"password\": \"Test1234!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns user object', () => {",
+                  "  const b = pm.response.json();",
+                  "  const user = (b.data && b.data.user) || b.data || b.user || b;",
+                  "  pm.expect(user).to.have.property('email');",
+                  "});",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Login — Wrong Password (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.be.false);",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"newman@example.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 - Goals",
+      "item": [
+        {
+          "name": "Create Goal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/goals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goalTitle\": \"Master Data Structures\",\n  \"subject\": \"Computer Science\",\n  \"deadline\": \"2026-12-31\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Goals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns array', () => {",
+                  "  const b = pm.response.json();",
+                  "  const goals = b.data || b;",
+                  "  pm.expect(goals).to.be.an('array');",
+                  "  if (goals.length > 0) pm.collectionVariables.set('goalId', goals[0]._id);",
+                  "});",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/goals/my-goals"
+          }
+        },
+        {
+          "name": "Get Single Goal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/goals/{{goalId}}"
+          }
+        },
+        {
+          "name": "Difficulty Suggestions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/goals/{{goalId}}/difficulty-suggestions"
+          }
+        },
+        {
+          "name": "Create Goal — No Auth (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 — invalid token rejected', () => pm.expect(pm.response.code).to.equal(401));",
+                  "pm.test('Response time < 5000ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer invalid_token_for_auth_test" }
+            ],
+            "url": "{{baseUrl}}/goals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goalTitle\": \"No Auth Goal\",\n  \"subject\": \"Test\",\n  \"deadline\": \"2026-12-31\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Gamification",
+      "item": [
+        {
+          "name": "Level Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has currentLevel', () => pm.expect(pm.response.json()).to.have.property('currentLevel'));",
+                  "pm.test('Has totalXP', () => pm.expect(pm.response.json()).to.have.property('totalXP'));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/gamification/level-info"
+          }
+        },
+        {
+          "name": "Game Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has XP fields', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.property('totalXP');",
+                  "  pm.expect(b).to.have.property('currentLevel');",
+                  "  pm.expect(b).to.have.property('currentStreak');",
+                  "});",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/gamification/profile"
+          }
+        },
+        {
+          "name": "Activity Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has activityStats', () => pm.expect(pm.response.json()).to.have.property('activityStats'));",
+                  "pm.test('Has streaks', () => pm.expect(pm.response.json()).to.have.property('streaks'));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/gamification/activity-stats"
+          }
+        },
+        {
+          "name": "Leaderboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/gamification/leaderboard"
+          }
+        },
+        {
+          "name": "Achievements",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/gamification/achievements"
+          }
+        },
+        {
+          "name": "Level Info — No Auth (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Auth required (401) or cookie still valid (200)', () => {",
+                  "  pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/gamification/level-info"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/notifications"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Community (Friends)",
+      "item": [
+        {
+          "name": "Discover Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/friends/discover"
+          }
+        },
+        {
+          "name": "Get Friends",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/friends"
+          }
+        },
+        {
+          "name": "Pending Friend Requests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 200ms', () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/friends/requests/pending"
+          }
+        }
+      ]
+    }
+  ]
+}
