@@ -308,9 +308,14 @@ export default function DashboardPage() {
                           Host: {hostName}
                         </p>
                       </div>
-                      <p className={styles.sessionTimeTime}>
-                        {session.scheduledAt ? new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Soon'}
-                      </p>
+                      <div className={styles.sessionMetaMini}>
+                        <span className={styles.sessionDateMini}>
+                          {session.scheduledAt ? new Date(session.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
+                        </span>
+                        <span className={styles.sessionTimeTime}>
+                          {session.scheduledAt ? new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Soon'}
+                        </span>
+                      </div>
                     </div>
                   );
                 })

@@ -1,16 +1,45 @@
-# React + Vite
+# Mindora
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Mindora Logo](client/public/logo-big.png)
 
-Currently, two official plugins are available:
+Mindora is a student productivity and learning platform that combines goal planning, study sessions, gamification, and community collaboration into one modern web application. It is built with a React + Vite front end and an Express.js server back end, using MongoDB for data persistence.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## About the system
 
-## React Compiler
+Mindora helps learners stay focused and motivated by providing:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Personal goal creation, progress tracking, and deadline management
+- Scheduled study sessions with hosts, participants, and session details
+- Gamification features such as XP, levels, leaderboard, and achievements
+- Community and social features including friend discovery and pending friend requests
+- Notifications for updates, sessions, and achievement progress
+- AI content and assistant tools for smarter studying
+- Admin dashboard tools for monitoring and managing users and content
 
-## Expanding the ESLint configuration
+## Main features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **User authentication & profile setup**
+- **Goal management** with active goals, progress, and deadlines
+- **Session scheduling** with date, time, host, and join controls
+- **Achievements & badges** for motivation and milestones
+- **Leaderboard ranking** to compare progress with peers
+- **Activity stats** and streak tracking
+- **Notifications** for engagement and reminders
+- **Community / friends** features and social interaction
+- **Material upload & AI note support**
+
+## Project structure
+
+- `client/` — React front end, pages, components, and styles
+- `server/` — Express API, controllers, routes, middleware, and models
+- `uploads/` — stored user uploads such as profile pictures, materials, and chat files
+
+## Getting started
+
+1. Install dependencies for both client and server:
+   - `cd client && npm install`
+   - `cd server && npm install`
+2. Start the client and server in separate terminals.
+3. Open the app in your browser on the configured development port.
+
+
