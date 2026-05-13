@@ -1,6 +1,6 @@
 # Mindora
 
-![Mindora Logo](client/public/logo-big.png)
+![Mindora Logo](client/public/logo-small.png)
 
 Mindora is a student productivity and learning platform that combines goal planning, study sessions, gamification, and community collaboration into one modern web application. It is built with a React + Vite front end and an Express.js server back end, using MongoDB for data persistence.
 
