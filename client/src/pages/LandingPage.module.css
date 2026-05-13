@@ -214,29 +214,29 @@
 
 /* Section headers */
 .featuresSection,
-.howSection {
+.howSection,
+.whySection,
+.testimonialsSection,
+.achievementsSection {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 6rem 1.5rem 4rem;
-  min-height: 100vh;
+  padding: 4rem 1.5rem 3rem;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
 .whySection {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 8rem;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  padding-bottom: 3rem;
 }
 
 .sectionHeader {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .sectionTitle {
@@ -259,8 +259,8 @@
 .featureGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2.5rem;
-  margin-top: 2rem;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 @media (max-width: 900px) {
@@ -277,31 +277,49 @@
 
 .featureCard {
   background-color: #ffffff;
-  border-radius: 1.5rem;
-  padding: 3rem 2rem;
-  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  border-radius: 1.2rem;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
   border: 1px solid #eef2f7;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .featureCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.1);
 }
 
 .featureTitle {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .featureText {
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  line-height: 1.7;
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
   color: #6b7280;
 }
+
+.featureIcon {
+  font-size: 2.2rem;
+  color: #0097ce;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  width: 58px;
+  background: rgba(0, 151, 206, 0.1);
+  border-radius: 16px;
+}
+
+.featureCard:hover .featureIcon {
+  transform: scale(1.05);
+}
+
 
 /* Why choose + CTA */
 .whySection {
@@ -411,7 +429,7 @@
 
 .howStepText {
   max-width: 320px;
-  transition: transform 0.35s ease, opacity 0.35s ease, color 0.35s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease;
 }
 
 /* All steps aligned in a row */
@@ -442,7 +460,7 @@
   font-weight: 600;
   color: #111827;
   margin-bottom: 0.4rem;
-  transition: transform 0.35s ease, font-size 0.35s ease, color 0.35s ease;
+  transition: transform 0.2s ease, font-size 0.2s ease, color 0.2s ease;
 }
 
 .howStepBody {
@@ -461,7 +479,7 @@
 .howStepActive {
   opacity: 1;
   transform: scale(1.05);
-  transition: all 0.35s ease;
+  transition: all 0.2s ease;
 }
 
 /* Completed previous step: slightly muted */
@@ -480,5 +498,620 @@
   .howStep3 {
     transform: translateY(0);
   }
+}
+
+/* Feature Icons */
+.featureIcon {
+  font-size: 3rem;
+  color: #0097ce;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(0, 151, 206, 0.1) 0%, rgba(0, 151, 206, 0.05) 100%);
+  border-radius: 1rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.featureCard:hover .featureIcon {
+  transform: scale(1.1) rotate(5deg);
+  color: #0073a0;
+}
+
+/* Testimonials Section */
+.testimonialsSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 4rem;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.testimonialsWrapper {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.testimonialsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.navButton {
+  background: #0097ce;
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.navButton:hover {
+  background: #0073a0;
+  transform: scale(1.1);
+}
+
+.testimonialCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.testimonialCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 151, 206, 0.15);
+}
+
+.testimonialStars {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.starIcon {
+  color: #fbbf24;
+  font-size: 1rem;
+}
+
+.testimonialText {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.testimonialName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0097ce;
+  margin-bottom: 0.25rem;
+}
+
+.testimonialRole {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Achievements Section */
+.achievementsSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 4rem;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.achievementsContainer {
+  width: 100%;
+  overflow: hidden;
+  margin-top: 3rem;
+  max-width: 100%;
+}
+
+.achievementsScroll {
+  display: flex;
+  gap: 2rem;
+  animation: scrollHorizontal 40s linear infinite;
+}
+
+.achievementsScroll.scrollPaused {
+  animation-play-state: paused;
+}
+
+.achievementBird {
+  flex-shrink: 0;
+  width: 150px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.achievementBird:hover {
+  transform: scale(1.1);
+}
+
+.birdImage {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  transition: filter 0.3s ease;
+}
+
+.achievementBird:hover .birdImage {
+  filter: drop-shadow(0 6px 16px rgba(0, 151, 206, 0.2));
+}
+
+.birdName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  height: 0;
+}
+
+.achievementBird:hover .birdName {
+  opacity: 1;
+  height: auto;
+}
+
+/* Smooth Scroll Animations */
+@keyframes scrollHorizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scroll reveal animation for sections */
+@media (prefers-reduced-motion: no-preference) {
+  .featureCard,
+  .testimonialsSection,
+  .achievementsSection {
+    animation: slideInUp 0.6s ease-out;
+  }
+}
+
+/* Mobile responsiveness for new sections */
+@media (max-width: 1024px) {
+  .testimonialsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .testimonialsWrapper {
+    gap: 1rem;
+  }
+
+  .navButton {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .testimonialsSection,
+  .achievementsSection {
+    padding: 4rem 1.5rem 3rem;
+    min-height: auto;
+  }
+
+  .testimonialCard {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .testimonialText {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .testimonialName {
+    font-size: 0.95rem;
+  }
+
+  .testimonialRole {
+    font-size: 0.8rem;
+  }
+
+  .testimonialStars {
+    gap: 0.25rem;
+  }
+
+  .starIcon {
+    font-size: 0.85rem;
+  }
+
+  .achievementBird {
+    width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonialsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonialsWrapper {
+    flex-direction: column;
+  }
+
+  .navButton {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .sectionSubtitle {
+    font-size: 1rem;
+  }
+
+  .featureGrid {
+    gap: 1.5rem;
+  }
+
+  .featureCard {
+    padding: 2rem 1.5rem;
+  }
+
+  .featureIcon {
+    font-size: 2.5rem;
+    height: 70px;
+  }
+
+  .featureTitle {
+    font-size: 1.2rem;
+  }
+
+  .featureText {
+    font-size: 0.95rem;
+  }
+
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .heroText {
+    font-size: 1rem;
+  }
+
+  .testimonialCard {
+    padding: 1.5rem 1rem;
+  }
+
+  .achievementBird {
+    width: 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    background: linear-gradient(to bottom, #f9fafb 0%, #ffffff 40%, #f9fafb 100%);
+  }
+
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  .navContainer {
+    padding: 0.5rem 0;
+  }
+
+  .logoImage {
+    width: 120px;
+    height: 50px;
+  }
+
+  .navAuth {
+    gap: 0.5rem;
+  }
+
+  .loginBtn,
+  .signupBtn {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .hero {
+    padding: 10rem 1rem 4rem;
+    min-height: auto;
+  }
+
+  .heroBadge {
+    font-size: 0.75rem;
+  }
+
+  .heroTitle {
+    font-size: 1.8rem;
+    line-height: 1.2;
+    margin-top: 1rem;
+  }
+
+  .heroHighlight {
+    color: #0097ce;
+  }
+
+  .heroText {
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .heroActions {
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    padding: 0.7rem 2rem;
+    font-size: 0.85rem;
+  }
+
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .heroStatNumber {
+    font-size: 2rem;
+  }
+
+  .heroStatLabel {
+    font-size: 0.85rem;
+  }
+
+  .featuresSection,
+  .howSection {
+    min-height: auto;
+    padding: 3rem 1rem 2rem;
+  }
+
+  .sectionHeader {
+    margin-bottom: 2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .sectionSubtitle {
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .featureCard {
+    padding: 1.5rem 1rem;
+    border-radius: 1rem;
+  }
+
+  .featureIcon {
+    font-size: 2rem;
+    height: 60px;
+    margin-bottom: 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .featureTitle {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .featureText {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-top: 0.75rem;
+  }
+
+  .howStepsLayer {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .howStepText {
+    max-width: 100%;
+  }
+
+  .howStepLabel {
+    font-size: 0.8rem;
+  }
+
+  .howStepTitle {
+    font-size: 1.1rem;
+  }
+
+  .howStepBody {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .howStepActive .howStepTitle {
+    font-size: 1.3rem;
+  }
+
+  .testimonialsSection,
+  .achievementsSection {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .testimonialsWrapper {
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .testimonialsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .navButton {
+    width: 38px;
+    height: 38px;
+    font-size: 0.85rem;
+  }
+
+  .testimonialCard {
+    padding: 1.2rem 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .testimonialStars {
+    gap: 0.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .starIcon {
+    font-size: 0.75rem;
+  }
+
+  .testimonialText {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .testimonialName {
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .testimonialRole {
+    font-size: 0.75rem;
+  }
+
+  .achievementsContainer {
+    margin-top: 1.5rem;
+  }
+
+  .achievementsScroll {
+    gap: 1rem;
+    animation: scrollHorizontal 30s linear infinite;
+  }
+
+  .achievementBird {
+    width: 80px;
+  }
+
+  .birdName {
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+  }
+
+  .whySection {
+    padding: 2rem 1rem 4rem;
+  }
+
+  .whyLeft {
+    padding-right: 0;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
+  .checklist li {
+    font-size: 0.85rem;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ctaCard {
+    padding: 2rem 1.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .ctaTitle {
+    font-size: 1.3rem;
+  }
+
+  .ctaText {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Transition speeds for animations */
+.howStepText {
+  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease;
+}
+
+.howStepTitle {
+  transition: transform 0.2s ease, font-size 0.2s ease, color 0.2s ease;
+}
+
+.howStepActive {
+  transition: all 0.2s ease;
 }
 

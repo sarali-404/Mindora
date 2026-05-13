@@ -1,8 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaRobot, FaBullseye, FaChartLine, FaUsers, FaBook, FaClock, FaStar, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import styles from "./LandingPage.module.css";
 import LoginModal from "../components/auth/LoginModal";
 import RegisterModal from "../components/auth/RegisterModal";
+
+// Import achievement images
+import firstStepsImg from "../assets/achievements/first_steps.png";
+import readingBirdImg from "../assets/achievements/reading_bird.png";
+import quizMasterImg from "../assets/achievements/quiz_master.png";
+import streakMasterImg from "../assets/achievements/streak_master.png";
+import goalCrusherImg from "../assets/achievements/goal_crusher.png";
+import memoryMasterImg from "../assets/achievements/memory_master.png";
+import teachingBirdImg from "../assets/achievements/teaching_bird.png";
+import goalArchitectImg from "../assets/achievements/goal_architect.png";
 
 
 
@@ -59,6 +70,121 @@ function AnimatedCounter({ endValue, duration = 2000, suffix = "" }) {
   );
 }
 
+// Testimonials Carousel Component
+function TestimonialsCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const testimonials = [
+    {
+      name: "Aisha Perera",
+      role: "2nd Year Engineering",
+      text: "Mindora transformed my study habits.",
+      rating: 5
+    },
+    {
+      name: "Rohan Silva",
+      role: "Final Year Medicine",
+      text: "Best platform for organized learning.",
+      rating: 5
+    },
+    {
+      name: "Priya Kumari",
+      role: "3rd Year Commerce",
+      text: "Love the goal tracking feature.",
+      rating: 5
+    },
+    {
+      name: "Nihal Jayawardena",
+      role: "2nd Year Law",
+      text: "Community features keep me motivated.",
+      rating: 5
+    }
+  ];
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  const getVisibleTestimonials = () => {
+    const visibleCount = 3;
+    const visible = [];
+    for (let i = 0; i < visibleCount; i++) {
+      visible.push(testimonials[(currentIndex + i) % testimonials.length]);
+    }
+    return visible;
+  };
+
+  return (
+    <div className={styles.testimonialsWrapper}>
+      <button onClick={prevSlide} className={styles.navButton} aria-label="Previous">
+        <FaChevronLeft />
+      </button>
+      
+      <div className={styles.testimonialsGrid}>
+        {getVisibleTestimonials().map((testimonial, idx) => (
+          <div key={idx} className={styles.testimonialCard}>
+            <div className={styles.testimonialStars}>
+              {[...Array(testimonial.rating)].map((_, i) => (
+                <FaStar key={i} className={styles.starIcon} />
+              ))}
+            </div>
+            <p className={styles.testimonialText}>"{testimonial.text}"</p>
+            <p className={styles.testimonialName}>{testimonial.name}</p>
+            <p className={styles.testimonialRole}>{testimonial.role}</p>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={nextSlide} className={styles.navButton} aria-label="Next">
+        <FaChevronRight />
+      </button>
+    </div>
+  );
+}
+
+// Achievements Carousel Component
+function AchievementsCarousel() {
+  const [isPaused, setIsPaused] = useState(false);
+  const containerRef = useRef(null);
+
+  const achievements = [
+    { name: "First Steps", img: firstStepsImg },
+    { name: "Reading Bird", img: readingBirdImg },
+    { name: "Quiz Master", img: quizMasterImg },
+    { name: "Streak Master", img: streakMasterImg },
+    { name: "Goal Crusher", img: goalCrusherImg },
+    { name: "Memory Master", img: memoryMasterImg },
+    { name: "Teaching Bird", img: teachingBirdImg },
+    { name: "Goal Architect", img: goalArchitectImg },
+  ];
+
+  return (
+    <div 
+      className={styles.achievementsContainer}
+      ref={containerRef}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className={`${styles.achievementsScroll} ${isPaused ? styles.scrollPaused : ""}`}>
+        {[...achievements, ...achievements, ...achievements].map((achievement, idx) => (
+          <div key={idx} className={styles.achievementBird}>
+            <img 
+              src={achievement.img} 
+              alt={achievement.name}
+              className={styles.birdImage}
+            />
+            <p className={styles.birdName}>{achievement.name}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const [activeStep, setActiveStep] = useState(1);
   const [animationStarted, setAnimationStarted] = useState(false);
@@ -82,7 +208,7 @@ export default function LandingPage() {
         if (entries[0].isIntersecting) {
           setAnimationStarted(true);
           // Cycle: 1 → 2 → 3, then stop
-          const stepDur = 2500; // ms per step
+          const stepDur = 1000; // ms per step (sped up from 2500)
           setActiveStep(1);
 
           const t1 = setTimeout(() => setActiveStep(2), stepDur);
@@ -164,8 +290,7 @@ export default function LandingPage() {
         </h1>
 
         <p className={styles.heroText}>
-          Achieve your learning goals with personalized study plans, AI‑powered
-          notes, and progress tracking that adapts to your learning pace.
+          Study smarter with AI notes, goal tracking, and community learning.
         </p>
 
         <div className={styles.heroActions}>
@@ -198,55 +323,70 @@ export default function LandingPage() {
       {/* Features */}
       <section className={styles.featuresSection}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Everything You Need to Succeed</h2>
+          <h2 className={styles.sectionTitle}>Everything You Need</h2>
           <p className={styles.sectionSubtitle}>
-            Comprehensive tools to support your learning journey from start to finish.
+            Smart tools for smart learners.
           </p>
         </div>
 
         <div className={styles.featureGrid}>
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>AI‑Powered Learning</h3>
+            <div className={styles.featureIcon}>
+              <FaRobot />
+            </div>
+            <h3 className={styles.featureTitle}>AI Notes</h3>
             <p className={styles.featureText}>
-              Get personalized learning recommendations and AI‑generated study
-              materials tailored to your goals.
+              Get personalized study summaries powered by AI.
             </p>
           </article>
 
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>Goal‑Based Learning</h3>
+            <div className={styles.featureIcon}>
+              <FaBullseye />
+            </div>
+            <h3 className={styles.featureTitle}>Smart Goals</h3>
             <p className={styles.featureText}>
-              Set clear learning objectives and track your progress with structured
-              milestones.
+              Set goals and track progress with ease.
             </p>
           </article>
 
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>Progress Analytics</h3>
+            <div className={styles.featureIcon}>
+              <FaChartLine />
+            </div>
+            <h3 className={styles.featureTitle}>Analytics</h3>
             <p className={styles.featureText}>
-              Visualize your learning journey with detailed insights and performance
-              metrics.
+              See your learning progress visualized.
             </p>
           </article>
 
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>Learning Community</h3>
+            <div className={styles.featureIcon}>
+              <FaUsers />
+            </div>
+            <h3 className={styles.featureTitle}>Community</h3>
             <p className={styles.featureText}>
-              Connect with peers, share knowledge, and collaborate on learning projects.
+              Learn and grow with your peers.
             </p>
           </article>
 
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>Resource Library</h3>
+            <div className={styles.featureIcon}>
+              <FaBook />
+            </div>
+            <h3 className={styles.featureTitle}>Library</h3>
             <p className={styles.featureText}>
-              Access organized study materials, notes, and AI‑generated summaries.
+              Access all your study materials in one place.
             </p>
           </article>
 
           <article className={styles.featureCard}>
-            <h3 className={styles.featureTitle}>Study Sessions</h3>
+            <div className={styles.featureIcon}>
+              <FaClock />
+            </div>
+            <h3 className={styles.featureTitle}>Focus Sessions</h3>
             <p className={styles.featureText}>
-              Plan and track your focused study sessions to build consistent habits.
+              Build better study habits day by day.
             </p>
           </article>
         </div>
@@ -257,7 +397,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>How It Works</h2>
           <p className={styles.sectionSubtitle}>
-            Start your learning journey in three simple steps.
+            Three simple steps to start learning.
           </p>
         </div>
 
@@ -270,10 +410,9 @@ export default function LandingPage() {
               } ${activeStep > 1 ? styles.howStepCompleted : ""}`}
             >
               <p className={styles.howStepLabel}>Step 01</p>
-              <h3 className={styles.howStepTitle}>Set Your Goals</h3>
+              <h3 className={styles.howStepTitle}>Set Goals</h3>
               <p className={styles.howStepBody}>
-                Define what you want to learn and set clear, achievable milestones
-                for your educational journey.
+                Define what you want to learn.
               </p>
             </div>
 
@@ -283,10 +422,9 @@ export default function LandingPage() {
               } ${activeStep > 2 ? styles.howStepCompleted : ""}`}
             >
               <p className={styles.howStepLabel}>Step 02</p>
-              <h3 className={styles.howStepTitle}>Learn &amp; Track</h3>
+              <h3 className={styles.howStepTitle}>Learn & Track</h3>
               <p className={styles.howStepBody}>
-                Follow your personalized learning path, complete tasks, and monitor
-                your progress with detailed analytics.
+                Follow your path and see progress.
               </p>
             </div>
 
@@ -296,10 +434,9 @@ export default function LandingPage() {
               }`}
             >
               <p className={styles.howStepLabel}>Step 03</p>
-              <h3 className={styles.howStepTitle}>Achieve Success</h3>
+              <h3 className={styles.howStepTitle}>Succeed</h3>
               <p className={styles.howStepBody}>
-                Reach your learning objectives, earn recognition, and build expertise
-                in your chosen subjects.
+                Achieve goals and earn recognition.
               </p>
             </div>
           </div>
@@ -307,23 +444,45 @@ export default function LandingPage() {
       </section>
 
 
+      {/* Testimonials Carousel Section */}
+      <section className={styles.testimonialsSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Loved by Students</h2>
+          <p className={styles.sectionSubtitle}>
+            See what our learners say about Mindora.
+          </p>
+        </div>
+        <TestimonialsCarousel />
+      </section>
+
+      {/* Achievements Section */}
+      <section className={styles.achievementsSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Become a Special Bird</h2>
+          <p className={styles.sectionSubtitle}>
+            Unlock unique achievements as you learn.
+          </p>
+        </div>
+        <AchievementsCarousel />
+      </section>
+
       {/* Why Choose + CTA */}
       <section className={styles.whySection}>
         <div className={styles.whyLeft}>
           <h2 className={styles.sectionTitle}>Why Choose Mindora?</h2>
           <ul className={styles.checklist}>
-            <li>AI‑powered personalized learning paths</li>
-            <li>Track progress with detailed analytics</li>
-            <li>Structured goal‑setting framework</li>
-            <li>Collaborative learning community</li>
-            <li>Comprehensive resource management</li>
+            <li>AI-powered personalized learning</li>
+            <li>Track progress easily</li>
+            <li>Clear goal-setting tools</li>
+            <li>Learn with your community</li>
+            <li>All resources in one place</li>
           </ul>
         </div>
 
         <aside className={styles.ctaCard}>
-          <h3 className={styles.ctaTitle}>Ready to Get Started?</h3>
+          <h3 className={styles.ctaTitle}>Ready to Start?</h3>
           <p className={styles.ctaText}>
-            Create your account and start learning smarter today.
+            Create your account now and begin your learning journey.
           </p>
           <button className={styles.primaryButton}>Get Started Free</button>
         </aside>

@@ -248,13 +248,13 @@ export default function DashboardPage() {
         <div className={styles.achievementsCard} style={recentAchievements.length === 0 ? { display: 'none' } : {}}>
           <div className={styles.sectionHeaderRow}>
             <h2 className={styles.sectionTitle}>Recent Achievements</h2>
-            <button className={styles.sectionLink} onClick={() => navigate('/app/profile')}>View All</button>
+            <button className={styles.sectionLink} onClick={() => navigate('/app/profile')}>See More</button>
           </div>
           <div className={styles.achievementsGrid}>
             {recentAchievements.length === 0 ? (
               <p className={styles.emptyText}>Complete activities to earn achievements!</p>
             ) : (
-              recentAchievements.map((achievement) => (
+              recentAchievements.slice(0, 4).map((achievement) => (
                 <div
                   key={achievement.id}
                   className={styles.achievementBadge}
