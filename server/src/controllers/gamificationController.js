@@ -3,10 +3,12 @@
  * Handles all XP, achievement, and leaderboard API endpoints
  */
 
+const mongoose = require('mongoose');
 const gamificationService = require('../services/gamificationService');
 const User = require('../models/User');
 const Achievement = require('../models/Achievement');
 const UserGameProfile = require('../models/UserGameProfile');
+const ActivityLog = require('../models/ActivityLog');
 
 /**
  * Add XP to user
@@ -165,8 +167,41 @@ const getActivityStats = async (req, res) => {
     // Re-fetch profile after streak update so the response reflects the new value
     const profile = await gamificationService.getUserGameProfile(userId);
 
+    const now = new Date();
+    const queryYear = parseInt(req.query.year, 10);
+    const queryMonth = parseInt(req.query.month, 10);
+    const year = Number.isFinite(queryYear) ? queryYear : now.getFullYear();
+    const monthIndex = Number.isFinite(queryMonth)
+      ? Math.min(Math.max(queryMonth, 1), 12) - 1
+      : now.getMonth();
+
+    const startOfMonth = new Date(year, monthIndex, 1, 0, 0, 0, 0);
+    const startOfNextMonth = new Date(year, monthIndex + 1, 1, 0, 0, 0, 0);
+
+    const activityAgg = await ActivityLog.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startOfMonth, $lt: startOfNextMonth }
+        }
+      },
+      { $group: { _id: { $dayOfMonth: '$createdAt' }, count: { $sum: 1 } } }
+    ]);
+
+    const dailyCounts = {};
+    activityAgg.forEach((entry) => {
+      const day = entry._id;
+      const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      dailyCounts[dateStr] = entry.count;
+    });
+
     res.json({
       activityStats: profile.activityStats,
+      activityCalendar: {
+        year,
+        month: monthIndex,
+        dailyCounts
+      },
       streaks: {
         current: profile.currentStreak?.count || 0,
         longest: profile.longestStreak?.count || 0,

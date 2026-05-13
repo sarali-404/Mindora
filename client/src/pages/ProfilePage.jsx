@@ -824,6 +824,74 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* XP Guidance Section */}
+      <section className={styles.xpGuidanceCard}>
+        <div className={styles.xpGuidanceHeader}>
+          <div className={styles.xpGuidanceTitleRow}>
+            <span className={styles.xpGuidanceIcon}>
+              <MdEmojiEvents size={20} />
+            </span>
+            <div>
+              <h2 className={styles.sectionTitle}>XP Guide</h2>
+              <p className={styles.xpGuidanceSubtitle}>Earn XP through study actions and climb levels for future perks.</p>
+            </div>
+          </div>
+          <div className={styles.levelChips}>
+            <span className={styles.levelChip}>Bronze: 0–4,999 XP</span>
+            <span className={styles.levelChip}>Silver: 5,000–14,999 XP</span>
+            <span className={styles.levelChip}>Gold: 15,000+ XP</span>
+          </div>
+        </div>
+        <div className={styles.xpGuidanceGrid}>
+          <div className={styles.xpGuidanceBlock}>
+            <h3 className={styles.xpGuidanceBlockTitle}>Earn XP</h3>
+            <ul className={styles.xpGuidanceList}>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdFlag size={16} /></span>
+                Create a goal (+25 XP)
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdCheckCircle size={16} /></span>
+                Complete a goal (+100 XP)
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdUpload size={16} /></span>
+                Share materials (+25 XP)
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdAutoAwesome size={16} /></span>
+                Quizzes and essays (XP based on score)
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdPeople size={16} /></span>
+                Host a session (+20 XP)
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.xpGuidanceItemIcon}><MdPlayCircleOutline size={16} /></span>
+                Join a session (+15 XP)
+              </li>
+            </ul>
+          </div>
+          <div className={styles.xpGuidanceBlock}>
+            <h3 className={styles.xpGuidanceBlockTitle}>Planned XP unlocks</h3>
+            <ul className={styles.xpGuidanceList}>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.tierBadgeBronze}>Bronze</span>
+                Up to 3 goals/week, sessions up to 20 participants.
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.tierBadgeSilver}>Silver</span>
+                Up to 5 goals/week, sessions up to 40 participants, advanced AI study tools.
+              </li>
+              <li className={styles.xpGuidanceItem}>
+                <span className={styles.tierBadgeGold}>Gold</span>
+                Up to 8 goals/week, sessions up to 60 participants, custom badges/themes, priority highlights.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* Verification Section */}
       <section className={styles.verificationCard}>
         {currentUser?.profile?.idPhoto?.verified ? (

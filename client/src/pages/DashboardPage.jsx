@@ -104,7 +104,8 @@ export default function DashboardPage() {
               ? `${entry.user.profile.firstName} ${entry.user.profile.lastName || ''}`.trim()
               : entry.user?.username || 'User',
             xp: entry.totalXP || 0,
-            isYou: entry.user?._id === currentUser?._id,
+            isYou: (entry.user?._id && currentUser?.id && entry.user?._id === currentUser?.id) || 
+                   (entry.user?._id && currentUser?._id && entry.user?._id === currentUser?._id),
             avatarColor: ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'][idx % 5],
           })));
         }
@@ -234,161 +235,159 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Achievements + Leaderboard row */}
-      <section
-        className={styles.chartSection}
-        style={{
-          gridTemplateColumns: recentAchievements.length === 0
-            ? '0fr 1fr'
-            : recentAchievements.length <= 2
-            ? '1fr 2fr'
-            : '2fr 1fr'
-        }}
-      >
-        <div className={styles.achievementsCard} style={recentAchievements.length === 0 ? { display: 'none' } : {}}>
-          <div className={styles.sectionHeaderRow}>
-            <h2 className={styles.sectionTitle}>Recent Achievements</h2>
-            <button className={styles.sectionLink} onClick={() => navigate('/app/profile')}>See More</button>
-          </div>
-          <div className={styles.achievementsGrid}>
-            {recentAchievements.length === 0 ? (
-              <p className={styles.emptyText}>Complete activities to earn achievements!</p>
-            ) : (
-              recentAchievements.slice(0, 4).map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className={styles.achievementBadge}
-                >
-                  {achievement.tier && achievement.tier !== 'one-time' && (
-                    <div className={styles.achievementLevelBadge}>
-                      {achievement.tier.charAt(0).toUpperCase() + achievement.tier.slice(1)}
+      {/* Modern Dashboard Grid */}
+      <div className={styles.dashboardGrid}>
+        {/* Row 1: Leaderboard Wide */}
+        <div className={styles.gridItemFull}>
+          <div className={styles.leaderboardCardHorizontal}>
+            <div className={styles.sectionHeaderRow}>
+              <h2 className={styles.sectionTitle}>
+                <FaTrophy style={{ color: "#fbbf24", marginRight: "0.5rem" }} />
+                Top Learners
+              </h2>
+              {leaderboard.length > 4 && (
+                <button className={styles.sectionLink} onClick={() => navigate('/app/community')}>Global Leaderboard</button>
+              )}
+            </div>
+            <div className={styles.leaderboardHorizontalScroll}>
+              {leaderboard.length === 0 ? (
+                <p className={styles.emptyText}>No leaderboard data yet.</p>
+              ) : (
+                leaderboard.slice(0, 25).map((user) => (
+                  <div
+                    key={user.rank}
+                    className={`${styles.leaderboardItemHorizontal} ${
+                      user.isYou ? styles.leaderboardItemYouHorizontal : ""
+                    }`}
+                  >
+                    <div className={styles.rankBadge}>
+                      {user.rank === 1 && <FaMedal style={{ color: "#fbbf24" }} />}
+                      {user.rank === 2 && <FaMedal style={{ color: "#94a3b8" }} />}
+                      {user.rank === 3 && <FaMedal style={{ color: "#cd7f32" }} />}
+                      {user.rank > 3 && <span>#{user.rank}</span>}
                     </div>
-                  )}
-                  <div className={styles.achievementImageWrapper}>
-                    <img 
-                      src={achievement.image} 
-                      alt={achievement.name}
-                      className={styles.achievementImage}
-                    />
+                    <span className={styles.leaderboardAvatarLarge}>
+                      <FaUser style={{ color: user.avatarColor }} />
+                    </span>
+                    <div className={styles.leaderboardUserInfo}>
+                      <span className={styles.leaderboardNameMini}>
+                        {user.name}
+                      </span>
+                      <span className={styles.leaderboardXPMini}>
+                        {user.xp.toLocaleString()} XP
+                      </span>
+                    </div>
                   </div>
-                  <p className={styles.achievementName}>{achievement.name}</p>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Leaderboard */}
-        <div className={styles.chartCard}>
-          <div className={styles.sectionHeaderRow}>
-            <h2 className={styles.sectionTitle}>
-              <FaTrophy style={{ color: "#fbbf24", marginRight: "0.5rem" }} />
-              Top Learners
-            </h2>
-          </div>
-          <div className={styles.leaderboardList}>
-            {leaderboard.length === 0 ? (
-              <p className={styles.emptyText}>No leaderboard data yet.</p>
-            ) : (
-              leaderboard.slice(0, showAllLeaderboard ? 10 : 3).map((user) => (
-                <div
-                  key={user.rank}
-                  className={`${styles.leaderboardItem} ${
-                    user.isYou ? styles.leaderboardItemYou : ""
-                  }`}
-                >
-                  <div className={styles.leaderboardRank}>
-                    {user.rank === 1 && (
-                      <FaMedal style={{ color: "#fbbf24", fontSize: "1.5rem" }} />
-                    )}
-                    {user.rank === 2 && (
-                      <FaMedal style={{ color: "#94a3b8", fontSize: "1.5rem" }} />
-                    )}
-                    {user.rank === 3 && (
-                      <FaMedal style={{ color: "#cd7f32", fontSize: "1.5rem" }} />
-                    )}
-                    {user.rank > 3 && `#${user.rank}`}
-                  </div>
-                  <span className={styles.leaderboardAvatar}>
-                    <FaUser style={{ color: user.avatarColor }} />
-                  </span>
-                  <span className={styles.leaderboardName}>
-                    {user.isYou ? 'You' : user.name}
-                  </span>
-                  <span className={styles.leaderboardXP}>
-                    {user.xp.toLocaleString()} XP
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-          {leaderboard.length > 3 && (
-            <button
-              className={styles.sectionLink}
-              style={{ marginTop: '0.75rem', display: 'block' }}
-              onClick={() => setShowAllLeaderboard(v => !v)}
-            >
-              {showAllLeaderboard ? 'Show Less' : 'View More'}
-            </button>
-          )}
-        </div>
-      </section>
+        {/* Row 2: Sessions + Badges */}
+        <div className={styles.gridItemHalf}>
+          <div className={`${styles.sectionCard} ${styles.sideCard}`}>
+            <div className={styles.sectionHeaderRow}>
+              <h3 className={styles.sectionTitleSmall}>Sessions</h3>
+              <button className={styles.sectionLinkMini} onClick={() => navigate('/app/sessions')}>All</button>
+            </div>
+            <div className={styles.sessionsVerticalList}>
+              {upcomingSessions.length === 0 ? (
+                <p className={styles.emptyTextMini}>No sessions.</p>
+              ) : (
+                upcomingSessions.slice(0, 3).map((session) => {
+                  const hostName = session.host?.profile?.firstName
+                    ? `${session.host.profile.firstName} ${session.host.profile.lastName || ''}`.trim()
+                    : session.host?.username || 'Unknown';
 
-      {/* Active goals + Upcoming sessions */}
-      <section className={styles.mainGrid}>
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeaderRow}>
-            <h2 className={styles.sectionTitle}>Active Goals</h2>
-            <button className={styles.sectionLink} onClick={() => navigate('/app/goals')}>View All</button>
+                  return (
+                    <div key={session._id} className={styles.sessionItemMini}>
+                      <div className={styles.sessionMainInfoMini}>
+                        <p className={styles.sessionTitleTitle}>{session.title}</p>
+                        <p className={styles.sessionHostMini}>
+                          Host: {hostName}
+                        </p>
+                      </div>
+                      <p className={styles.sessionTimeTime}>
+                        {session.scheduledAt ? new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Soon'}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-          {activeGoals.length === 0 ? (
-            <p className={styles.emptyText}>No active goals. Create one to get started!</p>
-          ) : (
-            activeGoals.map((goal) => {
-              const progress = goal.progress || 0;
-              return (
-                <div key={goal._id} className={styles.goalCard} onClick={() => navigate(`/app/goals/${goal._id}`)} style={{cursor:'pointer'}}>
-                  <p className={styles.goalName}>{goal.title}</p>
-                  <p className={styles.goalMeta}>{goal.subject || 'No subject'}</p>
-                  <div className={styles.progressBarOuter}>
-                    <div
-                      className={styles.progressBarInner}
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
         </div>
 
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeaderRow}>
-            <h2 className={styles.sectionTitle}>Upcoming Sessions</h2>
-            <button className={styles.sectionLink} onClick={() => navigate('/app/sessions')}>View All</button>
+        <div className={styles.gridItemHalf}>
+          <div className={`${styles.sectionCard} ${styles.sideCard}`}>
+            <div className={styles.sectionHeaderRow}>
+              <h3 className={styles.sectionTitleSmall}>Badges</h3>
+              <button className={styles.sectionLinkMini} onClick={() => navigate('/app/profile')}>View More</button>
+            </div>
+            <div className={styles.achievementRowMini}>
+              {recentAchievements.slice(0, 4).map((ach) => (
+                <div key={ach.id} className={styles.badgeLargeWrapper} title={ach.name}>
+                  <img src={ach.image} alt={ach.name} className={styles.badgeLarge} />
+                </div>
+              ))}
+              {recentAchievements.length === 0 && <span className={styles.emptyTextMini}>No badges yet.</span>}
+            </div>
           </div>
-          {upcomingSessions.length === 0 ? (
-            <p className={styles.emptyText}>No upcoming sessions.</p>
-          ) : (
-            upcomingSessions.map((session) => (
-              <div key={session._id} className={styles.sessionCard}>
-                <p className={styles.sessionTitle}>{session.title}</p>
-                <p className={styles.sessionMeta}>Host: {session.host?.username || 'Unknown'}</p>
-                <p className={styles.sessionTime}>
-                  {session.scheduledAt
-                    ? new Date(session.scheduledAt).toLocaleString(undefined, {
-                        weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-                      })
-                    : 'Time not set'}
-                </p>
-                <button className={styles.primaryButton} onClick={() => navigate(`/app/sessions`)}>
-                  View
-                </button>
-              </div>
-            ))
-          )}
         </div>
-      </section>
+
+        {/* Row 3: Goals Full Width */}
+        <div className={styles.gridItemFull}>
+          <div className={`${styles.sectionCard} ${styles.sideCard}`}>
+            <div className={styles.sectionHeaderRow}>
+              <h3 className={styles.sectionTitleSmall}>Active Goals</h3>
+              <button className={styles.sectionLinkMini} onClick={() => navigate('/app/goals')}>Details</button>
+            </div>
+            <div className={styles.goalsVerticalList}>
+              {activeGoals.length === 0 ? (
+                <div className={styles.emptyGoalsState}>
+                  <FaBullseye className={styles.emptyIcon} />
+                  <p>Set a goal to track your growth!</p>
+                </div>
+              ) : (
+                activeGoals.slice(0, 3).map((goal) => {
+                  const progress = goal.progress || 0;
+                  const dueDateLabel = goal.deadline
+                    ? `Due ${new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : 'No deadline';
+
+                  return (
+                    <div key={goal._id} className={styles.goalModernCard} onClick={() => navigate(`/app/goals/${goal._id}`)}>
+                      <div className={styles.goalCardDecoration} style={{ backgroundColor: progress >= 100 ? '#10b981' : '#3b82f6' }} />
+                      <div className={styles.goalMainContent}>
+                        <div className={styles.goalHeaderMini}>
+                          <span className={styles.goalSubjectTag}>{goal.subject || 'General'}</span>
+                          <span className={styles.goalProgressPercent}>{progress}%</span>
+                        </div>
+                        <p className={styles.goalTitleModern}>{goal.title}</p>
+                        <p className={styles.goalDueDate}>{dueDateLabel}</p>
+                        <div className={styles.modernProgressContainer}>
+                          <div className={styles.modernProgressTrack}>
+                            <div 
+                              className={styles.modernProgressFill} 
+                              style={{ 
+                                width: `${progress}%`,
+                                background: progress >= 100 ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #3b82f6, #60a5fa)'
+                              }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   );
 }

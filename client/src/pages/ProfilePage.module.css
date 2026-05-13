@@ -113,6 +113,146 @@
   flex-shrink: 0;
 }
 
+/* ── XP Guidance ── */
+.xpGuidanceCard {
+  margin-top: 1.4rem;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.4rem 1.25rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.xpGuidanceHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.xpGuidanceTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.xpGuidanceIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 0.7rem;
+  background: rgba(0, 115, 160, 0.12);
+  color: #0073a0;
+}
+
+.xpGuidanceSubtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.levelChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.levelChip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.xpGuidanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.xpGuidanceBlock {
+  background: #f8fafc;
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.xpGuidanceBlockTitle {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.xpGuidanceList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.xpGuidanceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.xpGuidanceItemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 0.5rem;
+  background: #e2e8f0;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.tierBadgeBronze,
+.tierBadgeSilver,
+.tierBadgeGold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.tierBadgeBronze {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.tierBadgeSilver {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #94a3b8;
+}
+
+.tierBadgeGold {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #facc15;
+}
+
 /* ── Verification Section ── */
 .verificationCard {
   margin-top: 1.4rem;
@@ -1253,6 +1393,14 @@
     padding: 0.15rem 0.35rem;
   }
 
+  .xpGuidanceHeader {
+    align-items: flex-start;
+  }
+
+  .xpGuidanceGrid {
+    grid-template-columns: 1fr;
+  }
+
   .achievementTooltip {
     min-width: 180px;
     max-width: 240px;
@@ -1554,6 +1702,13 @@
 :global([data-theme="dark"]) .materialRow:hover { background-color: var(--bg-hover); }
 :global([data-theme="dark"]) .aiTag { background-color: #2d1752; color: #c4b5fd; }
 :global([data-theme="dark"]) .metaPill { background-color: var(--bg-hover); color: var(--text-secondary); }
+:global([data-theme="dark"]) .xpGuidanceCard { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .xpGuidanceSubtitle { color: var(--text-secondary); }
+:global([data-theme="dark"]) .levelChip { background: var(--bg-hover); border-color: var(--border-color); color: var(--text-primary); }
+:global([data-theme="dark"]) .xpGuidanceBlock { background: var(--bg-subtle); border-color: var(--border-color); }
+:global([data-theme="dark"]) .xpGuidanceBlockTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .xpGuidanceItem { color: var(--text-secondary); }
+:global([data-theme="dark"]) .xpGuidanceItemIcon { background: var(--bg-hover); color: var(--text-primary); }
 :global([data-theme="dark"]) .goalCard { background: var(--bg-subtle); border-color: var(--border-color); }
 :global([data-theme="dark"]) .goalCard:hover { border-color: var(--border-color); box-shadow: none; }
 :global([data-theme="dark"]) .goalSubjectBadge { background: var(--bg-hover); color: var(--text-secondary); }

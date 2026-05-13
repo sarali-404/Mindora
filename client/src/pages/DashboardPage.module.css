@@ -202,13 +202,28 @@
   font-weight: 500;
 }
 
+/* Content Grid - Main layout for all sections */
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 /* Chart Section */
 
 .chartSection {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   align-items: start;
 }
 
@@ -300,6 +315,9 @@
   border: 1px solid #eef2f7;
   height: fit-content;
   align-self: start;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
 }
 
 .achievementsGrid {
@@ -308,6 +326,7 @@
   gap: 1rem;
   margin-top: 1.25rem;
   align-content: flex-start;
+  flex: 1;
 }
 
 .achievementBadge {
@@ -509,8 +528,9 @@
 
 .mainGrid {
   display: grid;
-  grid-template-columns: 2.1fr 1.2fr;
+  grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
+  margin-top: 0;
   align-items: flex-start;
 }
 
@@ -699,26 +719,576 @@
   padding: 1rem 0;
 }
 
+/* Calendar Section */
+
+.topRow {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) 1.2fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: start;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.calendarCard {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+  height: fit-content;
+}
+
+.calendarMonth {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.calendarLegend {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  color: #6b7280;
+}
+
+.legendBox {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.intensity0 {
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.intensity1 {
+  background-color: #dbeafe;
+}
+
+.intensity2 {
+  background-color: #93c5fd;
+}
+
+.intensity3 {
+  background-color: #3b82f6;
+}
+
+.intensity4 {
+  background-color: #1e40af;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.calendarDayHeader {
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #6b7280;
+  padding: 0.2rem 0;
+}
+
+.calendarEmpty {
+  aspect-ratio: 1;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendarDay:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.calendarDay.intensity0 {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.calendarDay.intensity1 {
+  background-color: #dbeafe;
+  color: #0369a1;
+}
+
+.calendarDay.intensity2 {
+  background-color: #93c5fd;
+  color: #1e40af;
+}
+
+.calendarDay.intensity3 {
+  background-color: #3b82f6;
+}
+
+.calendarDay.intensity4 {
+  background-color: #1e40af;
+}
+
+/* Dashboard Grid System */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.gridItemLarge {
+  grid-column: span 8;
+}
+
+.gridItemSmall {
+  grid-column: span 4;
+}
+
+.gridItemHalf {
+  grid-column: span 6;
+}
+
+.gridItemFull {
+  grid-column: span 12;
+}
+
+.fullHeightCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Horizontal Leaderboard */
+.leaderboardCardHorizontal {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
+}
+
+.leaderboardHorizontalScroll {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.leaderboardHorizontalScroll::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.leaderboardItemHorizontal {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  min-width: 180px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.leaderboardItemYouHorizontal {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.rankBadge {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.leaderboardAvatarLarge {
+  font-size: 1.5rem;
+}
+
+.leaderboardUserInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboardNameMini {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.leaderboardXPMini {
+  font-size: 0.75rem;
+  color: #0073a0;
+  font-weight: 700;
+}
+
+/* Calendar Large (Better Spacing) */
+.calendarGridLarge {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.calendarDayHeaderLarge {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  padding-bottom: 0.5rem;
+}
+
+.calendarDayLarge {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendarDayLarge.intensity0 { background-color: #f1f5f9; color: #94a3b8; }
+.calendarDayLarge.intensity1 { background-color: #dbeafe; color: #1e40af; }
+.calendarDayLarge.intensity2 { background-color: #93c5fd; }
+.calendarDayLarge.intensity3 { background-color: #3b82f6; }
+.calendarDayLarge.intensity4 { background-color: #1e40af; }
+
+.calendarEmptyLarge {
+  aspect-ratio: 1;
+}
+
+/* Side Cards Stack */
+.columnStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: 100%;
+}
+
+.sideCard {
+  padding: 1.25rem !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sectionTitleSmall {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.sectionLinkMini {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Progress Mini */
+.progressBarWrapper {
+  margin-top: 0.75rem;
+  cursor: pointer;
+}
+
+.progressLabelRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.progressTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.progressValue {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0073a0;
+}
+
+.progressTrackMini {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFillMini {
+  height: 100%;
+  background: linear-gradient(90deg, #0073a0, #3b82f6);
+  border-radius: 999px;
+}
+
+/* Session Mini */
+.sessionsVerticalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sessionItemMini {
+  margin-top: 0.5rem;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sessionItemMini:first-child {
+  margin-top: 0.75rem;
+}
+
+.sessionMainInfoMini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sessionTitleTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.sessionHostMini {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.sessionTimeTime {
+  font-size: 0.75rem;
+  color: #0073a0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+:global([data-theme="dark"]) .sessionItemMini {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+:global([data-theme="dark"]) .sessionTitleTitle { color: var(--text-primary); }
+:global([data-theme="dark"]) .sessionHostMini { color: var(--text-secondary); }
+:global([data-theme="dark"]) .sessionTimeTime { color: #3b82f6; }
+
+/* Badges Mini - Enlarged */
+.achievementRowMini {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.badgeLargeWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.badgeLargeWrapper:hover {
+  transform: scale(1.1);
+}
+
+.badgeLarge {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.emptyTextMini {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+/* Remade Active Goals Modern UI */
+.goalsVerticalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.goalModernCard {
+  position: relative;
+  background: #ffffff;
+  border-radius: 0.85rem;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.goalModernCard:hover {
+  transform: translateX(4px);
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.goalCardDecoration {
+  width: 4px;
+  height: auto;
+}
+
+.goalMainContent {
+  flex: 1;
+  padding: 0.85rem 1rem;
+}
+
+.goalHeaderMini {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.goalSubjectTag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.025em;
+}
+
+.goalProgressPercent {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0073a0;
+}
+
+.goalTitleModern {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.goalDueDate {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.7rem;
+}
+
+.modernProgressContainer {
+  width: 100%;
+}
+
+.modernProgressTrack {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.modernProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.emptyGoalsState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.emptyIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.emptyGoalsState p {
+  font-size: 0.75rem;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .gridItemLarge, .gridItemSmall, .gridItemHalf {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 640px) {
+  .achievementBadgeMini {
+    width: 100%;
+  }
+}
+
 /* ==============================================
    RESPONSIVE
    ============================================== */
 
+/* Existing Responsive Overrides */
 @media (max-width: 1280px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .chartSection {
-    grid-template-columns: 1fr !important;
-  }
 }
 
 @media (max-width: 1024px) {
-  .mainGrid {
-    grid-template-columns: 1fr;
-  }
-  .tasksRow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .heroCard {
     flex-direction: column;
     gap: 1.5rem;
@@ -734,15 +1304,13 @@
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .chartSection {
-    grid-template-columns: 1fr !important;
-  }
 }
 
 @media (max-width: 768px) {
   .page {
     padding: 0.85rem 1.1rem 1.5rem;
   }
+
 
   /* --- Hero --- */
   .heroSection {
@@ -1046,8 +1614,19 @@
 :global([data-theme="dark"]) .heroSubtitle { color: rgba(255,255,255,0.7); }
 :global([data-theme="dark"]) .xpNeeded { color: var(--text-secondary); }
 
+:global([data-theme="dark"]) .leaderboardCardHorizontal { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .leaderboardItemHorizontal { background: var(--bg-hover); border-color: var(--border-color); }
+:global([data-theme="dark"]) .leaderboardItemYouHorizontal { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; }
+:global([data-theme="dark"]) .leaderboardNameMini { color: var(--text-primary); }
+:global([data-theme="dark"]) .leaderboardXPMini { color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalModernCard { background: var(--bg-card); border-color: var(--border-color); }
+:global([data-theme="dark"]) .goalTitleModern { color: var(--text-primary); }
+:global([data-theme="dark"]) .goalSubjectTag { color: var(--text-secondary); }
+:global([data-theme="dark"]) .goalDueDate { color: var(--text-secondary); }
+:global([data-theme="dark"]) .modernProgressTrack { background: var(--bg-hover); }
+
 /* ── Dark mode ── */
-:global([data-theme="dark"]) .statCard {
+.statCard {
   background: var(--bg-card);
   border-color: var(--border-color);
 }

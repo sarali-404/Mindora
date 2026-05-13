@@ -187,7 +187,7 @@ export default function GoalWizardStages({
             )}
 
             <p className={styles.helperText}>
-              <MdLightbulb style={{ verticalAlign: 'middle', marginRight: 6, color: '#f59e0b' }} /> You can always add more materials later from your goal page
+              <MdLightbulb style={{ verticalAlign: 'middle', marginRight: 6, color: '#f59e0b' }} /> 
             </p>
           </div>
         </div>
