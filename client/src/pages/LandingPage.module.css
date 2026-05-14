@@ -228,7 +228,7 @@
 }
 
 .whySection {
-  padding-bottom: 3rem;
+  padding-bottom: 5rem;
 }
 
 .sectionHeader {
@@ -258,18 +258,12 @@
 /* Feature cards */
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
   margin-top: 1.5rem;
 }
 
 @media (max-width: 900px) {
-  .featureGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
   .featureGrid {
     grid-template-columns: 1fr;
   }
@@ -278,40 +272,40 @@
 .featureCard {
   background-color: #ffffff;
   border-radius: 1.2rem;
-  padding: 1.75rem 1.5rem;
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  padding: 1.35rem 1.3rem;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
   border: 1px solid #eef2f7;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .featureCard:hover {
   transform: translateY(-3px);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1);
 }
 
 .featureTitle {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .featureText {
-  margin-top: 0.75rem;
-  font-size: 1rem;
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   color: #6b7280;
 }
 
 .featureIcon {
-  font-size: 2.2rem;
+  font-size: 1.9rem;
   color: #0097ce;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 58px;
-  width: 58px;
+  height: 50px;
+  width: 50px;
   background: rgba(0, 151, 206, 0.1);
   border-radius: 16px;
 }
@@ -327,6 +321,7 @@
   grid-template-columns: 1.6fr 1.2fr;
   gap: 2rem;
   align-items: center;
+  padding-bottom: 5rem;
 }
 
 @media (max-width: 900px) {
@@ -409,6 +404,44 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 6rem 1.5rem 4rem;
+}
+
+.featuresWrapper {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.featuresLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.featureAnimation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fbff;
+  border-radius: 2rem;
+  padding: 2rem;
+  min-height: 420px;
+}
+
+.featureLottie {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+
+@media (max-width: 900px) {
+  .featuresWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .featureAnimation {
+    min-height: 320px;
+  }
 }
 
 .howTimelineWrapper {
@@ -643,13 +676,16 @@
 .achievementBird {
   flex-shrink: 0;
   width: 150px;
+  min-width: 150px;
   text-align: center;
   cursor: pointer;
   transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .achievementBird:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .birdImage {
@@ -665,18 +701,20 @@
 }
 
 .birdName {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #111827;
-  margin-top: 1rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  height: 0;
+  margin-top: 0.8rem;
+  line-height: 1.4;
+  display: block;
+  opacity: 1;
+  height: auto;
+  position: relative;
+  z-index: 2;
 }
 
 .achievementBird:hover .birdName {
-  opacity: 1;
-  height: auto;
+  color: #0097ce;
 }
 
 /* Smooth Scroll Animations */

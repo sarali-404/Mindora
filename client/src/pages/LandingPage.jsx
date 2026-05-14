@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaRobot, FaBullseye, FaChartLine, FaUsers, FaBook, FaClock, FaStar, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import Lottie from "lottie-react";
 import styles from "./LandingPage.module.css";
 import LoginModal from "../components/auth/LoginModal";
 import RegisterModal from "../components/auth/RegisterModal";
@@ -14,6 +15,7 @@ import goalCrusherImg from "../assets/achievements/goal_crusher.png";
 import memoryMasterImg from "../assets/achievements/memory_master.png";
 import teachingBirdImg from "../assets/achievements/teaching_bird.png";
 import goalArchitectImg from "../assets/achievements/goal_architect.png";
+import birdBaseAnimation from "../assets/animations/bird-base.json";
 
 
 
@@ -329,66 +331,54 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className={styles.featureGrid}>
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaRobot />
-            </div>
-            <h3 className={styles.featureTitle}>AI Notes</h3>
-            <p className={styles.featureText}>
-              Get personalized study summaries powered by AI.
-            </p>
-          </article>
+        <div className={styles.featuresWrapper}>
+          <div className={styles.featuresLeft}>
+            <div className={styles.featureGrid}>
+              <article className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <FaRobot />
+                </div>
+                <h3 className={styles.featureTitle}>AI Notes</h3>
+                <p className={styles.featureText}>
+                  Get personalized study summaries powered by AI.
+                </p>
+              </article>
 
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaBullseye />
-            </div>
-            <h3 className={styles.featureTitle}>Smart Goals</h3>
-            <p className={styles.featureText}>
-              Set goals and track progress with ease.
-            </p>
-          </article>
+              <article className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <FaBullseye />
+                </div>
+                <h3 className={styles.featureTitle}>Smart Goals</h3>
+                <p className={styles.featureText}>
+                  Set goals and track progress with ease.
+                </p>
+              </article>
 
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaChartLine />
-            </div>
-            <h3 className={styles.featureTitle}>Analytics</h3>
-            <p className={styles.featureText}>
-              See your learning progress visualized.
-            </p>
-          </article>
+              <article className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <FaChartLine />
+                </div>
+                <h3 className={styles.featureTitle}>Analytics</h3>
+                <p className={styles.featureText}>
+                  See your learning progress visualized.
+                </p>
+              </article>
 
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaUsers />
+              <article className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <FaUsers />
+                </div>
+                <h3 className={styles.featureTitle}>Community</h3>
+                <p className={styles.featureText}>
+                  Learn and grow with your peers.
+                </p>
+              </article>
             </div>
-            <h3 className={styles.featureTitle}>Community</h3>
-            <p className={styles.featureText}>
-              Learn and grow with your peers.
-            </p>
-          </article>
+          </div>
 
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaBook />
-            </div>
-            <h3 className={styles.featureTitle}>Library</h3>
-            <p className={styles.featureText}>
-              Access all your study materials in one place.
-            </p>
-          </article>
-
-          <article className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <FaClock />
-            </div>
-            <h3 className={styles.featureTitle}>Focus Sessions</h3>
-            <p className={styles.featureText}>
-              Build better study habits day by day.
-            </p>
-          </article>
+          <div className={styles.featureAnimation}>
+            <Lottie animationData={birdBaseAnimation} loop={true} className={styles.featureLottie} />
+          </div>
         </div>
       </section>
 
