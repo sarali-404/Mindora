@@ -512,8 +512,7 @@ exports.getMySessions = async (req, res) => {
 // @access  Private (host only)
 exports.startSession = async (req, res) => {
   try {
-    const session = await Session.findById(req.params.id)
-      .populate('host', 'username profile.firstName profile.lastName');
+    const session = await Session.findById(req.params.id);
 
     if (!session) {
       return res.status(404).json({
@@ -528,6 +527,9 @@ exports.startSession = async (req, res) => {
         message: 'Only the host can start this session'
       });
     }
+
+    // Populate host after authorization check
+    await session.populate('host', 'username profile.firstName profile.lastName');
 
     if (session.status !== 'scheduled') {
       return res.status(400).json({
